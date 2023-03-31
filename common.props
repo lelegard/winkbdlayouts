@@ -47,7 +47,6 @@
   </PropertyGroup>
 
   <PropertyGroup Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
     <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -73,12 +72,11 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <Link>
-      <SubSystem>Windows</SubSystem>
       <EnableUAC>false</EnableUAC>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
@@ -107,14 +105,5 @@
       <PreprocessorDefinitions>WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
-
-  <ItemGroup>
-    <ClCompile Include="$(ProjectName).c"/>
-    <ResourceCompile Include="$(ProjectName).rc"/>
-    <None Include="$(ProjectName).def"/>
-    <None Include="$(ProjectName).reg"/>
-  </ItemGroup>
-
-  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets"/>
 
 </Project>

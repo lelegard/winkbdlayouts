@@ -25,3 +25,6 @@ To add support for a new keyboard layout:
 
 That's all. Just run `build.ps1` to build the new layouts and `install.ps1` to
 install them.
+
+If you have difficulties to collect the scan codes for your keyboard,
+build and run the `tools\scancodes` application.
