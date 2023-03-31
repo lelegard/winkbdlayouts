@@ -19,6 +19,9 @@ To add support for a new keyboard layout:
   names and descriptions.
 - Update the key tables in `kbdXXapple.c`.
 - The files `kbdXXapple.def` and `kbdXXapple.vcxproj` do not need any modification.
+- Before building it for the first time, open `windows-apple-keyboards.sln` with
+  Visual Studio, right-click on the solution => "Add" => "Existing Project" and
+  select `kbdXXapple.vcxproj`. Then, "File" => "Save All".
 
 That's all. Just run `build.ps1` to build the new layouts and `install.ps1` to
 install them.

@@ -1,6 +1,8 @@
+//---------------------------------------------------------------------------
 // French Apple Keyboard Layout
+//---------------------------------------------------------------------------
 
-// European/American keyboard
+// European/American "Enhanced 101/102-key" keyboard type. Used in kbd.h.
 #define KBD_TYPE 4
 
 #include <windows.h>
