@@ -6,6 +6,12 @@
 #include <stdio.h>
 #include <windows.h>
 
+static void print_key(const char* name, WPARAM wParam, LPARAM lParam)
+{
+    printf("Scan code: 0x%02X, Ext (Ctrl, Right-Alt): %d, Alt: %d, VK: 0x%04X, %s\n",
+           int((lParam >> 16) & 0xFF), int((lParam >> 24) & 0x01), int((lParam >> 29) & 0x01), int(wParam), name);
+}
+
 int main(int argc, char* argv[])
 {
     WNDCLASS wclass;
@@ -26,22 +32,24 @@ int main(int argc, char* argv[])
     MSG msg;
     while (GetMessageA(&msg, window, 0, 0) > 0) {
         switch (msg.message) {
+            case WM_SYSKEYDOWN:
+                print_key("SYSKEYDOWN", msg.wParam, msg.lParam);
+                break;
+            case WM_SYSKEYUP:
+                print_key("SYSKEYUP", msg.wParam, msg.lParam);
+                break;
+            case WM_KEYDOWN:
+                print_key("KEYDOWN", msg.wParam, msg.lParam);
+                break;
+            case WM_KEYUP:
+                print_key("KEYUP", msg.wParam, msg.lParam);
+                break;
             case WM_PAINT: {
                 // Make sure the window stops complaining about paint.
                 PAINTSTRUCT ps;
                 HDC hdc = BeginPaint(msg.hwnd, &ps);
                 EndPaint(msg.hwnd, &ps);
                 break;
-            }
-            case WM_SYSKEYDOWN:
-            case WM_SYSKEYUP:
-            case WM_KEYDOWN:
-            case WM_KEYUP: {
-                printf("Scan code: 0x%02X, Ext (Ctrl, Right-Alt): %d, Alt: %d, VK: 0x%04X\n",
-                       int((msg.lParam >> 16) & 0xFF), 
-                       int((msg.lParam >> 24) & 0x01),
-                       int((msg.lParam >> 29) & 0x01),
-                       int(msg.wParam));
             }
         }
     }

@@ -28,3 +28,26 @@ install them.
 
 If you have difficulties to collect the scan codes for your keyboard,
 build and run the `tools\scancodes` application.
+
+## Scan codes
+
+The picture `tools\scancodes.jpg` shows the scan codes for a standard 101+102-key
+PC keyboards. There are some specificities in Apple keyboards.
+
+~~~
+Middle pad:
+  F13...0x37.e    F14...None    F18...None
+  fn....None      home..0x47.e  up....0x49.e
+  del...0x53.e    end...0x4F.e  down..0x51.e
+                  up....0x48.e
+  left..0x4B.e    down..0x50.e  right.0x4D.e
+
+
+Numeric pad:
+  F16...0x67      F17...0x68    F18...0x69      F19...0x6A
+  NLck..0x45.e    =.....0x59    /.....0x35.e    *.....0x37
+  7.....0x47      8.....0x48    9.....0x49      -.....0x4A
+  4.....0x4B      5.....0x4C    6.....0x4D      +.....0x4E
+  1.....0x4F      2.....0x50    3.....0x51
+  0.....0x52                    ,.....0x53      Ent...0x1C.e
+~~~
