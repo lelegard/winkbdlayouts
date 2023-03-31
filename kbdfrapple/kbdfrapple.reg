@@ -1,0 +1,5 @@
+REGEDIT4
+
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Keyboard Layouts\b000040c]
+"Layout File"="kbdfrapple.dll"
+"Layout Text"="French Apple Keyboard"

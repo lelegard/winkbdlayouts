@@ -1,0 +1,4 @@
+LIBRARY KBDFRAPPLE
+
+EXPORTS
+    KbdLayerDescriptor @1
