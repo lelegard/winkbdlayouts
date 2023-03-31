@@ -110,8 +110,9 @@
 
   <ItemGroup>
     <ClCompile Include="$(ProjectName).c"/>
-    <None Include="$(ProjectName).def"/>
     <ResourceCompile Include="$(ProjectName).rc"/>
+    <None Include="$(ProjectName).def"/>
+    <None Include="$(ProjectName).reg"/>
   </ItemGroup>
 
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets"/>

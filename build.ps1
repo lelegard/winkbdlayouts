@@ -1,4 +1,4 @@
-﻿# PowerShell script to build the MSBuild solution in this directory.
+﻿# PowerShell script to build the keyboard files and binary archive.
 
 [CmdletBinding(SupportsShouldProcess=$true)]
 param([switch]$NoPause = $false)
@@ -15,18 +15,20 @@ function Exit-Script([string]$Message = "")
     exit
 }
 
+# Create a new directory (delete previous one), return the directory object.
+function Create-NewDirectory([string]$DirName)
+{
+    Remove-Item $DirName -Recurse -Force -ErrorAction SilentlyContinue
+    return New-Item -ItemType Directory -Force $DirName
+}
+
 # Get first solution file in the same directory as the script.
-$SolutionFile = Get-ChildItem "$PSScriptRoot\*.sln" | ForEach-Object { $_.FullName} | Select-Object -First 1
+$SolutionFile = Get-ChildItem "$PSScriptRoot\*.sln" | Select-Object -First 1
 if ($SolutionFile -eq $null) {
     Exit-Script "No solution file found in $PSScriptRoot"
 }
+$ProjectName = $SolutionFile.BaseName
 Write-Output "Solution file: $SolutionFile"
-
-# Find architecture.
-$OSArch = (Get-WmiObject Win32_OperatingSystem).OSArchitecture
-$Platform = if ($OSArch -like "*arm*") {"arm64"} elseif ($OSArch -like "*64*") {"x64"} else {"Win32"}
-$PlatformDir = $Platform -replace "Win32","x86"
-Write-Output "Platform: $Platform"
 
 # Find MSBuild
 Write-Output "Searching MSBuild..."
@@ -35,16 +37,30 @@ $MSBuild = Get-ChildItem $MSRoots -Recurse -Include MSBuild.exe -ErrorAction Ign
 if ($MSBuild -eq $null) {
     Exit-Script "MSBuild not found"
 }
-
-# Build the project.
 Write-Output "MSBuild: $MSBuild"
-& $MSBuild $SolutionFile /nologo /property:Configuration=Release /property:Platform=$Platform
+
+# Build the project for each architecture.
+foreach ($Arch in ("x86", "x64", "arm64")) {
+    Write-Output "Building for $Arch ..."
+    & $MSBuild $SolutionFile /nologo /property:Configuration=Release /property:Platform=$Arch
+}
 
 # Build archive binaries.
-$Archive = (Get-Item $SolutionFile).DirectoryName + "\" + (Get-Item $SolutionFile).BaseName + ".zip"
+$Archive = "$PSScriptRoot\$ProjectName.zip"
 Write-Output "Archive: $Archive"
+$TempRoot = Create-NewDirectory "$PSScriptRoot\tmp"
+$InstallRoot = Create-NewDirectory "$TempRoot\$ProjectName"
+$RegFiles = Get-ChildItem $PSScriptRoot -Depth 2 -Include "kbd*.reg"
+Copy-Item $RegFiles -Destination $InstallRoot
+Copy-Item "$PSScriptRoot\install.ps1" -Destination $InstallRoot
+foreach ($Arch in ("x86", "x64", "arm64")) {
+    $Files = Get-ChildItem "$PSScriptRoot\$Arch\Release\kbd*.dll"
+    if ($Files -ne $null) {
+        Copy-Item $Files -Destination $(Create-NewDirectory "$InstallRoot\$Arch")
+    }
+}
 $ProgressPreference = "SilentlyContinue"
-Get-ChildItem "$PSScriptRoot\$PlatformDir\Release" -Depth 1 -Include @("*.exe", "*.dll", "*.reg") |
-    Compress-Archive -Force -DestinationPath "$Archive"
+Compress-Archive $InstallRoot -DestinationPath "$Archive" -Force
+Remove-Item $TempRoot -Recurse -Force
 
 Exit-Script
