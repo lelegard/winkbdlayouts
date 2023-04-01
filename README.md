@@ -64,16 +64,25 @@ build and run the `tools\scancodes` application.
 The picture `tools\scancodes.jpg` shows the scan codes for a standard
 101/102-key PC keyboards.
 
-There are some specificities on the right-hand side of Apple keyboards:
+There are some specificities on the bottom row of Apple keyboards:
+~~~
++--------+--------+--------+-----------------+--------+--------+--------+
+|control | option |command |      space      |command | option |control |
+|  0x1D  | 0x38 a | 0x5B e |      0x39       | 0x5C e | 0x38 e | 0x1D e |
++--------+--------+--------+-----------------+--------+--------+--------+
+~~~
+Where `e` means "Extended" (Ctrl or Right-Alt) and `a` means "Alt".
+
+And on the right-hand side of Apple keyboards:
 ~~~
 +--------+--------+--------+    +--------+--------+--------+--------+
 |  F13   |  F14   |  F15   |    |  F16   |  F17   |  F18   |  F19   |
 | 0x37 e | (none) | (none) |    |  0x67  |  0x68  |  0x69  |  0x6A  |
 +--------+--------+--------+    +--------+--------+--------+--------+
 |   fn   |  Home  |Page Up |    |Num Lock|   =    |   /    |   *    |
-| (none) | 0x47 e | 0x49 e |    | 0x45.e |  0x59  | 0x35 e |  0x37  |
+| (none) | 0x47 e | 0x49 e |    | 0x45 e |  0x59  | 0x35 e |  0x37  |
 +--------+--------+--------+    +--------+--------+--------+--------+
-|  Del   |  End   |Pag.Down|    |   7    |   8    |   9    |   -    |
+|  Del   |  End   |Page Dwn|    |   7    |   8    |   9    |   -    |
 | 0x53 e | 0x4F e | 0x51 e |    |  0x47  |  0x48  |  0x49  |  0x4A  |
 +--------+--------+--------+    +--------+--------+--------+--------+
                                 |   4    |   5    |   6    |   +    |
