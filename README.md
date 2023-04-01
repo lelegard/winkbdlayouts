@@ -37,7 +37,7 @@ To add support for a new keyboard layout:
 - Update the files `kbdXXYYY.rc` and `kbdXXYYY.reg` with the appropriate
   names and descriptions.
 - Update the key tables in `kbdXXYYY.c`.
-- The files `kbdXXYYY.def` and `kbdXXYYY.vcxproj` do not need any modification.
+- The file `kbdXXYYY.vcxproj` does not need any modification.
 - Before building it for the first time, open `winkbdlayouts.sln` with
   Visual Studio, right-click on the solution => "Add" => "Existing Project" and
   select `kbdXXYYY.vcxproj`. Then, "File" => "Save All".
@@ -53,15 +53,15 @@ Additional notes:
 - If possible, add a photo of the physical keyboard layout in the `images`
   subdirectory. For reference only.
 
-To build the project for all target architectures, run `build.ps1`. Run `install.ps1`
-to install them.
+To build the project for all target architectures, run `build.ps1`.
+Run `install.ps1` to install them.
+
+## Scan codes
 
 If you have difficulties to collect the scan codes for your keyboard,
 build and run the `tools\scancodes` application.
 
-## Scan codes
-
-The picture `tools\scancodes.jpg` shows the scan codes for a standard
+The image `scancodes.jpg` shows the scan codes for a standard
 101/102-key PC keyboards.
 
 There are some specificities on the bottom row of Apple keyboards:

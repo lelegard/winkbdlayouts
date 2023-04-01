@@ -1,0 +1,11 @@
+#include <windows.h>
+#include <ntverp.h>
+
+#define VER_FILETYPE              VFT_DLL
+#define VER_FILESUBTYPE           VFT2_DRV_KEYBOARD
+#define VER_FILEDESCRIPTION_STR   "Test Keyboard Layout from reverse tool"
+#define VER_INTERNALNAME_STR      "kbdtest"
+#define VER_ORIGINALFILENAME_STR  "kbdtest.dll"
+
+#define VER_LANGNEUTRAL
+#include "common.ver"

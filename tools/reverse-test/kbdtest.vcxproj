@@ -1,12 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{b9b80495-01ba-4afd-99fe-f87822fb8300}</ProjectGuid>
+  </PropertyGroup>
+
   <PropertyGroup Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
   </PropertyGroup>
 
   <ImportGroup Label="PropertySheets">
-    <Import Project="$(SolutionDir)common.props"/>
+    <Import Project="$(SolutionDir)..\..\common.props"/>
   </ImportGroup>
 
   <ItemDefinitionGroup>
@@ -18,7 +22,6 @@
   <ItemGroup>
     <ClCompile Include="$(ProjectName).c"/>
     <ResourceCompile Include="$(ProjectName).rc"/>
-    <None Include="$(ProjectName).reg"/>
   </ItemGroup>
 
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets"/>

@@ -59,9 +59,11 @@
 #define T34 _EQ(                                      OEM_2                      )
 #undef  T35
 #define T35 _EQ(                                   OEM_PLUS                      )
+#undef  T6A
+#define T6A _EQ(                                        '*'                      ) // F19 generates '*' to check the keyboard
 
 //---------------------------------------------------------------------------
-// Virtual Scan Code to Virtual Key conversion tables
+// Scan Code to Virtual Key conversion tables
 //---------------------------------------------------------------------------
 
 static USHORT ausVK[] = {
@@ -161,29 +163,51 @@ static VSC_VK aE1VscToVk[] = {
 };
 
 //---------------------------------------------------------------------------
-// Map Virtual Keys to Modifier Bits
-// See kbd.h for a full description.
+// Map character modifier bits to modification number
 //---------------------------------------------------------------------------
 
-// French Keyboard has only three shifter keys:
-//    SHIFT (L & R) affects alphabnumeric keys,
-//    CTRL  (L & R) is used to generate control characters
-//    ALT   (L & R) used for generating characters by number with numpad
+// Associate a Virtual Key with a Modifier bitmask.
+//   Vk : Virtual key (eg: VK_SHIFT, VK_RMENU, VK_CONTROL etc.)
+//   ModBits : Combination of KBDALT, KBDCTRL, KBDSHIFT and kbd - specific bits
+//
+// The languages that use AltGr (VK_RMENU) to shift keys convert it to
+// CTRL + ALT with the KBDSPECIAL bit in the ausVK[] entry for VK_RMENU
+// and by having an entry in aVkToPfnOem[] to simulate the right Vk sequence.
 
-static VK_TO_BIT aVkToBits[] = {
-    {VK_SHIFT,   KBDSHIFT},
-    {VK_CONTROL, KBDCTRL},
-    {VK_MENU,    KBDALT},
-    {0,          0}
+static VK_TO_BIT vk_to_bits[] = {
+    {.Vk = VK_SHIFT,   .ModBits = KBDSHIFT},
+    {.Vk = VK_CONTROL, .ModBits = KBDCTRL},
+    {.Vk = VK_MENU,    .ModBits = KBDALT},
+    {.Vk = 0,          .ModBits = 0} // end of table
 };
 
-//---------------------------------------------------------------------------
-// Map character modifier bits to modification number
-// See kbd.h for a full description.
-//---------------------------------------------------------------------------
+// Table to map shift bits to enumerated shift states.
+// Maps all possible shifter key combinations to an enumerated shift state.
+// The size of the table depends on the value of the highest order bit used
+// in aCharModifiers[*].ModBits
+//
+// Special values for aModification
+//   SHFT_INVALID - no characters produced with this shift state.
+//   SHFT_CTRL    - standard control character production (all keyboards must
+//                  be able to produce CTRL-C == 0x0003 etc.)
+//   Other        - enumerated shift state (not less than 0)
+//
+// This table is indexed by the Modifier Bits to obtain an Modification Number.
+//
+//                        CONTROL MENU SHIFT
+//    aModification[] = {
+//        0,            //   0     0     0     = 000  <none>
+//        1,            //   0     0     1     = 001  SHIFT
+//        SHFT_INVALID, //   0     1     0     = 010  ALT
+//        2,            //   0     1     1     = 011  SHIFT ALT
+//        3,            //   1     0     0     = 100  CTRL
+//        4,            //   1     0     1     = 101  SHIFT CTRL
+//        5,            //   1     1     0     = 110  CTRL ALT
+//        SHFT_INVALID  //   1     1     1     = 111  SHIFT CTRL ALT
+//    };
 
-static MODIFIERS CharModifiers = {
-    &aVkToBits[0],
+static MODIFIERS char_modifiers = {
+    vk_to_bits,
     6,
     {
     //  Modification# //  Keys Pressed
@@ -475,7 +499,7 @@ static DEADKEY aDeadKey[] = {
 //---------------------------------------------------------------------------
 
 static KBDTABLES KbdTables = {
-    .pCharModifiers  = &CharModifiers,   // Modifier keys
+    .pCharModifiers  = &char_modifiers,  // Modifier keys
     .pVkToWcharTable = aVkToWcharTable,  // Characters tables
     .pDeadKey        = aDeadKey,         // Diacritics ("dead keys")
     .pKeyNames       = aKeyNames,        // Names of Keys
@@ -492,10 +516,10 @@ static KBDTABLES KbdTables = {
 };
 
 //---------------------------------------------------------------------------
-// DLL entry point
+// DLL entry point.
 //---------------------------------------------------------------------------
 
-PKBDTABLES KbdLayerDescriptor(void)
+__declspec(dllexport) PKBDTABLES KbdLayerDescriptor(void)
 {
     return &KbdTables;
 }
