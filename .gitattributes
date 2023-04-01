@@ -10,3 +10,4 @@
 *.vcxproj text eol=crlf linguist-language=VisualStudio
 *.vcxproj.filters text eol=crlf linguist-language=VisualStudio
 *.rc text eol=crlf linguist-language=WindowsResource
+*.jpg binary
