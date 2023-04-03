@@ -11,6 +11,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kbdfrapple", "kbdfrapple\kb
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kbdfnapple", "kbdfnapple\kbdfnapple.vcxproj", "{DCCE0BD5-25A8-49E2-A7DA-754E22935020}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "inspect", "inspect\inspect.vcxproj", "{425001BB-6EB8-4CD3-AB70-2F88244F63E9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|arm64 = Debug|arm64
@@ -69,6 +71,18 @@ Global
 		{DCCE0BD5-25A8-49E2-A7DA-754E22935020}.Release|x64.Build.0 = Release|x64
 		{DCCE0BD5-25A8-49E2-A7DA-754E22935020}.Release|x86.ActiveCfg = Release|Win32
 		{DCCE0BD5-25A8-49E2-A7DA-754E22935020}.Release|x86.Build.0 = Release|Win32
+		{425001BB-6EB8-4CD3-AB70-2F88244F63E9}.Debug|arm64.ActiveCfg = Debug|arm64
+		{425001BB-6EB8-4CD3-AB70-2F88244F63E9}.Debug|arm64.Build.0 = Debug|arm64
+		{425001BB-6EB8-4CD3-AB70-2F88244F63E9}.Debug|x64.ActiveCfg = Debug|x64
+		{425001BB-6EB8-4CD3-AB70-2F88244F63E9}.Debug|x64.Build.0 = Debug|x64
+		{425001BB-6EB8-4CD3-AB70-2F88244F63E9}.Debug|x86.ActiveCfg = Debug|Win32
+		{425001BB-6EB8-4CD3-AB70-2F88244F63E9}.Debug|x86.Build.0 = Debug|Win32
+		{425001BB-6EB8-4CD3-AB70-2F88244F63E9}.Release|arm64.ActiveCfg = Release|arm64
+		{425001BB-6EB8-4CD3-AB70-2F88244F63E9}.Release|arm64.Build.0 = Release|arm64
+		{425001BB-6EB8-4CD3-AB70-2F88244F63E9}.Release|x64.ActiveCfg = Release|x64
+		{425001BB-6EB8-4CD3-AB70-2F88244F63E9}.Release|x64.Build.0 = Release|x64
+		{425001BB-6EB8-4CD3-AB70-2F88244F63E9}.Release|x86.ActiveCfg = Release|Win32
+		{425001BB-6EB8-4CD3-AB70-2F88244F63E9}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
