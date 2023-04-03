@@ -1,6 +1,12 @@
 //---------------------------------------------------------------------------
+//
+// Windows Keyboards Layouts (WKL)
+// Copyright (c) 2023, Thierry Lelegard
+// BSD-2-Clause license, see the LICENSE file.
+//
 // Utility to display scan codes and virtual keys.
 // Useful to explore a new keyboard.
+//
 //---------------------------------------------------------------------------
 
 #include <stdio.h>
