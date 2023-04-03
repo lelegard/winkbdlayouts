@@ -1,0 +1,5 @@
+REGEDIT4
+
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Keyboard Layouts\b001040c]
+"Layout File"="kbdfnapple.dll"
+"Layout Text"="French (Numerical) Apple (WKL)"
