@@ -25,6 +25,10 @@ std::string Join(const CONTAINER& container, const std::string& separator = ", "
 // Get the value of an environment variable.
 std::string GetEnv(const std::string& name, const std::string& def = "");
 
+// File name (without directory), file base name (without directory and prefix).
+std::string FileName(const std::string& name);
+std::string FileBaseName(const std::string& name);
+
 // Transform an error code into an error message string.
 std::string Error(::DWORD code = ::GetLastError());
 

@@ -9,8 +9,7 @@
 //
 //---------------------------------------------------------------------------
 
-#include <stdio.h>
-#include <windows.h>
+#include "strutils.h"
 
 
 //---------------------------------------------------------------------------
@@ -287,11 +286,11 @@ static void print_key(const char* name, WPARAM wParam, LPARAM lParam)
     const int scancode = int((lParam >> 16) & 0xFF);
     const int ext = int((lParam >> 24) & 0x01);
     const int alt = int((lParam >> 29) & 0x01);
-    printf("%-10s  Scan code: 0x%02X, Ext (Ctrl, Right-Alt): %d, Alt: %d, VK: 0x%04X", name, scancode, ext, alt, vk);
+    std::cout << Format("%-10s  Scan code: 0x%02X, Ext (Ctrl, Right-Alt): %d, Alt: %d, VK: 0x%04X", name, scancode, ext, alt, vk);
     if (vk < 256 && vk_names[vk] != nullptr) {
-        printf(" (%s)", vk_names[vk]);
+        std::cout << " (" << vk_names[vk] << ")";
     }
-    printf("\n");
+    std::cout << std::endl << std::flush;
 }
 
 
@@ -313,8 +312,8 @@ int main(int argc, char* argv[])
     HWND window = CreateWindowExA(0, "ScanCodesClass", "ScanCodes", WS_OVERLAPPEDWINDOW, 0, 0, 200, 200, 0, 0, 0, 0);
     ShowWindow(window, SW_SHOW);
 
-    printf("Click on the small window and press keys to see their scan codes.\n");
-    printf("Close this shell window to stop the application.\n");
+    std::cout << "Click on the small window and press keys to see their scan codes." << std::endl
+              << "Close this shell window to stop the application." << std::endl;
 
     MSG msg;
     while (GetMessageA(&msg, window, 0, 0) > 0) {

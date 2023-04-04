@@ -9,6 +9,7 @@
 //----------------------------------------------------------------------------
 
 #include "options.h"
+#include "strutils.h"
 
 
 //----------------------------------------------------------------------------
@@ -16,35 +17,13 @@
 //----------------------------------------------------------------------------
 
 Options::Options(int argc, char* argv[], const std::string syntax) :
-    command(CommandName(argc, argv)),
+    command(argc < 1 ? "" : FileBaseName(argv[0])),
     args(),
     _syntax(syntax)
 {
     for (int i = 1; i < argc; ++i) {
         args.push_back(argv[i]);
     }
-}
-
-
-//----------------------------------------------------------------------------
-// Static function to extract the command name.
-//----------------------------------------------------------------------------
-
-std::string Options::CommandName(int argc, char* argv[])
-{
-    std::string command(argc < 1 ? "" : argv[0]);
-
-    // Cleanup command name.
-    size_t pos = command.find_last_of(":/\\");
-    if (pos != std::string::npos) {
-        command.erase(0, pos + 1);
-    }
-    pos = command.find_last_of(".");
-    if (pos != std::string::npos) {
-        command.resize(pos);
-    }
-
-    return command;
 }
 
 

@@ -29,5 +29,4 @@ public:
     
 private:
     const std::string _syntax;
-    static std::string CommandName(int argc, char* argv[]);
 };

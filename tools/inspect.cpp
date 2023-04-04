@@ -58,48 +58,74 @@ InspectOptions::InspectOptions(int argc, char* argv[]) :
 
 
 //---------------------------------------------------------------------------
+// Get the file of a module.
+//---------------------------------------------------------------------------
+
+std::string ModuleFileName(::HANDLE hproc, ::HMODULE hmod)
+{
+    std::string name(2048, ' ');
+    ::DWORD size = ::GetModuleFileNameExA(hproc, hmod, &name[0], ::DWORD(name.size()));
+    name.resize(std::min<size_t>(size, name.size()));
+    return name;
+}
+
+
+//---------------------------------------------------------------------------
 // Inspect processes
 //---------------------------------------------------------------------------
 
 void InspectProcesses(const InspectOptions& opt, std::ostream& out)
 {
-    std::vector<::DWORD> pids(512);
-
-    // Get all process ids in the system. There is no way to anticipate the
-    // number of processes and the required space. So, if the pids buffer is
-    // filled, assume there are more processes and retry with doubled size.
-    for (;;) {
-        const ::DWORD insize = ::DWORD(pids.size() * sizeof(::DWORD));
-        ::DWORD retsize = 0;
-        if (!::EnumProcesses(&pids[0], insize, &retsize)) {
-            const ::DWORD err = ::GetLastError();
-            opt.fatal("EnumProcesses error: " + Error(err));
-        }
-        if (retsize < insize) {
-            pids.resize(retsize / sizeof(::DWORD));
-            break;
-        }
-        pids.resize(2 * pids.size());
+    // Get all process ids in the system.
+    std::vector<::DWORD> pids(4096);
+    ::DWORD insize = ::DWORD(pids.size() * sizeof(::DWORD));
+    ::DWORD retsize = 0;
+    if (!::EnumProcesses(&pids[0], insize, &retsize)) {
+        const ::DWORD err = ::GetLastError();
+        opt.fatal("EnumProcesses error: " + Error(err));
     }
-
-    out << "Found " << pids.size() << " processes" << std::endl;
+    pids.resize(retsize / sizeof(::DWORD));
 
     // Loop on all processes.
+    size_t error_count = 0;
     for (auto pid : pids) {
 
         // Open access to process.
         if (pid == 0) {
             continue; // why do we get pid zero ?
         }
-        ::HANDLE hproc = ::OpenProcess(READ_CONTROL, false, pid);
+        ::HANDLE hproc = ::OpenProcess(PROCESS_ALL_ACCESS, false, pid);
         if (hproc == NULL) {
             const ::DWORD err = ::GetLastError();
             std::cerr << opt.command << Format(": error opening process 0x%08X, ", pid) << Error(err) << std::endl;
+            error_count++;
             continue;
         }
 
+        // Enumerate all DLL's in this process.
+        std::vector<::HMODULE> mods(4096);
+        insize = ::DWORD(mods.size() * sizeof(::HMODULE));
+        retsize = 0;
+        if (!::EnumProcessModules(hproc, &mods[0], insize, &retsize)) {
+            const ::DWORD err = ::GetLastError();
+            std::cerr << opt.command << Format(": error getting modules from process 0x%08X, ", pid) << Error(err) << std::endl;
+            error_count++;
+            ::CloseHandle(hproc);
+            continue;
+        }
+        mods.resize(retsize / sizeof(::HMODULE));
+
+        // Get the module names.
+        for (auto hmod : mods) {
+            const std::string file(ModuleFileName(hproc, hmod));
+            const std::string base(ToLower(FileBaseName(file)));
+            if (base.length() >= 3 && base.substr(0, 3) == "kbd") {
+                out << Format("Process 0x%08X ", pid) << FileName(ModuleFileName(hproc, NULL)) << " uses " << file << std::endl;
+            }
+        }
         ::CloseHandle(hproc);
     }
+    out << "Found " << pids.size() << " processes, " << error_count << " not accessed" << std::endl;
 }
 
 

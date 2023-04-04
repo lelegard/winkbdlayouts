@@ -61,6 +61,24 @@ std::string ToUpper(const std::string& s)
 
 
 //----------------------------------------------------------------------------
+// File name (without directory), file base name (without directory and prefix).
+//----------------------------------------------------------------------------
+
+std::string FileName(const std::string& name)
+{
+    const size_t pos = name.find_last_of(":/\\");
+    return pos == std::string::npos ? name : name.substr(pos + 1);
+}
+
+std::string FileBaseName(const std::string& name)
+{
+    const std::string filename(FileName(name));
+    const size_t pos = filename.find_last_of(".");
+    return pos == std::string::npos ? filename : filename.substr(0, pos);
+}
+
+
+//----------------------------------------------------------------------------
 // Transform an error code into an error message string.
 //----------------------------------------------------------------------------
 
