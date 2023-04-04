@@ -21,9 +21,6 @@ updating Visual Studio.
 
 ## Language support and contributions
 
-At the creation of this project, the only supported layout was the
-French Apple keyboard, having no other physical keyboard for testing.
-
 New layouts are welcome as contributions. Please post a pull request
 with your implementation of new layouts.
 
@@ -36,7 +33,8 @@ To add support for a new keyboard layout:
 - Rename all files as `kbdXXYYY.*` in the new directory.
 - Update the files `kbdXXYYY.rc` and `kbdXXYYY.reg` with the appropriate
   names and descriptions.
-- Update the key tables in `kbdXXYYY.c`.
+- Update the key tables in `kbdXXYYY.c` or generate a new one from an existing
+  keyboard layout DLL using the `reverse` tool.
 - The file `kbdXXYYY.vcxproj` does not need any modification.
 - Before building it for the first time, open `winkbdlayouts.sln` with
   Visual Studio, right-click on the solution => "Add" => "Existing Project" and
@@ -50,8 +48,6 @@ Additional notes:
   range (for instance `b000040c` for the French Apple keyboard in this project).
   Use the Registry Editor to browse through the existing keyboard layout ids at
   `HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Keyboard Layouts`.
-- If possible, add a photo of the physical keyboard layout in the `images`
-  subdirectory. For reference only.
 
 To build the project for all target architectures, run `build.ps1`.
 Run `install.ps1` to install them.

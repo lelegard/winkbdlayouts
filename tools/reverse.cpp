@@ -73,7 +73,7 @@ ReverseOptions::ReverseOptions(int argc, char* argv[]) :
             kbd_type = std::atoi(argv[++i]);
         }
         else if (!args[i].empty() && args[i].front() != '-' && input.empty()) {
-            input = args[++i];
+            input = args[i];
         }
         else {
             fatal("invalid option '" + args[i] + "', try --help");
