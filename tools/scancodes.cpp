@@ -305,7 +305,7 @@ int main(int argc, char* argv[])
     memset(&wclass, 0, sizeof(wclass));
     wclass.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
     wclass.lpfnWndProc = DefWindowProc;
-    wclass.lpszClassName = L"ScanCodesClass";
+    wclass.lpszClassName = "ScanCodesClass";
     wclass.hCursor = LoadCursor(0, IDC_ARROW);
     wclass.cbWndExtra = 0;
     RegisterClass(&wclass);

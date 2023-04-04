@@ -9,22 +9,8 @@
 //
 //---------------------------------------------------------------------------
 
-#include <windows.h>
-#include <kbd.h>
-#if defined(min)
-    #undef min
-#endif
-#if defined(max)
-    #undef max
-#endif
-#include <cstdarg>
-#include <iostream>
-#include <fstream>
-#include <algorithm>
-#include <string>
-#include <vector>
-#include <list>
-#include <map>
+#include "options.h"
+#include "strutils.h"
 
 // Entry point of all keyboard layout DLL's.
 #define KBD_DLL_ENTRY_NAME "KbdLayerDescriptor"
@@ -34,205 +20,67 @@ typedef __int64 Value;
 typedef std::map<Value, std::string> SymbolTable;
 #define SYM(e) {e, #e}
 
-// Lists of lists of strings. Each list of strings represents a line in a table.
-typedef std::vector<std::string> GridLine;
-typedef std::list<GridLine> Grid;
-
-// Number of spaces between grid columns.
-#define GRID_SPACE 1
-
 
 //----------------------------------------------------------------------------
 // Command line options.
 //----------------------------------------------------------------------------
 
-class Options
+class ReverseOptions : public Options
 {
 public:
     // Constructor.
-    Options(int argc, char* argv[]);
+    ReverseOptions(int argc, char* argv[]);
 
     // Command line options.
-    std::string command;
     std::string dashed;
     std::string input;
     std::string output;
     int         kbd_type;
     bool        num_only;
-
-    // Print help and exits.
-    [[noreturn]] void usage() const;
-
-    // Print a fatal error and exit.
-    [[noreturn]] void fatal(const std::string& message) const;
 };
 
-[[noreturn]] void Options::usage() const
-{
-    std::cerr << std::endl
-        << "Syntax: " << command << " [options] kbd-name-or-file" << std::endl
-        << std::endl
-        << "  kbd-name-or-file : Either the file name of a keyboard layout DLL or the" << std::endl
-        << "  name of a keyboard layout, for instance \"fr\" for C:\\Windows\\System32\\kbdfr.dll" << std::endl
-        << std::endl
-        << "Options:" << std::endl
-        << std::endl
-        << "  -h : display this help text" << std::endl
-        << "  -n : numerical output only, do not attempt to translate to source macros" << std::endl
-        << "  -o file : output file name, default is standard output" << std::endl
-        << "  -t value : keyboard type, defaults to dwType in kbd table or 4 if unspecified" << std::endl
-        << std::endl;
-    ::exit(EXIT_FAILURE);
-}
-
-[[noreturn]] void Options::fatal(const std::string& message) const
-{
-    std::cerr << command << ": " << message << std::endl;
-    ::exit(EXIT_FAILURE);
-}
-
-Options::Options(int argc, char* argv[]) :
-    command(argc < 1 ? "" : argv[0]),
+ReverseOptions::ReverseOptions(int argc, char* argv[]) :
+    Options(argc, argv,
+        "[options] kbd-name-or-file\n"
+        "\n"
+        "  kbd-name-or-file : Either the file name of a keyboard layout DLL or the\n"
+        "  name of a keyboard layout, for instance \"fr\" for C:\\Windows\\System32\\kbdfr.dll\n"
+        "\n"
+        "Options:\n"
+        "\n"
+        "  -h : display this help text\n"
+        "  -n : numerical output only, do not attempt to translate to source macros\n"
+        "  -o file : output file name, default is standard output\n"
+        "  -t value : keyboard type, defaults to dwType in kbd table or 4 if unspecified"),
     dashed(75, '-'),
     input(),
     output(),
     kbd_type(0),
     num_only(false)
 {
-    // Cleanup command name.
-    size_t pos = command.find_last_of(":/\\");
-    if (pos != std::string::npos) {
-        command.erase(0, pos + 1);
-    }
-    pos = command.find_last_of(".");
-    if (pos != std::string::npos) {
-        command.resize(pos);
-    }
-
     // Parse arguments.
-    for (int i = 1; i < argc; ++i) {
-        const std::string arg(argv[i]);
-        if (arg == "--help" || arg == "-h") {
+    for (size_t i = 0; i < args.size(); ++i) {
+        if (args[i] == "--help" || args[i] == "-h") {
             usage();
         }
-        else if (arg == "-n") {
+        else if (args[i] == "-n") {
             num_only = true;
         }
-        else if (arg == "-o" && i + 1 < argc) {
-            output = argv[++i];
+        else if (args[i] == "-o" && i + 1 < args.size()) {
+            output = args[++i];
         }
-        else if (arg == "-t" && i + 1 < argc) {
+        else if (args[i] == "-t" && i + 1 < args.size()) {
             kbd_type = std::atoi(argv[++i]);
         }
-        else if (!arg.empty() && arg.front() != '-' && input.empty()) {
-            input = arg;
+        else if (!args[i].empty() && args[i].front() != '-' && input.empty()) {
+            input = args[++i];
         }
         else {
-            fatal("invalid option '" + arg + "', try --help");
+            fatal("invalid option '" + args[i] + "', try --help");
         }
     }
     if (input.empty()) {
         fatal("no keyboard layout specified, try --help");
-    }
-}
-
-
-//---------------------------------------------------------------------------
-// Format a C++ string in a printf-way.
-//---------------------------------------------------------------------------
-
-std::string Format(const char* fmt, ...)
-{
-    va_list ap;
-
-    // Get required output size.
-    va_start(ap, fmt);
-    int len = ::vsnprintf(nullptr, 0, fmt, ap);
-    va_end(ap);
-
-    if (len < 0) {
-        return std::string(); // error
-    }
-
-    // Actual formatting.
-    std::string buf(len + 1, '\0');
-    va_start(ap, fmt);
-    len = ::vsnprintf(&buf[0], buf.size(), fmt, ap);
-    va_end(ap);
-
-    buf.resize(std::max(0, len));
-    return buf;
-}
-
-
-//----------------------------------------------------------------------------
-// Transform an error code into an error message string.
-//----------------------------------------------------------------------------
-
-std::string Error(::DWORD code = ::GetLastError())
-{
-    std::string message(1024, ' ');
-    size_t length = ::FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM, nullptr, code, 0, &message[0], ::DWORD(message.size()), nullptr);
-    message.resize(std::min(length, message.size()));
-
-    if (!message.empty()) {
-        return message;
-    }
-    else {
-        // Message is not found.
-        return Format("System error %d (0x%X)", code, code);
-    }
-}
-
-
-//---------------------------------------------------------------------------
-// Get the value of an environment variable.
-//---------------------------------------------------------------------------
-
-std::string GetEnv(const std::string& name, const std::string& def = "")
-{
-    std::string value(1024, ' ');
-    ::DWORD size = ::GetEnvironmentVariableA(name.c_str(), &value[0], ::DWORD(value.size()));
-    if (size >= ::DWORD(value.size())) {
-        value.resize(size_t(size + 1));
-        size = ::GetEnvironmentVariableA(name.c_str(), &value[0], ::DWORD(value.size()));
-    }
-    value.resize(std::max<size_t>(0, std::min<size_t>(value.size(), size)));
-    return value.empty() ? def : value;
-}
-
-
-//----------------------------------------------------------------------------
-// Print a grid of strings. All columns are aligned on their maximum width.
-//----------------------------------------------------------------------------
-
-void PrintGrid(std::ostream& out, const Grid& grid, const std::string& margin)
-{
-    std::vector<size_t> widths;
-
-    // Compute columns widths.
-    for (const auto& row : grid) {
-        for (size_t i = 0; i < row.size(); ++i) {
-            const size_t w = row[i].length();
-            if (widths.size() <= i) {
-                widths.push_back(w);
-            }
-            else if (widths[i] < w) {
-                widths[i] = w;
-            }
-        }
-    }
-
-    // Then print the grid.
-    for (const auto& row : grid) {
-        out << margin;
-        for (size_t i = 0; i < row.size(); ++i) {
-            out << row[i];
-            if (i < row.size() - 1) {
-                out << std::string(widths[i] - row[i].length() + GRID_SPACE, ' ');
-            }
-        }
-        out << std::endl;
     }
 }
 
@@ -254,7 +102,7 @@ std::string Integer(Value value, int hex_digits = 0)
 // If hex_digits is zero, format in decimal.
 //---------------------------------------------------------------------------
 
-std::string Symbol(const Options& opt, const SymbolTable& symbols, Value value, int hex_digits = 0)
+std::string Symbol(const ReverseOptions& opt, const SymbolTable& symbols, Value value, int hex_digits = 0)
 {
     if (!opt.num_only) {
         const auto it = symbols.find(value);
@@ -270,7 +118,7 @@ std::string Symbol(const Options& opt, const SymbolTable& symbols, Value value, 
 // Format a bit mask of symbols, same principle as Symbol().
 //---------------------------------------------------------------------------
 
-std::string BitMask(const Options& opt, const SymbolTable& symbols, Value value, int hex_digits = 0)
+std::string BitMask(const ReverseOptions& opt, const SymbolTable& symbols, Value value, int hex_digits = 0)
 {
     if (!opt.num_only) {
         std::string str;
@@ -308,7 +156,7 @@ std::string BitMask(const Options& opt, const SymbolTable& symbols, Value value,
 // Format a symbol and a bit mask of attributes, same principle as Symbol().
 //---------------------------------------------------------------------------
 
-std::string Attributes(const Options& opt, const SymbolTable& symbols, const SymbolTable& attributes, Value value, int hex_digits = 0)
+std::string Attributes(const ReverseOptions& opt, const SymbolTable& symbols, const SymbolTable& attributes, Value value, int hex_digits = 0)
 {
     if (!opt.num_only) {
         // Compute mask of all possible attributes.
@@ -628,7 +476,7 @@ std::string Pointer(const void* value, const std::string& name)
 // Format a WCHAR
 //---------------------------------------------------------------------------
 
-std::string Wchar(const Options& opt, ::WCHAR value)
+std::string Wchar(const ReverseOptions& opt, ::WCHAR value)
 {
     if (!opt.num_only) {
         const auto it = wchar_symbols.find(value);
@@ -676,7 +524,7 @@ std::string Wstring(const ::WCHAR* value)
 // Generate various parts of the source file.
 //---------------------------------------------------------------------------
 
-void GenerateVkToBits(const Options& opt, std::ostream& out, const ::VK_TO_BIT* vtb, const std::string& name)
+void GenerateVkToBits(const ReverseOptions& opt, std::ostream& out, const ::VK_TO_BIT* vtb, const std::string& name)
 {
     Grid grid;
     for (; vtb->Vk != 0; vtb++) {
@@ -698,7 +546,7 @@ void GenerateVkToBits(const Options& opt, std::ostream& out, const ::VK_TO_BIT* 
 
 //---------------------------------------------------------------------------
 
-void GenerateCharModifiers(const Options& opt, std::ostream& out, const ::MODIFIERS& mods, const std::string& name)
+void GenerateCharModifiers(const ReverseOptions& opt, std::ostream& out, const ::MODIFIERS& mods, const std::string& name)
 {
     const char* vk_to_bits_name = "vk_to_bits";
 
@@ -743,7 +591,7 @@ void GenerateCharModifiers(const Options& opt, std::ostream& out, const ::MODIFI
 
 //---------------------------------------------------------------------------
 
-void GenerateSubVkToWchar(const Options& opt, std::ostream& out, const ::VK_TO_WCHARS10* vtwc, size_t count, size_t size, const std::string& name)
+void GenerateSubVkToWchar(const ReverseOptions& opt, std::ostream& out, const ::VK_TO_WCHARS10* vtwc, size_t count, size_t size, const std::string& name)
 {
     // TODO: clarity role of each column to add proper comment in generated source.
     //  |         |  Shift  |  Ctrl   |  Ctl+Alt|S+Ctrl   |
@@ -784,7 +632,7 @@ void GenerateSubVkToWchar(const Options& opt, std::ostream& out, const ::VK_TO_W
 
 //---------------------------------------------------------------------------
 
-void GenerateVkToWchar(const Options& opt, std::ostream& out, const ::VK_TO_WCHAR_TABLE* vtwc, const std::string& name)
+void GenerateVkToWchar(const ReverseOptions& opt, std::ostream& out, const ::VK_TO_WCHAR_TABLE* vtwc, const std::string& name)
 {
     Grid grid;
     for (; vtwc->pVkToWchars != nullptr; vtwc++) {
@@ -809,7 +657,7 @@ void GenerateVkToWchar(const Options& opt, std::ostream& out, const ::VK_TO_WCHA
 
 //---------------------------------------------------------------------------
 
-void GenerateLgToWchar(const Options& opt, std::ostream& out, const ::LIGATURE1* ligatures, size_t count, size_t size, const std::string& name)
+void GenerateLgToWchar(const ReverseOptions& opt, std::ostream& out, const ::LIGATURE1* ligatures, size_t count, size_t size, const std::string& name)
 {
     const ::LIGATURE5* lg = reinterpret_cast<const ::LIGATURE5*>(ligatures);
 
@@ -848,7 +696,7 @@ void GenerateLgToWchar(const Options& opt, std::ostream& out, const ::LIGATURE1*
 
 //---------------------------------------------------------------------------
 
-void GenerateDeadKeys(const Options& opt, std::ostream& out, const ::DEADKEY* dk, const std::string& name)
+void GenerateDeadKeys(const ReverseOptions& opt, std::ostream& out, const ::DEADKEY* dk, const std::string& name)
 {
     Grid grid;
     for (; dk->dwBoth != 0; dk++) {
@@ -873,7 +721,7 @@ void GenerateDeadKeys(const Options& opt, std::ostream& out, const ::DEADKEY* dk
 
 //---------------------------------------------------------------------------
 
-void GenerateVscToString(const Options& opt, std::ostream& out, const ::VSC_LPWSTR* vts, const std::string& name, const std::string& comment = "")
+void GenerateVscToString(const ReverseOptions& opt, std::ostream& out, const ::VSC_LPWSTR* vts, const std::string& name, const std::string& comment = "")
 {
     Grid grid;
     for (; vts->vsc != 0; vts++) {
@@ -895,7 +743,7 @@ void GenerateVscToString(const Options& opt, std::ostream& out, const ::VSC_LPWS
 
 //---------------------------------------------------------------------------
 
-void GenerateKeyNames(const Options& opt, std::ostream& out, const ::DEADKEY_LPWSTR* names, const std::string& name)
+void GenerateKeyNames(const ReverseOptions& opt, std::ostream& out, const ::DEADKEY_LPWSTR* names, const std::string& name)
 {
     Grid grid;
     for (; *names != nullptr; ++names) {
@@ -919,7 +767,7 @@ void GenerateKeyNames(const Options& opt, std::ostream& out, const ::DEADKEY_LPW
 
 //---------------------------------------------------------------------------
 
-void GenerateScanToVk(const Options& opt, std::ostream& out, const ::USHORT* vk, size_t vk_count, const std::string& name)
+void GenerateScanToVk(const ReverseOptions& opt, std::ostream& out, const ::USHORT* vk, size_t vk_count, const std::string& name)
 {
     out << "//" << opt.dashed << std::endl
         << "// Scan code to virtual key conversion table" << std::endl
@@ -936,7 +784,7 @@ void GenerateScanToVk(const Options& opt, std::ostream& out, const ::USHORT* vk,
 
 //---------------------------------------------------------------------------
 
-void GenerateVscToVk(const Options& opt, std::ostream& out, const ::VSC_VK* vtvk, const std::string& name, const std::string& comment = "")
+void GenerateVscToVk(const ReverseOptions& opt, std::ostream& out, const ::VSC_VK* vtvk, const std::string& name, const std::string& comment = "")
 {
     Grid grid;
     for (; vtvk->Vsc != 0; vtvk++) {
@@ -958,7 +806,7 @@ void GenerateVscToVk(const Options& opt, std::ostream& out, const ::VSC_VK* vtvk
 
 //---------------------------------------------------------------------------
 
-std::string LocaleFlags(const Options& opt, ::DWORD flags)
+std::string LocaleFlags(const ReverseOptions& opt, ::DWORD flags)
 {
     if (opt.num_only) {
         return Format("0x%08X", flags);
@@ -975,7 +823,7 @@ std::string LocaleFlags(const Options& opt, ::DWORD flags)
 // Starting point of the source file creation.
 //---------------------------------------------------------------------------
 
-void GenerateSourceFile(const Options& opt, std::ostream& out, const ::KBDTABLES& tables)
+void GenerateSourceFile(const ReverseOptions& opt, std::ostream& out, const ::KBDTABLES& tables)
 {
     out << "//" << opt.dashed << std::endl
         << "// Windows Keyboards Layouts (WKL)" << std::endl
@@ -1081,7 +929,7 @@ void GenerateSourceFile(const Options& opt, std::ostream& out, const ::KBDTABLES
 int main(int argc, char* argv[])
 {
     // Parse command line options.
-    Options opt(argc, argv);
+    ReverseOptions opt(argc, argv);
 
     // If input does not look like a file name, must be a keyboard name.
     if (opt.input.find_first_of(":\\/.") == std::string::npos) {

@@ -4,6 +4,6 @@
     <ProjectGuid>{38202AFE-E69D-4994-8943-8F39164776D1}</ProjectGuid>
   </PropertyGroup>
   <ImportGroup Label="PropertySheets">
-    <Import Project="$(SolutionDir)console.props" />
+    <Import Project="$(SolutionDir)msbuild.props"/>
   </ImportGroup>
 </Project>

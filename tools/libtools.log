@@ -1,0 +1,9 @@
+﻿  
+  
+  ========= Building project libtools, type: Library, for x64, Debug =========
+  
+  
+  options.cpp
+  strutils.cpp
+  Generating Code...
+  libtools.vcxproj -> C:\Users\lelegard\Documents\winkbdlayouts\x64\Debug\libtools.lib

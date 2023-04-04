@@ -1,6 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
+  <!-- Common MSBuild instructions -->
+
+  <!-- Definition of a new-line for messages -->
+  <PropertyGroup>
+    <NL>%0A</NL>
+  </PropertyGroup>
+
+  <!-- Type of project, depending on project name -->
+  <PropertyGroup Condition="'$(ProjectName)'==''">
+    <ProjectName>$(MSBuildProjectName)</ProjectName>
+  </PropertyGroup>
+  <PropertyGroup Condition="$([System.Text.RegularExpressions.Regex]::IsMatch($(ProjectName), '^kbd.*'))">
+    <ProjectType>KeyboardLayout</ProjectType>
+  </PropertyGroup>
+  <PropertyGroup Condition="$([System.Text.RegularExpressions.Regex]::IsMatch($(ProjectName), '^lib.*'))">
+    <ProjectType>Library</ProjectType>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(ProjectType)'==''">
+    <ProjectType>ConsoleTool</ProjectType>
+  </PropertyGroup>
+
+  <!-- Configuration for 3 platforms -->
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Release|arm64">
       <Configuration>Release</Configuration>
@@ -28,17 +50,32 @@
     </ProjectConfiguration>
   </ItemGroup>
 
+  <!-- Type target, depending on project type -->
+  <PropertyGroup Label="Configuration" Condition="'$(ProjectType)'=='KeyboardLayout'">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(ProjectType)'=='Library'">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(ProjectType)'=='ConsoleTool'">
+    <ConfigurationType>Application</ConfigurationType>
+  </PropertyGroup>
+
+  <!-- Standard default properties -->
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props"/>
 
+  <!-- Default environment -->
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>$(ProjectName)</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <PlatformToolset>v143</PlatformToolset>
     <Configuration Condition="'$(Configuration)' == ''">Release</Configuration>
     <Platform Condition="'$(Platform)' == ''">arm64</Platform>
   </PropertyGroup>
 
+  <!-- Output directories -->
   <PropertyGroup Label="Configuration">
     <PlatformDir Condition="'$(Platform)'!='Win32'">$(Platform)</PlatformDir>
     <PlatformDir Condition="'$(Platform)'=='Win32'">x86</PlatformDir>
@@ -46,11 +83,7 @@
     <IntDir>$(OutDir)$(ProjectName)\</IntDir>
   </PropertyGroup>
 
-  <PropertyGroup Label="Configuration">
-    <PlatformToolset>v143</PlatformToolset>
-    <CharacterSet>Unicode</CharacterSet>
-  </PropertyGroup>
-
+  <!-- Build options -->
   <PropertyGroup Condition="'$(Configuration)'=='Debug'" Label="Configuration">
     <UseDebugLibraries>true</UseDebugLibraries>
   </PropertyGroup>
@@ -60,14 +93,15 @@
     <WholeProgramOptimization>true</WholeProgramOptimization>
   </PropertyGroup>
 
+  <!-- Standard build options -->
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props"/>
-
   <ImportGroup Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props"
             Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')"
             Label="LocalAppDataPlatform"/>
   </ImportGroup>
 
+  <!-- Build options -->
   <ItemDefinitionGroup>
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -105,5 +139,39 @@
       <PreprocessorDefinitions>WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
+
+  <ItemDefinitionGroup Condition="'$(ProjectType)'=='KeyboardLayout'">
+    <Link>
+      <SubSystem>Windows</SubSystem>
+    </Link>
+  </ItemDefinitionGroup>
+
+  <ItemDefinitionGroup Condition="'$(ProjectType)'=='ConsoleTool'">
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <AdditionalLibraryDirectories>$(OutDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>libtools.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+
+  <!-- File names for keyboard layouts -->
+  <ItemGroup Condition="'$(ProjectType)'=='KeyboardLayout'">
+    <ClCompile Include="$(ProjectName).c"/>
+    <ResourceCompile Include="$(ProjectName).rc"/>
+    <None Include="$(ProjectName).reg"/>
+  </ItemGroup>
+
+  <!-- One main source file per console application -->
+  <ItemGroup Condition="'$(ProjectType)'=='ConsoleTool'">
+    <ClCompile Include="$(ProjectName).cpp"/>
+  </ItemGroup>
+
+  <!-- Standard targets -->
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets"/>
+
+  <!-- Print a message before each build -->
+  <Target Name="DisplayHeader" BeforeTargets='PrepareForBuild'>
+    <Message Text="$(NL)$(NL)========= Building project $(ProjectName), type: $(ProjectType), for $(Platform), $(Configuration) =========$(NL)$(NL)" Importance="high"/>
+  </Target>
 
 </Project>
