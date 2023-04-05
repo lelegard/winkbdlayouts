@@ -571,8 +571,3 @@ __declspec(dllexport) PKBDTABLES KbdLayerDescriptor(void)
 {
     return &kbd_tables;
 }
-
-BOOL __cdecl _DllMainCRTStartup(HANDLE hDllHandle, DWORD dwReason, LPVOID lpreserved)
-{
-    return TRUE;
-}

@@ -165,10 +165,12 @@
       <WholeProgramOptimization>false</WholeProgramOptimization>
       <ControlFlowGuard>false</ControlFlowGuard>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
     </ClCompile>
     <Link>
       <SubSystem>NotSet</SubSystem>
       <IgnoreAllDefaultLibraries>true</IgnoreAllDefaultLibraries>
+      <NoEntryPoint>true</NoEntryPoint>
     </Link>
   </ItemDefinitionGroup>
 
