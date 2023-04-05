@@ -141,6 +141,9 @@
   </ItemDefinitionGroup>
 
   <ItemDefinitionGroup Condition="'$(ProjectType)'=='KeyboardLayout'">
+    <ResourceCompile>
+      <PreprocessorDefinitions>PROJECT_NAME=$(ProjectName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
     </Link>

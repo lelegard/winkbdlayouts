@@ -1,11 +1,3 @@
-#include <windows.h>
-#include <ntverp.h>
-
-#define VER_FILETYPE              VFT_DLL
-#define VER_FILESUBTYPE           VFT2_DRV_KEYBOARD
-#define VER_FILEDESCRIPTION_STR   "French Apple Keyboard Layout (WKL)"
-#define VER_INTERNALNAME_STR      "kbdfrapple"
-#define VER_ORIGINALFILENAME_STR  "kbdfrapple.dll"
-
-#define VER_LANGNEUTRAL
+#include "../kbdrc.h"
+#define VER_FILEDESCRIPTION_STR "French Apple Keyboard Layout (WKL)"
 #include "common.ver"
