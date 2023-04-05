@@ -24,7 +24,7 @@ public:
 
     // Command line options.
     std::string output;
-    bool        inspect_processes;
+    bool        verbose;
 };
 
 InspectOptions::InspectOptions(int argc, char* argv[]) :
@@ -35,17 +35,17 @@ InspectOptions::InspectOptions(int argc, char* argv[]) :
         "\n"
         "  -h : display this help text\n"
         "  -o file : output file name, default is standard output\n"
-        "  -p : inspect all processes in the system for loaded kbd DLL's"),
+        "  -v : verbose, display processes which cannot be accessed"),
     output(),
-    inspect_processes(false)
+    verbose(false)
 {
     // Parse arguments.
     for (size_t i = 0; i < args.size(); ++i) {
         if (args[i] == "--help" || args[i] == "-h") {
             usage();
         }
-        else if (args[i] == "-p") {
-            inspect_processes = true;
+        else if (args[i] == "-v") {
+            verbose = true;
         }
         else if (args[i] == "-o" && i + 1 < args.size()) {
             output = args[++i];
@@ -97,7 +97,9 @@ void InspectProcesses(const InspectOptions& opt, std::ostream& out)
         ::HANDLE hproc = ::OpenProcess(PROCESS_ALL_ACCESS, false, pid);
         if (hproc == NULL) {
             const ::DWORD err = ::GetLastError();
-            std::cerr << opt.command << Format(": error opening process 0x%08X, ", pid) << Error(err) << std::endl;
+            if (opt.verbose || err != ERROR_ACCESS_DENIED) {
+                std::cerr << opt.command << Format(": error %08X opening process 0x%08X, ", err, pid) << Error(err) << std::endl;
+            }
             error_count++;
             continue;
         }
@@ -108,14 +110,16 @@ void InspectProcesses(const InspectOptions& opt, std::ostream& out)
         retsize = 0;
         if (!::EnumProcessModules(hproc, &mods[0], insize, &retsize)) {
             const ::DWORD err = ::GetLastError();
-            std::cerr << opt.command << Format(": error getting modules from process 0x%08X, ", pid) << Error(err) << std::endl;
+            if (opt.verbose || (err != ERROR_ACCESS_DENIED && err != ERROR_PARTIAL_COPY)) {
+                std::cerr << opt.command << Format(": error %08X getting modules from process 0x%08X, ", err, pid) << Error(err) << std::endl;
+            }
             error_count++;
             ::CloseHandle(hproc);
             continue;
         }
         mods.resize(retsize / sizeof(::HMODULE));
 
-        // Get the module names.
+        // Get the module names and display potential keyboards DLL's.
         for (auto hmod : mods) {
             const std::string file(ModuleFileName(hproc, hmod));
             const std::string base(ToLower(FileBaseName(file)));
@@ -125,20 +129,7 @@ void InspectProcesses(const InspectOptions& opt, std::ostream& out)
         }
         ::CloseHandle(hproc);
     }
-    out << "Found " << pids.size() << " processes, " << error_count << " not accessed" << std::endl;
-}
-
-
-//---------------------------------------------------------------------------
-// Main processing
-//---------------------------------------------------------------------------
-
-void Inspect(const InspectOptions& opt, std::ostream& out)
-{
-    if (opt.inspect_processes) {
-        InspectProcesses(opt, out);
-    }
-    // More opions later...
+    out << "Found " << pids.size() << " processes, " << error_count << " cannot be accessed" << std::endl;
 }
 
 
@@ -154,13 +145,13 @@ int main(int argc, char* argv[])
     // Keyboard tables are now identified, generate the source file.
     if (opt.output.empty()) {
         // No output specified, using standard output.
-        Inspect(opt, std::cout);
+        InspectProcesses(opt, std::cout);
     }
     else {
         // Create the specified output file.
         std::ofstream out(opt.output);
         if (out) {
-            Inspect(opt, out);
+            InspectProcesses(opt, out);
         }
         else {
             opt.fatal("cannot create " + opt.output);

@@ -8,7 +8,7 @@ $IsAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIden
 if ($IsAdmin) {
     $OSArch = (Get-WmiObject Win32_OperatingSystem).OSArchitecture
     $PlatformDir = if ($OSArch -like "*arm*") {"arm64"} elseif ($OSArch -like "*64*") {"x64"} else {"x86"}
-    & "$PSScriptRoot\..\$PlatformDir\Release\inspect.exe" -p
+    & "$PSScriptRoot\..\$PlatformDir\Release\inspect.exe"
 }
 else {
     Write-Output "Must be administrator to continue, trying to restart as administrator ..."
