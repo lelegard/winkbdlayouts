@@ -102,14 +102,22 @@
   </ImportGroup>
 
   <!-- Build options -->
+  <PropertyGroup>
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+
   <ItemDefinitionGroup>
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
+      <TreatWarningAsError>true</TreatWarningAsError>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>WKL_PROJECT_NAME=$(ProjectName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
     <Link>
       <EnableUAC>false</EnableUAC>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -140,12 +148,27 @@
     </ClCompile>
   </ItemDefinitionGroup>
 
+  <ItemDefinitionGroup Condition="'$(ProjectType)'!='KeyboardLayout'">
+    <ClCompile>
+      <SDLCheck>true</SDLCheck>
+    </ClCompile>
+  </ItemDefinitionGroup>
+
   <ItemDefinitionGroup Condition="'$(ProjectType)'=='KeyboardLayout'">
-    <ResourceCompile>
-      <PreprocessorDefinitions>PROJECT_NAME=$(ProjectName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ResourceCompile>
+    <ClCompile>
+      <DebugInformationFormat>None</DebugInformationFormat>
+      <CompileAsManaged>false</CompileAsManaged>
+      <ExceptionHandling>false</ExceptionHandling>
+      <FunctionLevelLinking>false</FunctionLevelLinking>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+      <SDLCheck>false</SDLCheck>
+      <WholeProgramOptimization>false</WholeProgramOptimization>
+      <ControlFlowGuard>false</ControlFlowGuard>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+    </ClCompile>
     <Link>
-      <SubSystem>Windows</SubSystem>
+      <SubSystem>NotSet</SubSystem>
+      <IgnoreAllDefaultLibraries>true</IgnoreAllDefaultLibraries>
     </Link>
   </ItemDefinitionGroup>
 

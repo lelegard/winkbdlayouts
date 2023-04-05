@@ -1,3 +1,4 @@
+tmp
 arm64
 x64
 x86
@@ -6,8 +7,6 @@ win64
 .vs
 *.vcxproj.user
 .#*
-*.tmp
-tmp
 *.aps
 *.obj
 *.ilk
@@ -19,7 +18,9 @@ tmp
 *.a
 *.dll
 *.exe
+*.log
 *.out
+*.tmp
 *.idb
 *.pdb
 *.zip

@@ -14,6 +14,7 @@
 
 // Entry point of all keyboard layout DLL's.
 #define KBD_DLL_ENTRY_NAME "KbdLayerDescriptor"
+#define DLL_ENTRY_NAME     "_DllMainCRTStartup"
 
 // Tables of values => symbols
 typedef __int64 Value;
@@ -37,6 +38,7 @@ public:
     std::string output;
     int         kbd_type;
     bool        num_only;
+    bool        no_main;
 };
 
 ReverseOptions::ReverseOptions(int argc, char* argv[]) :
@@ -48,6 +50,7 @@ ReverseOptions::ReverseOptions(int argc, char* argv[]) :
         "\n"
         "Options:\n"
         "\n"
+        "  -e : don't generate the _DllMainCRTStartup() fake entry point\n"
         "  -h : display this help text\n"
         "  -n : numerical output only, do not attempt to translate to source macros\n"
         "  -o file : output file name, default is standard output\n"
@@ -56,12 +59,16 @@ ReverseOptions::ReverseOptions(int argc, char* argv[]) :
     input(),
     output(),
     kbd_type(0),
-    num_only(false)
+    num_only(false),
+    no_main(false)
 {
     // Parse arguments.
     for (size_t i = 0; i < args.size(); ++i) {
         if (args[i] == "--help" || args[i] == "-h") {
             usage();
+        }
+        else if (args[i] == "-e") {
+            no_main = true;
         }
         else if (args[i] == "-n") {
             num_only = true;
@@ -827,7 +834,7 @@ void GenerateSourceFile(const ReverseOptions& opt, std::ostream& out, const ::KB
 {
     out << "//" << opt.dashed << std::endl
         << "// Windows Keyboards Layouts (WKL)" << std::endl
-        << "// Automatically generated from " << opt.input << std::endl
+        << "// Automatically generated from " << FileName(opt.input) << std::endl
         << "//" << opt.dashed << std::endl
         << std::endl
         << "#define KBD_TYPE " << (opt.kbd_type > 0 ? opt.kbd_type : (tables.dwType > 0 ? tables.dwType : 4)) << std::endl
@@ -912,15 +919,26 @@ void GenerateSourceFile(const ReverseOptions& opt, std::ostream& out, const ::KB
         << "};" << std::endl
         << std::endl
         << "//" << opt.dashed << std::endl
-        << "// DLL entry point" << std::endl
+        << "// Keyboard layout entry point" << std::endl
         << "//" << opt.dashed << std::endl
         << std::endl
         << "__declspec(dllexport) PKBDTABLES " KBD_DLL_ENTRY_NAME "(void)" << std::endl
         << "{" << std::endl
         << "    return &" << kbd_table_name << ";" << std::endl
         << "}" << std::endl;
-}
 
+    if (!opt.no_main) {
+        out << std::endl
+            << "//" << opt.dashed << std::endl
+            << "// DLL entry point" << std::endl
+            << "//" << opt.dashed << std::endl
+            << std::endl
+            << "BOOL __cdecl " KBD_DLL_ENTRY_NAME "(HANDLE hDllHandle, DWORD dwReason, LPVOID lpreserved)" << std::endl
+            << "{" << std::endl
+            << "    return TRUE;" << std::endl
+            << "}" << std::endl;
+    }
+}
 
 //---------------------------------------------------------------------------
 // Application entry point.

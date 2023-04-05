@@ -1,8 +1,0 @@
-﻿  
-  
-  ========= Building project libtools, type: Library, for x64, Release =========
-  
-  
-  options.cpp
-  strutils.cpp
-  libtools.vcxproj -> C:\Users\lelegard\Documents\winkbdlayouts\x64\Release\libtools.lib
