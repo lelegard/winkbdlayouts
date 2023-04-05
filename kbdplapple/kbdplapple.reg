@@ -1,0 +1,5 @@
+REGEDIT4
+
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Keyboard Layouts\b0000415]
+"Layout File"="kbdplapple.dll"
+"Layout Text"="Polish (Programmers) Apple (WKL)"

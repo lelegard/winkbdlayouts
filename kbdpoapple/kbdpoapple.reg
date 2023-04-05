@@ -1,0 +1,5 @@
+REGEDIT4
+
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Keyboard Layouts\b0000816]
+"Layout File"="kbdpoapple.dll"
+"Layout Text"="Portuguese Apple (WKL)"

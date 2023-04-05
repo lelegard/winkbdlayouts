@@ -1,0 +1,5 @@
+REGEDIT4
+
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Keyboard Layouts\b00f0809]
+"Layout File"="kbdejapple.dll"
+"Layout Text"="English Japanese Apple (WKL)"

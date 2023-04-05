@@ -1,30 +1,34 @@
 # Windows Keyboards Layouts (WKL)
 
-The WKL project collects a few keyboard layouts which are not,
-or no longer, included by default in Windows distributions.
+The WKL project collects a few keyboard layouts which are not, or no longer,
+included by default in Windows distributions.
 
-Specifically, starting with Windows 11, the Apple keyboards
-are no longer available by default and need custom mappings.
-When Windows 11 is installed as a virtual machine on a Mac,
-the hypervisor may include specific mappings for the Apple
-keyboards. This is the case for Parallels but not UTM/Qemu.
-In the latter case, this project is useful.
+Specifically, at least on Windows 11, the Apple keyboards are not available
+by default and need custom mappings. When Windows 11 is installed as a virtual
+machine on a Mac, the hypervisor may include specific mappings for the Apple
+keyboards. This is the case for Parallels but not UTM/Qemu. When the hypervisor
+does not provide mapping for Mac keyboards, this project is useful.
 
 ## Build instructions
 
-The project is built for x86, x64 and arm64 Windows systems.
-The released archive contains binaries for the three architectures.
+The project is built for x86, x64 and arm64 Windows systems. The released archive
+contains binaries for the three architectures.
 
-To build this projet, make sure to install all build tools
-(compilers and libraries) for all targets when installing or
-updating Visual Studio.
+To build this projet, make sure to install all build tools (compilers and libraries)
+for all targets when installing or updating Visual Studio.
+
+Available PowerShell scripts:
+- `build.ps1` : Build the binaries for all architectures, build the distribution archive.
+- `install.ps1` : Install the keyboards on the current system after rebuild.
+- `clean.ps1` : Cleanup all generated files.
 
 ## Language support and contributions
 
-New layouts are welcome as contributions. Please post a pull request
-with your implementation of new layouts.
+New layouts are welcome as contributions. Please post a pull request with your
+implementation of new layouts.
 
-To add support for a new keyboard layout:
+To add support for a new keyboard layout, start from an existing keyboard in
+this project, for instance `kbdfrapple`.
 
 - Duplicate the `kbdfrapple` directory under the name `kbdXXYYY` where
   `XX` is the language code for your keyboard (not necessarily two letters,
@@ -33,8 +37,7 @@ To add support for a new keyboard layout:
 - Rename all files as `kbdXXYYY.*` in the new directory.
 - Update the files `kbdXXYYY.rc` and `kbdXXYYY.reg` with the appropriate
   names and descriptions.
-- Update the key tables in `kbdXXYYY.c` or generate a new one from an existing
-  keyboard layout DLL using the `reverse` tool.
+- Update the key tables in `kbdXXYYY.c`.
 - The file `kbdXXYYY.vcxproj` does not need any modification.
 - Before building it for the first time, open `winkbdlayouts.sln` with
   Visual Studio, right-click on the solution => "Add" => "Existing Project" and
@@ -43,22 +46,27 @@ To add support for a new keyboard layout:
 Additional notes:
 
 - In the registry file `kbdXXYYY.reg`, carefully select a unique keyboard id.
-  Typically start from the "standard" id of the keyboard language (for instance
-  `0000040c` for the standard French PC keyboard), and shift it into the private
-  range (for instance `b000040c` for the French Apple keyboard in this project).
   Use the Registry Editor to browse through the existing keyboard layout ids at
   `HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Keyboard Layouts`.
+  Typically start from the "standard" id of the keyboard language (for instance
+  `0000040c` for the standard French PC keyboard), and shift it into the private
+  range `b0XXXXXX` (for instance `b000040c` for the French Apple keyboard in this
+  project). In practice the last 4 digits indicate a language (`040c` in the example
+  means French) and the first 4 digits indicate a flavour. By convention, all
+  flavours in this project start with `b0`.
 
-To build the project for all target architectures, run `build.ps1`.
-Run `install.ps1` to install them.
-
+- The key tables in `kbdXXYYY.c` can be manually updated from an existing keyboard
+  source file in this project. However, if you already have a valid DLL for that
+  keyboard on one system, use the `reverse` tool to extract the keyboard definition
+  and rebuild a source file from it. The source file will then be recompiled for all
+  architectures.
+  
 ## Scan codes
 
-If you have difficulties to collect the scan codes for your keyboard,
-build and run the `tools\scancodes` application.
+If you have difficulties to collect the scan codes for your keyboard, build and run
+the `scancodes` tool.
 
-The image `scancodes.jpg` shows the scan codes for a standard
-101/102-key PC keyboards.
+The image `scancodes.jpg` shows the scan codes for a standard 101/102-key PC keyboard.
 
 There are some specificities on the bottom row of Apple keyboards:
 ~~~

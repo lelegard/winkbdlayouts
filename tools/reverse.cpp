@@ -35,6 +35,7 @@ public:
     std::string dashed;
     std::string input;
     std::string output;
+    std::string comment;
     int         kbd_type;
     bool        num_only;
 };
@@ -48,6 +49,7 @@ ReverseOptions::ReverseOptions(int argc, char* argv[]) :
         "\n"
         "Options:\n"
         "\n"
+        "  -c \"string\" : comment string in the header\n"
         "  -h : display this help text\n"
         "  -n : numerical output only, do not attempt to translate to source macros\n"
         "  -o file : output file name, default is standard output\n"
@@ -55,6 +57,7 @@ ReverseOptions::ReverseOptions(int argc, char* argv[]) :
     dashed(75, '-'),
     input(),
     output(),
+    comment("Windows Keyboards Layouts (WKL)"),
     kbd_type(0),
     num_only(false)
 {
@@ -68,6 +71,9 @@ ReverseOptions::ReverseOptions(int argc, char* argv[]) :
         }
         else if (args[i] == "-o" && i + 1 < args.size()) {
             output = args[++i];
+        }
+        else if (args[i] == "-c" && i + 1 < args.size()) {
+            comment = args[++i];
         }
         else if (args[i] == "-t" && i + 1 < args.size()) {
             kbd_type = std::atoi(argv[++i]);
@@ -457,7 +463,7 @@ const SymbolTable wchar_literals{
     {'\t', "\\t"},
     {'\n', "\\n"},
     {'\r', "\\r"},
-    {'\'', "\\\'"},
+    {'"',  "\\\""},
     {'\\', "\\\\"},
 };
 
@@ -484,7 +490,10 @@ std::string Wchar(const ReverseOptions& opt, ::WCHAR value)
             return it->second;
         }
     }
-    if (value >= L' ' && value < 0x007F && value != '\'' && value != '\\') {
+    if (value == '\'' || value == '\\') {
+        return Format("L'\\%c'", value);
+    }
+    else if (value >= L' ' && value < 0x007F) {
         return Format("L'%c'", value);
     }
     else {
@@ -826,7 +835,7 @@ std::string LocaleFlags(const ReverseOptions& opt, ::DWORD flags)
 void GenerateSourceFile(const ReverseOptions& opt, std::ostream& out, const ::KBDTABLES& tables)
 {
     out << "//" << opt.dashed << std::endl
-        << "// Windows Keyboards Layouts (WKL)" << std::endl
+        << "// " << opt.comment << std::endl
         << "// Automatically generated from " << FileName(opt.input) << std::endl
         << "//" << opt.dashed << std::endl
         << std::endl

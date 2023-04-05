@@ -1,0 +1,5 @@
+REGEDIT4
+
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Keyboard Layouts\b0020409]
+"Layout File"="kbduiapple.dll"
+"Layout Text"="United States International Apple (WKL)"

@@ -1,5 +1,5 @@
 //---------------------------------------------------------------------------
-// Windows Keyboards Layouts (WKL)
+// French (Numerical) Apple Keyboard Layout (WKL)
 // Automatically generated from kbdprlfn.dll
 //---------------------------------------------------------------------------
 
@@ -564,7 +564,7 @@ static KBDTABLES kbd_tables = {
 };
 
 //---------------------------------------------------------------------------
-// DLL entry point
+// Keyboard layout entry point
 //---------------------------------------------------------------------------
 
 __declspec(dllexport) PKBDTABLES KbdLayerDescriptor(void)

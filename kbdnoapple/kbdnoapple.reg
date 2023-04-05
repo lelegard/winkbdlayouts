@@ -1,0 +1,5 @@
+REGEDIT4
+
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Keyboard Layouts\b0000414]
+"Layout File"="kbdnoapple.dll"
+"Layout Text"="Norwegian Apple (WKL)"

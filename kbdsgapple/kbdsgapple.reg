@@ -1,0 +1,5 @@
+REGEDIT4
+
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Keyboard Layouts\b0000807]
+"Layout File"="kbdsgapple.dll"
+"Layout Text"="Swiss German Apple (WKL)"

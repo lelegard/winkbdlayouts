@@ -1,0 +1,5 @@
+REGEDIT4
+
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Keyboard Layouts\b0000406]
+"Layout File"="kbddaapple.dll"
+"Layout Text"="Danish Apple (WKL)"

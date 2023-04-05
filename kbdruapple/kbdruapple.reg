@@ -1,0 +1,5 @@
+REGEDIT4
+
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Keyboard Layouts\b0000419]
+"Layout File"="kbdruapple.dll"
+"Layout Text"="Russian Apple (WKL)"
