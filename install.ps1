@@ -15,7 +15,7 @@ $BinDir = "$PSScriptRoot\$PlatformDir\Release"
 $Files = if (Test-Path $BinDir) {Get-ChildItem $BinDir -Depth 1 -Include "kbd*.dll"} else {$null}
 
 # If not found, check arch directory (archive hierarchy).
-if ($File -eq $null) {
+if ($Files -eq $null) {
     $BinDir = "$PSScriptRoot\$PlatformDir"
     $Files = if (Test-Path $BinDir) {Get-ChildItem $BinDir -Depth 1 -Include "kbd*.dll"} else {$null}
 }
