@@ -20,6 +20,9 @@ typedef __int64 Value;
 typedef std::map<Value, std::string> SymbolTable;
 #define SYM(e) {e, #e}
 
+// General purpose.
+typedef std::list<std::string> StringList;
+
 
 //----------------------------------------------------------------------------
 // Command line options.
@@ -186,7 +189,31 @@ std::string Attributes(const ReverseOptions& opt, const SymbolTable& symbols, co
 // Common symbol tables.
 //---------------------------------------------------------------------------
 
-const SymbolTable shift_state_symbols{
+// Full description of a modifier state, for use in comments in MODIFIERS structure.
+static const std::vector<std::string> modifiers_comments {
+    "000 = <none>",
+    "001 = Shift",
+    "010 = Control",
+    "011 = Shift Control",
+    "100 = Alt",
+    "101 = Shift Alt",
+    "110 = Control Alt (AltGr)",
+    "111 = Shift Control Alt"
+};
+
+// Top of columns of VK_TO_WCHARSx structures.
+static const std::vector<std::string> modifiers_headers {
+    "",
+    "Shift",
+    "Ctrl",
+    "Shift/Ctrl",
+    "Alt",
+    "Shift/Alt",
+    "Ctrl/Alt",
+    "Shift/Ctrl/Alt"
+};
+
+const SymbolTable shift_state_symbols {
     SYM(KBDBASE),
     SYM(KBDSHIFT),
     SYM(KBDCTRL),
@@ -429,7 +456,7 @@ const SymbolTable vk_symbols {
     SYM(VK__none_)
 };
 
-const SymbolTable vk_flags_symbols{
+const SymbolTable vk_flags_symbols {
     SYM(KBDEXT),
     SYM(KBDMULTIVK),
     SYM(KBDSPECIAL),
@@ -440,7 +467,7 @@ const SymbolTable vk_flags_symbols{
     SYM(KBDBREAK)
 };
 
-const SymbolTable vk_attr_symbols{
+const SymbolTable vk_attr_symbols {
     SYM(CAPLOK),
     SYM(SGCAPS),
     SYM(CAPLOKALTGR),
@@ -448,7 +475,8 @@ const SymbolTable vk_attr_symbols{
     SYM(GRPSELTAP)
 };
 
-const SymbolTable wchar_symbols{
+// Complete symbol for a WCHAR (a character literal).
+const SymbolTable wchar_symbols {
     {'\t', "L'\\t'"},
     {'\n', "L'\\n'"},
     {'\r', "L'\\r'"},
@@ -459,7 +487,8 @@ const SymbolTable wchar_symbols{
     SYM(WCH_LGTR)
 };
 
-const SymbolTable wchar_literals{
+// WCHAR representation when inserted in strings literals.
+const SymbolTable wchar_literals {
     {'\t', "\\t"},
     {'\n', "\\n"},
     {'\r', "\\r"},
@@ -467,6 +496,241 @@ const SymbolTable wchar_literals{
     {'\\', "\\\\"},
 };
 
+// Names of some usual non-ASCII WCHAR, for insertion in comments.
+const SymbolTable wchar_descriptions {
+    {0x0008, "BS"},
+    {0x0009, "TAB"},
+    {0x000A, "LF"},
+    {0x000B, "VT"},
+    {0x000C, "FF"},
+    {0x000D, "CR"},
+    {0x001B, "ESC"},
+    {0x007F, "DEL"},
+    {0x00A0, "Nbrk space"},
+    {0x00A1, "Inv !"},
+    {0x00A2, "Cent"},
+    {0x00A3, "Pound"},
+    {0x00A4, "Currency"},
+    {0x00A5, "Yen"},
+    {0x00A6, "Broken bar"},
+    {0x00A7, "Section"},
+    {0x00A8, "Diaeresis"},
+    {0x00A9, "Copyright"},
+    {0x00AA, "Fem ord"},
+    {0x00AB, "<<"},
+    {0x00AC, "Not"},
+    {0x00AD, "Soft hyphen"},
+    {0x00AE, "Registered"},
+    {0x00AF, "Macron"},
+    {0x00B0, "Degree"},
+    {0x00B1, "+/-"},
+    {0x00B2, "Superscr two"},
+    {0x00B3, "Superscr three"},
+    {0x00B4, "Acute"},
+    {0x00B5, "Micro"},
+    {0x00B6, "Pilcrow"},
+    {0x00B7, "Middle dot"},
+    {0x00B8, "Cedilla"},
+    {0x00B9, "Superscr one"},
+    {0x00BA, "Masc ord"},
+    {0x00BB, ">>"},
+    {0x00BC, "1/4"},
+    {0x00BD, "1/2"},
+    {0x00BE, "3/4"},
+    {0x00BF, "Inv ?"},
+    {0x00C0, "A grave"},
+    {0x00C1, "A acute"},
+    {0x00C2, "A circumflex"},
+    {0x00C3, "A tilde"},
+    {0x00C4, "A diaeresis"},
+    {0x00C5, "A ring above"},
+    {0x00C6, "AE"},
+    {0x00C7, "C cedilla"},
+    {0x00C8, "E grave"},
+    {0x00C9, "E acute"},
+    {0x00CA, "E circumflex"},
+    {0x00CB, "E diaeresis"},
+    {0x00CC, "I grave"},
+    {0x00CD, "I acute"},
+    {0x00CE, "I circumflex"},
+    {0x00CF, "I diaeresis"},
+    {0x00D0, "ETH"},
+    {0x00D1, "N tilde"},
+    {0x00D2, "O grave"},
+    {0x00D3, "O acute"},
+    {0x00D4, "O circumflex"},
+    {0x00D5, "O tilde"},
+    {0x00D6, "O diaeresis"},
+    {0x00D7, "Multiplication"},
+    {0x00D8, "O stroke"},
+    {0x00D9, "U grave"},
+    {0x00DA, "U acute"},
+    {0x00DB, "U circumflex"},
+    {0x00DC, "U diaeresis"},
+    {0x00DD, "Y acute"},
+    {0x00DE, "THORN"},
+    {0x00DF, "sharp S"},
+    {0x00E0, "a grave"},
+    {0x00E1, "a acute"},
+    {0x00E2, "a circumflex"},
+    {0x00E3, "a tilde"},
+    {0x00E4, "a diaeresis"},
+    {0x00E5, "a ring above"},
+    {0x00E6, "ae"},
+    {0x00E7, "c cedilla"},
+    {0x00E8, "e grave"},
+    {0x00E9, "e acute"},
+    {0x00EA, "e circumflex"},
+    {0x00EB, "e diaeresis"},
+    {0x00EC, "i grave"},
+    {0x00ED, "i acute"},
+    {0x00EE, "i circumflex"},
+    {0x00EF, "i diaeresis"},
+    {0x00F0, "eth"},
+    {0x00F1, "n tilde"},
+    {0x00F2, "o grave"},
+    {0x00F3, "o acute"},
+    {0x00F4, "o circumflex"},
+    {0x00F5, "o tilde"},
+    {0x00F6, "o diaeresis"},
+    {0x00F7, "Division"},
+    {0x00F8, "o stroke"},
+    {0x00F9, "u grave"},
+    {0x00FA, "u acute"},
+    {0x00FB, "u circumflex"},
+    {0x00FC, "u diaeresis"},
+    {0x00FD, "y acute"},
+    {0x00FE, "thorn"},
+    {0x00FF, "y diaeresis"},
+    {0x0100, "A macron"},
+    {0x0101, "a macron"},
+    {0x0102, "A breve"},
+    {0x0103, "a breve"},
+    {0x0104, "A ogonek"},
+    {0x0105, "a ogonek"},
+    {0x0106, "C acute"},
+    {0x0107, "c acute"},
+    {0x0108, "C circumflex"},
+    {0x0109, "c circumflex"},
+    {0x010A, "C dot above"},
+    {0x010B, "c dot above"},
+    {0x010C, "C caron"},
+    {0x010D, "c caron"},
+    {0x010E, "D caron"},
+    {0x010F, "d caron"},
+    {0x0110, "D stroke"},
+    {0x0111, "d stroke"},
+    {0x0112, "E macron"},
+    {0x0113, "e macron"},
+    {0x0116, "E dot above"},
+    {0x0117, "e dot above"},
+    {0x0118, "E ogonek"},
+    {0x0119, "e ogonek"},
+    {0x011A, "E caron"},
+    {0x011B, "e caron"},
+    {0x011C, "G circumflex"},
+    {0x011D, "g circumflex"},
+    {0x011E, "G breve"},
+    {0x011F, "g breve"},
+    {0x0120, "G dot above"},
+    {0x0121, "g dot above"},
+    {0x0122, "G cedilla"},
+    {0x0123, "g cedilla"},
+    {0x0124, "H circumflex"},
+    {0x0125, "h circumflex"},
+    {0x0126, "H stroke"},
+    {0x0127, "h stroke"},
+    {0x0128, "I tilde"},
+    {0x0129, "i tilde"},
+    {0x012A, "I macron"},
+    {0x012B, "i macron"},
+    {0x012E, "I ogonek"},
+    {0x012F, "i ogonek"},
+    {0x0130, "I dot above"},
+    {0x0131, "Dotless I"},
+    {0x0134, "J circumflex"},
+    {0x0135, "j circumflex"},
+    {0x0136, "K cedilla"},
+    {0x0137, "k cedilla"},
+    {0x0138, "kra"},
+    {0x0139, "L acute"},
+    {0x013A, "l acute"},
+    {0x013B, "L cedilla"},
+    {0x013C, "l cedilla"},
+    {0x013D, "L caron"},
+    {0x013E, "l caron"},
+    {0x0141, "L stroke"},
+    {0x0142, "l stroke"},
+    {0x0143, "N acute"},
+    {0x0144, "n acute"},
+    {0x0145, "N cedilla"},
+    {0x0146, "n cedilla"},
+    {0x0147, "N caron"},
+    {0x0148, "n caron"},
+    {0x014A, "ENG"},
+    {0x014B, "eng"},
+    {0x014C, "O macron"},
+    {0x014D, "o macron"},
+    {0x0150, "O double acute"},
+    {0x0151, "o double acute"},
+    {0x0152, "OE"},
+    {0x0153, "oe"},
+    {0x0154, "R acute"},
+    {0x0155, "r acute"},
+    {0x0156, "R cedilla"},
+    {0x0157, "r cedilla"},
+    {0x0158, "R caron"},
+    {0x0159, "r caron"},
+    {0x015A, "S acute"},
+    {0x015B, "s acute"},
+    {0x015C, "S circumflex"},
+    {0x015D, "s circumflex"},
+    {0x015E, "S cedilla"},
+    {0x015F, "s cedilla"},
+    {0x0160, "S caron"},
+    {0x0161, "s caron"},
+    {0x0162, "T cedilla"},
+    {0x0163, "t cedilla"},
+    {0x0164, "T caron"},
+    {0x0165, "t caron"},
+    {0x0166, "T stroke"},
+    {0x0167, "t stroke"},
+    {0x0168, "U tilde"},
+    {0x0169, "u tilde"},
+    {0x016A, "U macron"},
+    {0x016B, "u macron"},
+    {0x016C, "U breve"},
+    {0x016D, "u breve"},
+    {0x016E, "U ring above"},
+    {0x016F, "u ring above"},
+    {0x0170, "U double acute"},
+    {0x0171, "u double acute"},
+    {0x0172, "U ogonek"},
+    {0x0173, "u ogonek"},
+    {0x0174, "W circumflex"},
+    {0x0175, "w circumflex"},
+    {0x0176, "Y circumflex"},
+    {0x0177, "y circumflex"},
+    {0x0178, "Y diaeresis"},
+    {0x0179, "Z acute"},
+    {0x017A, "z acute"},
+    {0x017B, "Z dot above"},
+    {0x017C, "z dot above"},
+    {0x017D, "Z caron"},
+    {0x017E, "z caron"},
+    {0x0192, "f HOOK"},
+    {0x0218, "S comma below"},
+    {0x0219, "s comma below"},
+    {0x021A, "T comma below"},
+    {0x021B, "t comma below"},
+    {0x02C6, "Circumflex"},
+    {0x02C7, "Caron"},
+    {0x02D8, "Breve"},
+    {0x02D9, "Dot above"},
+    {0x02DB, "Ogonek"},
+    {0x02DC, "Small tilde"},
+    {0x02DD, "Double acute"},
+};
 
 //---------------------------------------------------------------------------
 // Format a Pointer
@@ -479,15 +743,15 @@ std::string Pointer(const void* value, const std::string& name)
 
 
 //---------------------------------------------------------------------------
-// Format a WCHAR
+// Format a WCHAR. Add description in descs if one exists.
 //---------------------------------------------------------------------------
 
-std::string Wchar(const ReverseOptions& opt, ::WCHAR value)
+std::string Wchar(const ReverseOptions& opt, ::WCHAR value, StringList& descs)
 {
     if (!opt.num_only) {
-        const auto it = wchar_symbols.find(value);
-        if (it != wchar_symbols.end()) {
-            return it->second;
+        const auto sym = wchar_symbols.find(value);
+        if (sym != wchar_symbols.end()) {
+            return sym->second;
         }
     }
     if (value == '\'' || value == '\\') {
@@ -497,6 +761,13 @@ std::string Wchar(const ReverseOptions& opt, ::WCHAR value)
         return Format("L'%c'", value);
     }
     else {
+        // No symbol found, add a comment 
+        if (!opt.num_only) {
+            const auto dsc = wchar_descriptions.find(value);
+            if (dsc != wchar_descriptions.end()) {
+                descs.push_back(dsc->second);
+            }
+        }
         return Format("0x%04X", value);
     }
 }
@@ -563,23 +834,12 @@ void GenerateCharModifiers(const ReverseOptions& opt, std::ostream& out, const :
         GenerateVkToBits(opt, out, mods.pVkToBit, vk_to_bits_name);
     }
 
-    // At most 8 entriess in ModNumber.
-    static const std::string mod_names[] = {
-        "000 = <none>",
-        "001 = SHIFT",
-        "010 = ALT",
-        "011 = SHIFT ALT",
-        "100 = CTRL",
-        "101 = SHIFT CTRL",
-        "110 = CTRL ALT",
-        "111 = SHIFT CTRL ALT"
-    };
-
     Grid grid;
-    for (::WORD i = 0; i < mods.wMaxModBits; ++i) {
+    // Note: wMaxModBits is the "max value", ie. size = wMaxModBits + 1
+    for (::WORD i = 0; i <= mods.wMaxModBits; ++i) {
         GridLine line{ Symbol(opt, { SYM(SHFT_INVALID) }, mods.ModNumber[i]) + "," };
-        if (i < ARRAYSIZE(mod_names)) {
-            line.push_back("// " + mod_names[i]);
+        if (!opt.num_only && i < modifiers_comments.size()) {
+            line.push_back("// " + modifiers_comments[i]);
         }
         grid.push_back(line);
     }
@@ -600,31 +860,60 @@ void GenerateCharModifiers(const ReverseOptions& opt, std::ostream& out, const :
 
 //---------------------------------------------------------------------------
 
-void GenerateSubVkToWchar(const ReverseOptions& opt, std::ostream& out, const ::VK_TO_WCHARS10* vtwc, size_t count, size_t size, const std::string& name)
+void GenerateSubVkToWchar(const ReverseOptions& opt,
+                          std::ostream& out,
+                          const ::VK_TO_WCHARS10* vtwc,
+                          size_t count,
+                          size_t size,
+                          const std::string& name,
+                          const ::MODIFIERS& mods)
 {
-    // TODO: clarity role of each column to add proper comment in generated source.
-    //  |         |  Shift  |  Ctrl   |  Ctl+Alt|S+Ctrl   |
-    //  |=========|=========|=========|=========|=========|
+    // Add header lines of comments to indicate the type of modifier on top of each column.
+    std::vector<std::string> headers(count);
+    for (size_t i = 0; i <= mods.wMaxModBits && i < modifiers_headers.size(); ++i) {
+        if (mods.ModNumber[i] < headers.size()) {
+            headers[mods.ModNumber[i]] = modifiers_headers[i];
+        }
+    }
+
+    GridLine line1({"//", ""});
+    GridLine line2({"//", ""});
+    bool not_empty = false;
+    for (const auto& head : headers) {
+        line1.push_back(head);
+        line2.push_back(std::string(head.length(), '='));
+        not_empty = not_empty || !head.empty();
+    }
 
     Grid grid;
+    if (not_empty && !opt.num_only) {
+        grid.push_back(line1);
+        grid.push_back(line2);
+    }
+
     while (vtwc->VirtualKey != 0) {
         GridLine line({
             "{" + Symbol(opt, vk_symbols, vtwc->VirtualKey, 2) + ",",
             BitMask(opt, vk_attr_symbols, vtwc->Attributes, 2) + ","
         });
+        StringList comments;
         for (size_t i = 0; i < count; ++i) {
-            std::string str(Wchar(opt, vtwc->wch[i]));
+            std::string str(Wchar(opt, vtwc->wch[i], comments));
             if (i == 0) {
                 str.insert(0, 1, '{');
             }
             str.append(i == count - 1 ? "}}," : ",");
             line.push_back(str);
         }
+        if (!comments.empty()) {
+            line.push_back("// " + Join(comments));
+        }
         grid.push_back(line);
 
         // Move to next structure (variable size).
         vtwc = reinterpret_cast<const ::VK_TO_WCHARS10*>(reinterpret_cast<const char*>(vtwc) + size);
     }
+
     GridLine line({"{0,"});
     line.resize(count + 1, "0,");
     line.push_back("0}");
@@ -641,12 +930,16 @@ void GenerateSubVkToWchar(const ReverseOptions& opt, std::ostream& out, const ::
 
 //---------------------------------------------------------------------------
 
-void GenerateVkToWchar(const ReverseOptions& opt, std::ostream& out, const ::VK_TO_WCHAR_TABLE* vtwc, const std::string& name)
+void GenerateVkToWchar(const ReverseOptions& opt,
+                       std::ostream& out,
+                       const ::VK_TO_WCHAR_TABLE* vtwc,
+                       const std::string& name,
+                       const::MODIFIERS& mods)
 {
     Grid grid;
     for (; vtwc->pVkToWchars != nullptr; vtwc++) {
         const std::string sub_name(Format("vk_to_wchar%d", vtwc->nModifications));
-        GenerateSubVkToWchar(opt, out, reinterpret_cast<PVK_TO_WCHARS10>(vtwc->pVkToWchars), vtwc->nModifications, vtwc->cbSize, sub_name);
+        GenerateSubVkToWchar(opt, out, reinterpret_cast<PVK_TO_WCHARS10>(vtwc->pVkToWchars), vtwc->nModifications, vtwc->cbSize, sub_name, mods);
         grid.push_back({
             "{(PVK_TO_WCHARS1)" + sub_name + ",",
             Format("%d,", vtwc->nModifications),
@@ -676,13 +969,17 @@ void GenerateLgToWchar(const ReverseOptions& opt, std::ostream& out, const ::LIG
             "{" + Symbol(opt, vk_symbols, lg->VirtualKey, 2) + ",",
             Format("%d,", lg->ModificationNumber)
         });
+        StringList comments;
         for (size_t i = 0; i < count; ++i) {
-            std::string str(Wchar(opt, lg->wch[i]));
+            std::string str(Wchar(opt, lg->wch[i], comments));
             if (i == 0) {
                 str.insert(0, 1, '{');
             }
             str.append(i == count - 1 ? "}}," : ",");
             line.push_back(str);
+        }
+        if (!comments.empty()) {
+            line.push_back("// " + Join(comments));
         }
         grid.push_back(line);
 
@@ -709,12 +1006,16 @@ void GenerateDeadKeys(const ReverseOptions& opt, std::ostream& out, const ::DEAD
 {
     Grid grid;
     for (; dk->dwBoth != 0; dk++) {
-        grid.push_back({
-            "DEADTRANS(" + Wchar(opt, LOWORD(dk->dwBoth)) + ",",
-            Wchar(opt, HIWORD(dk->dwBoth)) + ",",
-            Wchar(opt, dk->wchComposed) + ",",
-            BitMask(opt, { SYM(DKF_DEAD) }, dk->uFlags, 4) + "),"
-        });
+        StringList comments;
+        GridLine line;
+        line.push_back("DEADTRANS(" + Wchar(opt, LOWORD(dk->dwBoth), comments) + ",");
+        line.push_back(Wchar(opt, HIWORD(dk->dwBoth), comments) + ",");
+        line.push_back(Wchar(opt, dk->wchComposed, comments) + ",");
+        line.push_back(BitMask(opt, { SYM(DKF_DEAD) }, dk->uFlags, 4) + "),");
+        if (!comments.empty()) {
+            line.push_back("// " + Join(comments));
+        }
+        grid.push_back(line);
     }
 
     out << "//" << opt.dashed << std::endl
@@ -834,17 +1135,23 @@ std::string LocaleFlags(const ReverseOptions& opt, ::DWORD flags)
 
 void GenerateSourceFile(const ReverseOptions& opt, std::ostream& out, const ::KBDTABLES& tables)
 {
+    // Keyboard type are typically lower than 42. The field dwType was not used in older
+    // versions and may contain crap. Try to guess a realistic value for keyboard type.
+    // The last default keyord type is 4 (classical 101/102-key keyboard).
+    const int kbd_type = opt.kbd_type > 0 ? opt.kbd_type : (tables.dwType > 0 && tables.dwType < 48 ? tables.dwType : 4);
+
     out << "//" << opt.dashed << std::endl
         << "// " << opt.comment << std::endl
         << "// Automatically generated from " << FileName(opt.input) << std::endl
         << "//" << opt.dashed << std::endl
         << std::endl
-        << "#define KBD_TYPE " << (opt.kbd_type > 0 ? opt.kbd_type : (tables.dwType > 0 ? tables.dwType : 4)) << std::endl
+        << "#define KBD_TYPE " << kbd_type << std::endl
         << std::endl
         << "#include <windows.h>" << std::endl
         << "#include <kbd.h>" << std::endl
         << "#include <dontuse.h>" << std::endl
         << std::endl;
+
 
     const std::string char_modifiers_name = "char_modifiers";
     if (tables.pCharModifiers != nullptr) {
@@ -853,7 +1160,7 @@ void GenerateSourceFile(const ReverseOptions& opt, std::ostream& out, const ::KB
 
     const std::string vk_to_wchar_name = "vk_to_wchar";
     if (tables.pVkToWcharTable != nullptr) {
-        GenerateVkToWchar(opt, out, tables.pVkToWcharTable, vk_to_wchar_name);
+        GenerateVkToWchar(opt, out, tables.pVkToWcharTable, vk_to_wchar_name, *tables.pCharModifiers);
     }
 
     const std::string dead_keys_name = "dead_keys";

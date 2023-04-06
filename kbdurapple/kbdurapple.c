@@ -29,12 +29,13 @@ static MODIFIERS char_modifiers = {
     .wMaxModBits = 7,
     .ModNumber   = {
         0,            // 000 = <none>
-        1,            // 001 = SHIFT
-        2,            // 010 = ALT
-        SHFT_INVALID, // 011 = SHIFT ALT
-        SHFT_INVALID, // 100 = CTRL
-        SHFT_INVALID, // 101 = SHIFT CTRL
-        3,            // 110 = CTRL ALT
+        1,            // 001 = Shift
+        2,            // 010 = Control
+        SHFT_INVALID, // 011 = Shift Control
+        SHFT_INVALID, // 100 = Alt
+        SHFT_INVALID, // 101 = Shift Alt
+        3,            // 110 = Control Alt (AltGr)
+        4,            // 111 = Shift Control Alt
     }
 };
 
@@ -43,8 +44,10 @@ static MODIFIERS char_modifiers = {
 //---------------------------------------------------------------------------
 
 static VK_TO_WCHARS3 vk_to_wchar3[] = {
-    {VK_BACK,   0x00, {0x0008, 0x0008, 0x007F}},
-    {VK_ESCAPE, 0x00, {0x001B, 0x001B, 0x001B}},
+    //                         Shift   Ctrl
+    //                         =====   ====
+    {VK_BACK,   0x00, {0x0008, 0x0008, 0x007F}}, // BS, BS, DEL
+    {VK_ESCAPE, 0x00, {0x001B, 0x001B, 0x001B}}, // ESC, ESC, ESC
     {VK_RETURN, 0x00, {L'\r',  L'\r',  L'\n'}},
     {VK_CANCEL, 0x00, {0x0003, 0x0003, 0x0003}},
     {0,         0,    0,       0,      0}
@@ -55,80 +58,82 @@ static VK_TO_WCHARS3 vk_to_wchar3[] = {
 //---------------------------------------------------------------------------
 
 static VK_TO_WCHARS5 vk_to_wchar5[] = {
-    {'1',           0x00,   {L'1',     L'!',     WCH_NONE, 0x00A1,   0x2044}},
+    //                                 Shift     Ctrl      Ctrl/Alt  Shift/Ctrl/Alt
+    //                                 =====     ====      ========  ==============
+    {'1',           0x00,   {L'1',     L'!',     WCH_NONE, 0x00A1,   0x2044}},      // Inv !
     {'2',           0x00,   {L'2',     L'@',     WCH_NONE, 0x2122,   0x20AC}},
-    {'3',           0x00,   {L'3',     L'#',     WCH_NONE, 0x00A3,   0x2039}},
-    {'4',           0x00,   {L'4',     L'$',     WCH_NONE, 0x00A2,   0x203A}},
+    {'3',           0x00,   {L'3',     L'#',     WCH_NONE, 0x00A3,   0x2039}},      // Pound
+    {'4',           0x00,   {L'4',     L'$',     WCH_NONE, 0x00A2,   0x203A}},      // Cent
     {'5',           0x00,   {L'5',     L'%',     WCH_NONE, 0x221E,   0xFB01}},
-    {'6',           0x00,   {L'6',     L'^',     WCH_NONE, 0x00A7,   0xFB02}},
-    {'7',           0x00,   {L'7',     L'&',     WCH_NONE, 0x00B6,   0x2021}},
-    {'8',           0x00,   {L'8',     L'*',     WCH_NONE, 0x2022,   0x00B0}},
-    {'9',           0x00,   {L'9',     L'(',     WCH_NONE, 0x00AA,   0x00B7}},
-    {'0',           0x00,   {L'0',     L')',     WCH_NONE, 0x00BA,   0x201A}},
+    {'6',           0x00,   {L'6',     L'^',     WCH_NONE, 0x00A7,   0xFB02}},      // Section
+    {'7',           0x00,   {L'7',     L'&',     WCH_NONE, 0x00B6,   0x2021}},      // Pilcrow
+    {'8',           0x00,   {L'8',     L'*',     WCH_NONE, 0x2022,   0x00B0}},      // Degree
+    {'9',           0x00,   {L'9',     L'(',     WCH_NONE, 0x00AA,   0x00B7}},      // Fem ord, Middle dot
+    {'0',           0x00,   {L'0',     L')',     WCH_NONE, 0x00BA,   0x201A}},      // Masc ord
     {VK_OEM_MINUS,  0x00,   {L'-',     L'_',     WCH_NONE, 0x2013,   0x2014}},
-    {VK_OEM_PLUS,   0x00,   {L'=',     L'+',     WCH_NONE, 0x2260,   0x00B1}},
-    {'Q',           SGCAPS, {L'q',     L'Q',     WCH_NONE, 0x0153,   0x0152}},
+    {VK_OEM_PLUS,   0x00,   {L'=',     L'+',     WCH_NONE, 0x2260,   0x00B1}},      // +/-
+    {'Q',           SGCAPS, {L'q',     L'Q',     WCH_NONE, 0x0153,   0x0152}},      // oe, OE
     {'Q',           0x00,   {L'Q',     L'Q',     0x0000,   0x0000,   0x0000}},
     {'W',           SGCAPS, {L'w',     L'W',     WCH_NONE, 0x2211,   0x201E}},
     {'W',           0x00,   {L'W',     L'W',     0x0000,   0x0000,   0x0000}},
-    {'E',           SGCAPS, {L'e',     L'E',     WCH_NONE, WCH_DEAD, 0x00B4}},
-    {VK__none_,     0x00,   {L'E',     L'E',     WCH_NONE, 0x00B4,   WCH_NONE}},
-    {'R',           SGCAPS, {L'r',     L'R',     WCH_NONE, 0x00AE,   0x2030}},
+    {'E',           SGCAPS, {L'e',     L'E',     WCH_NONE, WCH_DEAD, 0x00B4}},      // Acute
+    {VK__none_,     0x00,   {L'E',     L'E',     WCH_NONE, 0x00B4,   WCH_NONE}},    // Acute
+    {'R',           SGCAPS, {L'r',     L'R',     WCH_NONE, 0x00AE,   0x2030}},      // Registered
     {'R',           0x00,   {L'R',     L'R',     0x0000,   0x0000,   0x0000}},
-    {'T',           SGCAPS, {L't',     L'T',     WCH_NONE, 0x2020,   0x02C7}},
+    {'T',           SGCAPS, {L't',     L'T',     WCH_NONE, 0x2020,   0x02C7}},      // Caron
     {'T',           0x00,   {L'T',     L'T',     0x0000,   0x0000,   0x0000}},
-    {'Y',           SGCAPS, {L'y',     L'Y',     WCH_NONE, 0x00A5,   0x00C1}},
+    {'Y',           SGCAPS, {L'y',     L'Y',     WCH_NONE, 0x00A5,   0x00C1}},      // Yen, A acute
     {'Y',           0x00,   {L'Y',     L'Y',     0x0000,   0x0000,   0x0000}},
-    {'U',           SGCAPS, {L'u',     L'U',     WCH_NONE, WCH_DEAD, 0x00A8}},
-    {VK__none_,     0x00,   {L'U',     L'U',     WCH_NONE, 0x00A8,   WCH_NONE}},
-    {'I',           SGCAPS, {L'i',     L'I',     WCH_NONE, WCH_DEAD, 0x02C6}},
+    {'U',           SGCAPS, {L'u',     L'U',     WCH_NONE, WCH_DEAD, 0x00A8}},      // Diaeresis
+    {VK__none_,     0x00,   {L'U',     L'U',     WCH_NONE, 0x00A8,   WCH_NONE}},    // Diaeresis
+    {'I',           SGCAPS, {L'i',     L'I',     WCH_NONE, WCH_DEAD, 0x02C6}},      // Circumflex
     {VK__none_,     0x00,   {L'I',     L'I',     WCH_NONE, L'^',     WCH_NONE}},
-    {'O',           SGCAPS, {L'o',     L'O',     WCH_NONE, 0x00F8,   0x00D8}},
+    {'O',           SGCAPS, {L'o',     L'O',     WCH_NONE, 0x00F8,   0x00D8}},      // o stroke, O stroke
     {'O',           0x00,   {L'O',     L'O',     0x0000,   0x0000,   0x0000}},
     {'P',           SGCAPS, {L'p',     L'P',     WCH_NONE, 0x03C0,   0x220F}},
     {'P',           0x00,   {L'P',     L'P',     0x0000,   0x0000,   0x0000}},
     {VK_OEM_4,      0x00,   {L'[',     L'{',     WCH_NONE, 0x201C,   0x201D}},
     {VK_OEM_6,      0x00,   {L']',     L'}',     WCH_NONE, 0x2018,   0x2019}},
-    {'A',           SGCAPS, {L'a',     L'A',     WCH_NONE, 0x00E5,   0x00C5}},
+    {'A',           SGCAPS, {L'a',     L'A',     WCH_NONE, 0x00E5,   0x00C5}},      // a ring above, A ring above
     {'A',           0x00,   {L'A',     L'A',     0x0000,   0x0000,   0x0000}},
-    {'S',           SGCAPS, {L's',     L'S',     WCH_NONE, 0x00DF,   0x00CD}},
+    {'S',           SGCAPS, {L's',     L'S',     WCH_NONE, 0x00DF,   0x00CD}},      // sharp S, I acute
     {'S',           0x00,   {L'S',     L'S',     0x0000,   0x0000,   0x0000}},
-    {'D',           SGCAPS, {L'd',     L'D',     WCH_NONE, 0x2202,   0x00CE}},
+    {'D',           SGCAPS, {L'd',     L'D',     WCH_NONE, 0x2202,   0x00CE}},      // I circumflex
     {'D',           0x00,   {L'D',     L'D',     0x0000,   0x0000,   0x0000}},
-    {'F',           SGCAPS, {L'f',     L'F',     WCH_NONE, 0x0192,   0x00CF}},
+    {'F',           SGCAPS, {L'f',     L'F',     WCH_NONE, 0x0192,   0x00CF}},      // f HOOK, I diaeresis
     {'F',           0x00,   {L'F',     L'F',     0x0000,   0x0000,   0x0000}},
-    {'G',           SGCAPS, {L'g',     L'G',     WCH_NONE, 0x00A9,   0x02DD}},
+    {'G',           SGCAPS, {L'g',     L'G',     WCH_NONE, 0x00A9,   0x02DD}},      // Copyright, Double acute
     {'G',           0x00,   {L'G',     L'G',     0x0000,   0x0000,   0x0000}},
-    {'H',           SGCAPS, {L'h',     L'H',     WCH_NONE, 0x02D9,   0x00D3}},
+    {'H',           SGCAPS, {L'h',     L'H',     WCH_NONE, 0x02D9,   0x00D3}},      // Dot above, O acute
     {'H',           0x00,   {L'H',     L'H',     0x0000,   0x0000,   0x0000}},
-    {'J',           SGCAPS, {L'j',     L'J',     WCH_NONE, 0x2206,   0x00D4}},
+    {'J',           SGCAPS, {L'j',     L'J',     WCH_NONE, 0x2206,   0x00D4}},      // O circumflex
     {'J',           0x00,   {L'J',     L'J',     0x0000,   0x0000,   0x0000}},
     {'K',           SGCAPS, {L'k',     L'K',     WCH_NONE, 0x02DA,   0x2225}},
     {'K',           0x00,   {L'K',     L'K',     0x0000,   0x0000,   0x0000}},
-    {'L',           SGCAPS, {L'l',     L'L',     WCH_NONE, 0x00AC,   0x00D2}},
+    {'L',           SGCAPS, {L'l',     L'L',     WCH_NONE, 0x00AC,   0x00D2}},      // Not, O grave
     {'L',           0x00,   {L'L',     L'L',     0x0000,   0x0000,   0x0000}},
-    {VK_OEM_1,      0x00,   {L';',     L':',     WCH_NONE, 0x2026,   0x00DA}},
-    {VK_OEM_3,      0x00,   {L'\'',    L'"',     WCH_NONE, 0x00E6,   0x00C6}},
-    {VK_OEM_8,      0x00,   {0x00A7,   0x00B1,   WCH_NONE, 0x00A7,   0x00B1}},
-    {VK_OEM_7,      0x00,   {L'\\',    L'|',     WCH_NONE, 0x00AB,   0x00BB}},
-    {'Z',           SGCAPS, {L'z',     L'Z',     WCH_NONE, 0x03A9,   0x00B8}},
+    {VK_OEM_1,      0x00,   {L';',     L':',     WCH_NONE, 0x2026,   0x00DA}},      // U acute
+    {VK_OEM_3,      0x00,   {L'\'',    L'"',     WCH_NONE, 0x00E6,   0x00C6}},      // ae, AE
+    {VK_OEM_8,      0x00,   {0x00A7,   0x00B1,   WCH_NONE, 0x00A7,   0x00B1}},      // Section, +/-, Section, +/-
+    {VK_OEM_7,      0x00,   {L'\\',    L'|',     WCH_NONE, 0x00AB,   0x00BB}},      // <<, >>
+    {'Z',           SGCAPS, {L'z',     L'Z',     WCH_NONE, 0x03A9,   0x00B8}},      // Cedilla
     {'Z',           0x00,   {L'Z',     L'Z',     0x0000,   0x0000,   0x0000}},
-    {'X',           SGCAPS, {L'x',     L'X',     WCH_NONE, 0x2248,   0x02DB}},
+    {'X',           SGCAPS, {L'x',     L'X',     WCH_NONE, 0x2248,   0x02DB}},      // Ogonek
     {'X',           0x00,   {L'X',     L'X',     0x0000,   0x0000,   0x0000}},
-    {'C',           SGCAPS, {L'c',     L'C',     WCH_NONE, 0x00E7,   0x00C7}},
+    {'C',           SGCAPS, {L'c',     L'C',     WCH_NONE, 0x00E7,   0x00C7}},      // c cedilla, C cedilla
     {'C',           0x00,   {L'C',     L'C',     0x0000,   0x0000,   0x0000}},
     {'V',           SGCAPS, {L'v',     L'V',     WCH_NONE, 0x221A,   0x25CA}},
     {'V',           0x00,   {L'V',     L'V',     0x0000,   0x0000,   0x0000}},
-    {'B',           SGCAPS, {L'b',     L'B',     WCH_NONE, 0x222B,   0x0131}},
+    {'B',           SGCAPS, {L'b',     L'B',     WCH_NONE, 0x222B,   0x0131}},      // Dotless I
     {'B',           0x00,   {L'B',     L'B',     0x0000,   0x0000,   0x0000}},
-    {'N',           SGCAPS, {L'n',     L'N',     WCH_NONE, WCH_DEAD, 0x02DC}},
+    {'N',           SGCAPS, {L'n',     L'N',     WCH_NONE, WCH_DEAD, 0x02DC}},      // Small tilde
     {VK__none_,     0x00,   {L'N',     L'N',     WCH_NONE, L'~',     WCH_NONE}},
-    {'M',           SGCAPS, {L'm',     L'M',     WCH_NONE, 0x00B5,   0x00C2}},
+    {'M',           SGCAPS, {L'm',     L'M',     WCH_NONE, 0x00B5,   0x00C2}},      // Micro, A circumflex
     {'M',           0x00,   {L'M',     L'M',     0x0000,   0x0000,   0x0000}},
-    {VK_OEM_COMMA,  0x00,   {L',',     L'<',     WCH_NONE, 0x2264,   0x00AF}},
-    {VK_OEM_PERIOD, 0x00,   {L'.',     L'>',     WCH_NONE, 0x2265,   0x02D8}},
-    {VK_OEM_2,      0x00,   {L'/',     L'?',     WCH_NONE, 0x00F7,   0x00BF}},
-    {VK_SPACE,      0x00,   {L' ',     L' ',     L' ',     0x00A0,   0x00A0}},
+    {VK_OEM_COMMA,  0x00,   {L',',     L'<',     WCH_NONE, 0x2264,   0x00AF}},      // Macron
+    {VK_OEM_PERIOD, 0x00,   {L'.',     L'>',     WCH_NONE, 0x2265,   0x02D8}},      // Breve
+    {VK_OEM_2,      0x00,   {L'/',     L'?',     WCH_NONE, 0x00F7,   0x00BF}},      // Division, Inv ?
+    {VK_SPACE,      0x00,   {L' ',     L' ',     L' ',     0x00A0,   0x00A0}},      // Nbrk space, Nbrk space
     {VK_OEM_5,      0x00,   {L'`',     L'~',     WCH_NONE, WCH_DEAD, L'`'}},
     {VK__none_,     0x00,   {WCH_NONE, WCH_NONE, WCH_NONE, L'`',     WCH_NONE}},
     {VK_DECIMAL,    0x00,   {L'.',     L'.',     WCH_NONE, WCH_NONE, WCH_NONE}},
@@ -140,6 +145,8 @@ static VK_TO_WCHARS5 vk_to_wchar5[] = {
 //---------------------------------------------------------------------------
 
 static VK_TO_WCHARS2 vk_to_wchar2[] = {
+    //                          Shift
+    //                          =====
     {VK_TAB,      0x00, {L'\t', L'\t'}},
     {VK_ADD,      0x00, {L'+',  L'+'}},
     {VK_DIVIDE,   0x00, {L'/',  L'/'}},
@@ -184,90 +191,90 @@ static VK_TO_WCHAR_TABLE vk_to_wchar[] = {
 //---------------------------------------------------------------------------
 
 static DEADKEY dead_keys[] = {
-    DEADTRANS(L'e', 0x00B4, 0x00E9, 0x0000),
-    DEADTRANS(L'u', 0x00B4, 0x00FA, 0x0000),
-    DEADTRANS(L'i', 0x00B4, 0x00ED, 0x0000),
-    DEADTRANS(L'y', 0x00B4, 0x00FD, 0x0000),
-    DEADTRANS(L'o', 0x00B4, 0x00F3, 0x0000),
-    DEADTRANS(L'a', 0x00B4, 0x00E1, 0x0000),
-    DEADTRANS(L'E', 0x00B4, 0x00C9, 0x0000),
-    DEADTRANS(L'U', 0x00B4, 0x00DA, 0x0000),
-    DEADTRANS(L'I', 0x00B4, 0x00CD, 0x0000),
-    DEADTRANS(L'Y', 0x00B4, 0x00DD, 0x0000),
-    DEADTRANS(L'O', 0x00B4, 0x00D3, 0x0000),
-    DEADTRANS(L'A', 0x00B4, 0x00C1, 0x0000),
-    DEADTRANS(L'n', 0x00B4, 0x0144, 0x0000),
-    DEADTRANS(L'c', 0x00B4, 0x0107, 0x0000),
-    DEADTRANS(L's', 0x00B4, 0x015B, 0x0000),
-    DEADTRANS(L'l', 0x00B4, 0x013A, 0x0000),
-    DEADTRANS(L'r', 0x00B4, 0x0155, 0x0000),
-    DEADTRANS(L'z', 0x00B4, 0x017A, 0x0000),
-    DEADTRANS(L'N', 0x00B4, 0x0143, 0x0000),
-    DEADTRANS(L'C', 0x00B4, 0x0106, 0x0000),
-    DEADTRANS(L'S', 0x00B4, 0x015A, 0x0000),
-    DEADTRANS(L'L', 0x00B4, 0x0139, 0x0000),
-    DEADTRANS(L'R', 0x00B4, 0x0154, 0x0000),
-    DEADTRANS(L'Z', 0x00B4, 0x0179, 0x0000),
-    DEADTRANS(L' ', 0x00B4, 0x00B4, 0x0000),
-    DEADTRANS(L'e', 0x00A8, 0x00EB, 0x0000),
-    DEADTRANS(L'u', 0x00A8, 0x00FC, 0x0000),
-    DEADTRANS(L'i', 0x00A8, 0x00EF, 0x0000),
-    DEADTRANS(L'y', 0x00A8, 0x00FF, 0x0000),
-    DEADTRANS(L'o', 0x00A8, 0x00F6, 0x0000),
-    DEADTRANS(L'a', 0x00A8, 0x00E4, 0x0000),
-    DEADTRANS(L'E', 0x00A8, 0x00CB, 0x0000),
-    DEADTRANS(L'U', 0x00A8, 0x00DC, 0x0000),
-    DEADTRANS(L'I', 0x00A8, 0x00CF, 0x0000),
-    DEADTRANS(L'Y', 0x00A8, 0x0178, 0x0000),
-    DEADTRANS(L'O', 0x00A8, 0x00D6, 0x0000),
-    DEADTRANS(L'A', 0x00A8, 0x00C4, 0x0000),
-    DEADTRANS(L' ', 0x00A8, 0x00A8, 0x0000),
-    DEADTRANS(L'e', L'^',   0x00EA, 0x0000),
-    DEADTRANS(L'u', L'^',   0x00FB, 0x0000),
-    DEADTRANS(L'i', L'^',   0x00EE, 0x0000),
-    DEADTRANS(L'o', L'^',   0x00F4, 0x0000),
-    DEADTRANS(L'a', L'^',   0x00E2, 0x0000),
-    DEADTRANS(L'E', L'^',   0x00CA, 0x0000),
-    DEADTRANS(L'U', L'^',   0x00DB, 0x0000),
-    DEADTRANS(L'I', L'^',   0x00CE, 0x0000),
-    DEADTRANS(L'O', L'^',   0x00D4, 0x0000),
-    DEADTRANS(L'A', L'^',   0x00C2, 0x0000),
-    DEADTRANS(L'c', L'^',   0x0109, 0x0000),
-    DEADTRANS(L'h', L'^',   0x0125, 0x0000),
-    DEADTRANS(L'j', L'^',   0x0135, 0x0000),
-    DEADTRANS(L'g', L'^',   0x011D, 0x0000),
-    DEADTRANS(L's', L'^',   0x015D, 0x0000),
-    DEADTRANS(L'w', L'^',   0x0175, 0x0000),
-    DEADTRANS(L'y', L'^',   0x0177, 0x0000),
-    DEADTRANS(L'C', L'^',   0x0108, 0x0000),
-    DEADTRANS(L'H', L'^',   0x0124, 0x0000),
-    DEADTRANS(L'J', L'^',   0x0134, 0x0000),
-    DEADTRANS(L'G', L'^',   0x011C, 0x0000),
-    DEADTRANS(L'S', L'^',   0x015C, 0x0000),
-    DEADTRANS(L'W', L'^',   0x0174, 0x0000),
-    DEADTRANS(L'Y', L'^',   0x0176, 0x0000),
+    DEADTRANS(L'e', 0x00B4, 0x00E9, 0x0000), // Acute, e acute
+    DEADTRANS(L'u', 0x00B4, 0x00FA, 0x0000), // Acute, u acute
+    DEADTRANS(L'i', 0x00B4, 0x00ED, 0x0000), // Acute, i acute
+    DEADTRANS(L'y', 0x00B4, 0x00FD, 0x0000), // Acute, y acute
+    DEADTRANS(L'o', 0x00B4, 0x00F3, 0x0000), // Acute, o acute
+    DEADTRANS(L'a', 0x00B4, 0x00E1, 0x0000), // Acute, a acute
+    DEADTRANS(L'E', 0x00B4, 0x00C9, 0x0000), // Acute, E acute
+    DEADTRANS(L'U', 0x00B4, 0x00DA, 0x0000), // Acute, U acute
+    DEADTRANS(L'I', 0x00B4, 0x00CD, 0x0000), // Acute, I acute
+    DEADTRANS(L'Y', 0x00B4, 0x00DD, 0x0000), // Acute, Y acute
+    DEADTRANS(L'O', 0x00B4, 0x00D3, 0x0000), // Acute, O acute
+    DEADTRANS(L'A', 0x00B4, 0x00C1, 0x0000), // Acute, A acute
+    DEADTRANS(L'n', 0x00B4, 0x0144, 0x0000), // Acute, n acute
+    DEADTRANS(L'c', 0x00B4, 0x0107, 0x0000), // Acute, c acute
+    DEADTRANS(L's', 0x00B4, 0x015B, 0x0000), // Acute, s acute
+    DEADTRANS(L'l', 0x00B4, 0x013A, 0x0000), // Acute, l acute
+    DEADTRANS(L'r', 0x00B4, 0x0155, 0x0000), // Acute, r acute
+    DEADTRANS(L'z', 0x00B4, 0x017A, 0x0000), // Acute, z acute
+    DEADTRANS(L'N', 0x00B4, 0x0143, 0x0000), // Acute, N acute
+    DEADTRANS(L'C', 0x00B4, 0x0106, 0x0000), // Acute, C acute
+    DEADTRANS(L'S', 0x00B4, 0x015A, 0x0000), // Acute, S acute
+    DEADTRANS(L'L', 0x00B4, 0x0139, 0x0000), // Acute, L acute
+    DEADTRANS(L'R', 0x00B4, 0x0154, 0x0000), // Acute, R acute
+    DEADTRANS(L'Z', 0x00B4, 0x0179, 0x0000), // Acute, Z acute
+    DEADTRANS(L' ', 0x00B4, 0x00B4, 0x0000), // Acute, Acute
+    DEADTRANS(L'e', 0x00A8, 0x00EB, 0x0000), // Diaeresis, e diaeresis
+    DEADTRANS(L'u', 0x00A8, 0x00FC, 0x0000), // Diaeresis, u diaeresis
+    DEADTRANS(L'i', 0x00A8, 0x00EF, 0x0000), // Diaeresis, i diaeresis
+    DEADTRANS(L'y', 0x00A8, 0x00FF, 0x0000), // Diaeresis, y diaeresis
+    DEADTRANS(L'o', 0x00A8, 0x00F6, 0x0000), // Diaeresis, o diaeresis
+    DEADTRANS(L'a', 0x00A8, 0x00E4, 0x0000), // Diaeresis, a diaeresis
+    DEADTRANS(L'E', 0x00A8, 0x00CB, 0x0000), // Diaeresis, E diaeresis
+    DEADTRANS(L'U', 0x00A8, 0x00DC, 0x0000), // Diaeresis, U diaeresis
+    DEADTRANS(L'I', 0x00A8, 0x00CF, 0x0000), // Diaeresis, I diaeresis
+    DEADTRANS(L'Y', 0x00A8, 0x0178, 0x0000), // Diaeresis, Y diaeresis
+    DEADTRANS(L'O', 0x00A8, 0x00D6, 0x0000), // Diaeresis, O diaeresis
+    DEADTRANS(L'A', 0x00A8, 0x00C4, 0x0000), // Diaeresis, A diaeresis
+    DEADTRANS(L' ', 0x00A8, 0x00A8, 0x0000), // Diaeresis, Diaeresis
+    DEADTRANS(L'e', L'^',   0x00EA, 0x0000), // e circumflex
+    DEADTRANS(L'u', L'^',   0x00FB, 0x0000), // u circumflex
+    DEADTRANS(L'i', L'^',   0x00EE, 0x0000), // i circumflex
+    DEADTRANS(L'o', L'^',   0x00F4, 0x0000), // o circumflex
+    DEADTRANS(L'a', L'^',   0x00E2, 0x0000), // a circumflex
+    DEADTRANS(L'E', L'^',   0x00CA, 0x0000), // E circumflex
+    DEADTRANS(L'U', L'^',   0x00DB, 0x0000), // U circumflex
+    DEADTRANS(L'I', L'^',   0x00CE, 0x0000), // I circumflex
+    DEADTRANS(L'O', L'^',   0x00D4, 0x0000), // O circumflex
+    DEADTRANS(L'A', L'^',   0x00C2, 0x0000), // A circumflex
+    DEADTRANS(L'c', L'^',   0x0109, 0x0000), // c circumflex
+    DEADTRANS(L'h', L'^',   0x0125, 0x0000), // h circumflex
+    DEADTRANS(L'j', L'^',   0x0135, 0x0000), // j circumflex
+    DEADTRANS(L'g', L'^',   0x011D, 0x0000), // g circumflex
+    DEADTRANS(L's', L'^',   0x015D, 0x0000), // s circumflex
+    DEADTRANS(L'w', L'^',   0x0175, 0x0000), // w circumflex
+    DEADTRANS(L'y', L'^',   0x0177, 0x0000), // y circumflex
+    DEADTRANS(L'C', L'^',   0x0108, 0x0000), // C circumflex
+    DEADTRANS(L'H', L'^',   0x0124, 0x0000), // H circumflex
+    DEADTRANS(L'J', L'^',   0x0134, 0x0000), // J circumflex
+    DEADTRANS(L'G', L'^',   0x011C, 0x0000), // G circumflex
+    DEADTRANS(L'S', L'^',   0x015C, 0x0000), // S circumflex
+    DEADTRANS(L'W', L'^',   0x0174, 0x0000), // W circumflex
+    DEADTRANS(L'Y', L'^',   0x0176, 0x0000), // Y circumflex
     DEADTRANS(L' ', L'^',   L'^',   0x0000),
-    DEADTRANS(L'n', L'~',   0x00F1, 0x0000),
-    DEADTRANS(L'o', L'~',   0x00F5, 0x0000),
-    DEADTRANS(L'a', L'~',   0x00E3, 0x0000),
-    DEADTRANS(L'N', L'~',   0x00D1, 0x0000),
-    DEADTRANS(L'O', L'~',   0x00D5, 0x0000),
-    DEADTRANS(L'A', L'~',   0x00C3, 0x0000),
-    DEADTRANS(L'u', L'~',   0x0169, 0x0000),
-    DEADTRANS(L'i', L'~',   0x0129, 0x0000),
-    DEADTRANS(L'U', L'~',   0x0168, 0x0000),
-    DEADTRANS(L'I', L'~',   0x0128, 0x0000),
+    DEADTRANS(L'n', L'~',   0x00F1, 0x0000), // n tilde
+    DEADTRANS(L'o', L'~',   0x00F5, 0x0000), // o tilde
+    DEADTRANS(L'a', L'~',   0x00E3, 0x0000), // a tilde
+    DEADTRANS(L'N', L'~',   0x00D1, 0x0000), // N tilde
+    DEADTRANS(L'O', L'~',   0x00D5, 0x0000), // O tilde
+    DEADTRANS(L'A', L'~',   0x00C3, 0x0000), // A tilde
+    DEADTRANS(L'u', L'~',   0x0169, 0x0000), // u tilde
+    DEADTRANS(L'i', L'~',   0x0129, 0x0000), // i tilde
+    DEADTRANS(L'U', L'~',   0x0168, 0x0000), // U tilde
+    DEADTRANS(L'I', L'~',   0x0128, 0x0000), // I tilde
     DEADTRANS(L' ', L'~',   L'~',   0x0000),
-    DEADTRANS(L'e', L'`',   0x00E8, 0x0000),
-    DEADTRANS(L'u', L'`',   0x00F9, 0x0000),
-    DEADTRANS(L'i', L'`',   0x00EC, 0x0000),
-    DEADTRANS(L'o', L'`',   0x00F2, 0x0000),
-    DEADTRANS(L'a', L'`',   0x00E0, 0x0000),
-    DEADTRANS(L'E', L'`',   0x00C8, 0x0000),
-    DEADTRANS(L'U', L'`',   0x00D9, 0x0000),
-    DEADTRANS(L'I', L'`',   0x00CC, 0x0000),
-    DEADTRANS(L'O', L'`',   0x00D2, 0x0000),
-    DEADTRANS(L'A', L'`',   0x00C0, 0x0000),
+    DEADTRANS(L'e', L'`',   0x00E8, 0x0000), // e grave
+    DEADTRANS(L'u', L'`',   0x00F9, 0x0000), // u grave
+    DEADTRANS(L'i', L'`',   0x00EC, 0x0000), // i grave
+    DEADTRANS(L'o', L'`',   0x00F2, 0x0000), // o grave
+    DEADTRANS(L'a', L'`',   0x00E0, 0x0000), // a grave
+    DEADTRANS(L'E', L'`',   0x00C8, 0x0000), // E grave
+    DEADTRANS(L'U', L'`',   0x00D9, 0x0000), // U grave
+    DEADTRANS(L'I', L'`',   0x00CC, 0x0000), // I grave
+    DEADTRANS(L'O', L'`',   0x00D2, 0x0000), // O grave
+    DEADTRANS(L'A', L'`',   0x00C0, 0x0000), // A grave
     DEADTRANS(L' ', L'`',   L'`',   0x0000),
     {0, 0, 0}
 };

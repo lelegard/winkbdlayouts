@@ -29,12 +29,13 @@ static MODIFIERS char_modifiers = {
     .wMaxModBits = 7,
     .ModNumber   = {
         0,            // 000 = <none>
-        1,            // 001 = SHIFT
-        2,            // 010 = ALT
-        SHFT_INVALID, // 011 = SHIFT ALT
-        SHFT_INVALID, // 100 = CTRL
-        SHFT_INVALID, // 101 = SHIFT CTRL
-        3,            // 110 = CTRL ALT
+        1,            // 001 = Shift
+        2,            // 010 = Control
+        SHFT_INVALID, // 011 = Shift Control
+        SHFT_INVALID, // 100 = Alt
+        SHFT_INVALID, // 101 = Shift Alt
+        3,            // 110 = Control Alt (AltGr)
+        4,            // 111 = Shift Control Alt
     }
 };
 
@@ -43,8 +44,10 @@ static MODIFIERS char_modifiers = {
 //---------------------------------------------------------------------------
 
 static VK_TO_WCHARS3 vk_to_wchar3[] = {
-    {VK_BACK,   0x00, {0x0008, 0x0008, 0x007F}},
-    {VK_ESCAPE, 0x00, {0x001B, 0x001B, 0x001B}},
+    //                         Shift   Ctrl
+    //                         =====   ====
+    {VK_BACK,   0x00, {0x0008, 0x0008, 0x007F}}, // BS, BS, DEL
+    {VK_ESCAPE, 0x00, {0x001B, 0x001B, 0x001B}}, // ESC, ESC, ESC
     {VK_RETURN, 0x00, {L'\r',  L'\r',  L'\n'}},
     {VK_CANCEL, 0x00, {0x0003, 0x0003, 0x0003}},
     {0,         0,    0,       0,      0}
@@ -55,11 +58,13 @@ static VK_TO_WCHARS3 vk_to_wchar3[] = {
 //---------------------------------------------------------------------------
 
 static VK_TO_WCHARS5 vk_to_wchar5[] = {
+    //                               Shift     Ctrl      Ctrl/Alt  Shift/Ctrl/Alt
+    //                               =====     ====      ========  ==============
     {'1',           SGCAPS, {0x0661, L'!',     0x0661,   0x0638,   0x0638}},
     {'1',           0x00,   {L'1',   0x0000,   0x0000,   0x0000,   0x0000}},
     {'2',           SGCAPS, {0x0662, L'@',     0x0662,   0x0637,   0x274A}},
     {'2',           0x00,   {L'2',   0x0000,   0x0000,   0x0000,   0x0000}},
-    {'3',           SGCAPS, {0x0663, L'#',     0x0663,   0x0630,   0x00A3}},
+    {'3',           SGCAPS, {0x0663, L'#',     0x0663,   0x0630,   0x00A3}},      // Pound
     {'3',           0x00,   {L'3',   0x0000,   0x0000,   0x0000,   0x0000}},
     {'4',           SGCAPS, {0x0664, L'$',     0x0664,   0x062F,   0x20AC}},
     {'4',           0x00,   {L'4',   0x0000,   0x0000,   0x0000,   0x0000}},
@@ -73,7 +78,7 @@ static VK_TO_WCHARS5 vk_to_wchar5[] = {
     {'8',           0x00,   {L'8',   0x0000,   0x0000,   0x0000,   0x0000}},
     {'9',           SGCAPS, {0x0669, L')',     0x0669,   WCH_NONE, WCH_NONE}},
     {'9',           0x00,   {L'9',   0x0000,   0x0000,   0x0000,   0x0000}},
-    {'0',           SGCAPS, {0x0660, L'(',     0x0660,   0x00B0,   WCH_NONE}},
+    {'0',           SGCAPS, {0x0660, L'(',     0x0660,   0x00B0,   WCH_NONE}},    // Degree
     {'0',           0x00,   {L'0',   0x0000,   0x0000,   0x0000,   0x0000}},
     {VK_OEM_MINUS,  SGCAPS, {L'-',   0x0640,   WCH_NONE, L'_',     L'_'}},
     {VK_OEM_MINUS,  0x00,   {L'-',   0x0000,   0x0000,   0x0000,   0x0000}},
@@ -89,10 +94,10 @@ static VK_TO_WCHARS5 vk_to_wchar5[] = {
     {'I',           0x00,   {0x0647, 0x0651,   WCH_NONE, WCH_NONE, WCH_NONE}},
     {'O',           0x00,   {0x062E, L']',     WCH_NONE, WCH_NONE, WCH_NONE}},
     {'P',           0x00,   {0x062D, L'[',     WCH_NONE, WCH_NONE, WCH_NONE}},
-    {VK_OEM_4,      0x00,   {0x062C, L'}',     0x001B,   0x0686,   0x0686}},
+    {VK_OEM_4,      0x00,   {0x062C, L'}',     0x001B,   0x0686,   0x0686}},      // ESC
     {VK_OEM_6,      0x00,   {0x0629, L'{',     0x001D,   WCH_NONE, WCH_NONE}},
-    {'A',           0x00,   {0x0634, 0x00AB,   WCH_NONE, WCH_NONE, WCH_NONE}},
-    {'S',           0x00,   {0x0633, 0x00BB,   WCH_NONE, 0x06D2,   0x06D2}},
+    {'A',           0x00,   {0x0634, 0x00AB,   WCH_NONE, WCH_NONE, WCH_NONE}},    // <<
+    {'S',           0x00,   {0x0633, 0x00BB,   WCH_NONE, 0x06D2,   0x06D2}},      // >>
     {'D',           0x00,   {0x064A, 0x0649,   WCH_NONE, 0x06CC,   0x06CC}},
     {'F',           0x00,   {0x0628, WCH_NONE, WCH_NONE, 0x067E,   0x067E}},
     {'G',           0x00,   {0x0644, WCH_NONE, WCH_NONE, 0x0653,   WCH_NONE}},
@@ -102,7 +107,7 @@ static VK_TO_WCHARS5 vk_to_wchar5[] = {
     {'L',           0x00,   {0x0645, 0x066C,   WCH_NONE, WCH_NONE, WCH_NONE}},
     {VK_OEM_1,      0x00,   {0x0643, L':',     L';',     0x06AF,   0x06A9}},
     {VK_OEM_7,      0x00,   {0x061B, L'"',     L'\'',    0x2026,   0x2026}},
-    {VK_OEM_3,      SGCAPS, {0x00A7, 0x00B1,   L'0',     0x0003,   0x0003}},
+    {VK_OEM_3,      SGCAPS, {0x00A7, 0x00B1,   L'0',     0x0003,   0x0003}},      // Section, +/-
     {VK_OEM_3,      0x00,   {0x0003, 0x0000,   0x0000,   0x0000,   0x0000}},
     {VK_OEM_5,      0x00,   {L'\\',  L'|',     0x001C,   WCH_NONE, WCH_NONE}},
     {'Z',           0x00,   {0x0638, L'\'',    WCH_NONE, WCH_NONE, WCH_NONE}},
@@ -114,8 +119,8 @@ static VK_TO_WCHARS5 vk_to_wchar5[] = {
     {'M',           0x00,   {0x0648, 0x0624,   WCH_NONE, WCH_NONE, WCH_NONE}},
     {VK_OEM_COMMA,  0x00,   {0x060C, L'>',     L',',     L',',     L','}},
     {VK_OEM_PERIOD, 0x00,   {L'.',   L'<',     L'.',     WCH_NONE, WCH_NONE}},
-    {VK_OEM_2,      0x00,   {L'/',   0x061F,   L'/',     0x00F7,   0x00F7}},
-    {VK_SPACE,      0x00,   {L' ',   L' ',     WCH_NONE, 0x00A0,   0x00A0}},
+    {VK_OEM_2,      0x00,   {L'/',   0x061F,   L'/',     0x00F7,   0x00F7}},      // Division, Division
+    {VK_SPACE,      0x00,   {L' ',   L' ',     WCH_NONE, 0x00A0,   0x00A0}},      // Nbrk space, Nbrk space
     {VK_OEM_102,    0x00,   {0x0640, WCH_NONE, L'`',     WCH_NONE, WCH_NONE}},
     {VK_DECIMAL,    0x00,   {L'.',   L'.',     WCH_NONE, WCH_NONE, WCH_NONE}},
     {0,             0,      0,       0,        0,        0,        0}
@@ -126,6 +131,8 @@ static VK_TO_WCHARS5 vk_to_wchar5[] = {
 //---------------------------------------------------------------------------
 
 static VK_TO_WCHARS2 vk_to_wchar2[] = {
+    //                          Shift
+    //                          =====
     {VK_TAB,      0x00, {L'\t', L'\t'}},
     {VK_ADD,      0x00, {L'+',  L'+'}},
     {VK_DIVIDE,   0x00, {L'/',  L'/'}},
