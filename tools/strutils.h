@@ -14,6 +14,10 @@
 // Format a C++ string in a printf-way.
 std::string Format(const char* fmt, ...);
 
+// Length of a WSTRING. Size in bytes of it (including trailing null).
+size_t WstringLength(const WCHAR*);
+size_t WstringSize(const WCHAR*);
+
 // Case conversions.
 std::string ToLower(const std::string&);
 std::string ToUpper(const std::string&);
@@ -38,6 +42,12 @@ typedef std::list<GridLine> Grid;
 
 // Print a grid of strings. All columns are aligned on their maximum width.
 void PrintGrid(std::ostream& out, const Grid& grid, const std::string& margin = "", size_t spacing = 1);
+
+// Hexadecimal digit.
+char Hexa(int nibble);
+
+// Hexadecimal dump.
+void PrintHexa(std::ostream& out, const void* addr, size_t size, const std::string& margin = "", bool show_addr = false);
 
 //----------------------------------------------------------------------------
 // Template expansions...

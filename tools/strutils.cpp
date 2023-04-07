@@ -42,6 +42,30 @@ std::string Format(const char* fmt, ...)
 
 
 //----------------------------------------------------------------------------
+// Length of a WSTRING. Size in bytes of it (including trailing null).
+//----------------------------------------------------------------------------
+
+size_t WstringLength(const WCHAR* s)
+{
+    if (s == nullptr) {
+        return 0;
+    }
+    else {
+        size_t len = 0;
+        while (*s++ != 0) {
+            len++;
+        }
+        return len;
+    }
+}
+
+size_t WstringSize(const WCHAR* s)
+{
+    return s == nullptr ? 0 : (WstringLength(s) + 1) * sizeof(WCHAR);
+}
+
+
+//----------------------------------------------------------------------------
 // Case conversions.
 //----------------------------------------------------------------------------
 
@@ -150,5 +174,39 @@ void PrintGrid(std::ostream& out, const Grid& grid, const std::string& margin, s
             }
         }
         out << std::endl;
+    }
+}
+
+//---------------------------------------------------------------------------
+// Hexadecimal dump.
+//---------------------------------------------------------------------------
+
+char Hexa(int nibble)
+{
+    int n = nibble & 0x0F;
+    return (n < 10 ? '0' : 'A' - 10) + n;
+}
+
+void PrintHexa(std::ostream& out, const void* addr, size_t size, const std::string& margin, bool show_addr)
+{
+    const uint8_t* cur = reinterpret_cast<const uint8_t*>(addr);
+    const uint8_t* end = cur + size;
+    constexpr size_t bytes_per_line = 16;
+
+    while (cur < end) {
+        const size_t count = std::min<size_t>(bytes_per_line, end - cur);
+        out << margin;
+        if (show_addr) {
+            out << Format("0x%08llX: ", size_t(cur));
+        }
+        for (size_t i = 0; i < count; ++i) {
+            out << Hexa(cur[i] >> 4) << Hexa(cur[i]) << ' ';
+        }
+        out << std::string(2 + 3 * (bytes_per_line - count), ' ');
+        for (size_t i = 0; i < count; ++i) {
+            out << char(cur[i] >= ' ' && cur[i] < 0x7F ? cur[i] : '.');
+        }
+        out << std::endl;
+        cur += count;
     }
 }
