@@ -9,6 +9,14 @@
     <ClCompile Include="options.cpp"/>
     <ClInclude Include="strutils.h"/>
     <ClCompile Include="strutils.cpp"/>
+    <ClInclude Include="winutils.h"/>
+    <ClCompile Include="winutils.cpp"/>
+    <ClInclude Include="registry.h"/>
+    <ClCompile Include="registry.cpp"/>
+    <ClInclude Include="resources.h"/>
+    <ClCompile Include="resources.cpp"/>
+    <ClInclude Include="grid.h"/>
+    <ClCompile Include="grid.cpp"/>
   </ItemGroup>
   <ImportGroup Label="PropertySheets">
     <Import Project="$(SolutionDir)msbuild.props"/>

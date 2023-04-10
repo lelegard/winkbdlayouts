@@ -9,7 +9,7 @@
 //----------------------------------------------------------------------------
 
 #include "options.h"
-#include "strutils.h"
+#include "winutils.h"
 
 
 //----------------------------------------------------------------------------
@@ -19,7 +19,10 @@
 Options::Options(int argc, char* argv[], const std::string syntax) :
     command(argc < 1 ? "" : FileBaseName(argv[0])),
     args(),
-    _syntax(syntax)
+    _syntax(syntax),
+    _outfile(),
+    _out(&std::cout),
+    _prompt_on_exit(false)
 {
     for (int i = 1; i < argc; ++i) {
         args.push_back(argv[i]);
@@ -28,17 +31,58 @@ Options::Options(int argc, char* argv[], const std::string syntax) :
 
 
 //----------------------------------------------------------------------------
+// Set an output file or use std::cout.
+//----------------------------------------------------------------------------
+
+void Options::setOutput(const std::string& filename)
+{
+    closeOutput();
+    if (!filename.empty()) {
+        _outfile.open(filename);
+        if (!_outfile) {
+            fatal("cannot create output file " + filename);
+        }
+        _out = &_outfile;
+    }
+}
+
+void Options::closeOutput()
+{
+    if (_out == &_outfile) {
+        _outfile.close();
+        _out = &std::cout;
+    }
+}
+
+
+//----------------------------------------------------------------------------
 // Error handling.
 //----------------------------------------------------------------------------
 
-[[noreturn]] void Options::usage() const
+[[noreturn]] void Options::usage()
 {
-    std::cerr << std::endl << "Syntax: " << command << "  " << _syntax << std::endl << std::endl;
-    ::exit(EXIT_FAILURE);
+    std::cerr << std::endl << "Syntax: " << command << " " << _syntax << std::endl << std::endl;
+    exit(EXIT_FAILURE);
 }
 
-[[noreturn]] void Options::fatal(const std::string& message) const
+[[noreturn]] void Options::fatal(const std::string& message)
 {
     std::cerr << command << ": " << message << std::endl;
-    ::exit(EXIT_FAILURE);
+    exit(EXIT_FAILURE);
+}
+
+
+//----------------------------------------------------------------------------
+// Exit process, prompt for user input if setPromptOnExit(true) was called.
+//----------------------------------------------------------------------------
+
+[[noreturn]] void Options::exit(int status)
+{
+    closeOutput();
+    if (_prompt_on_exit) {
+        char c;
+        std::cout << "Press return to exit: " << std::flush;
+        std::cin.getline(&c, 1);
+    }
+    ::exit(status);
 }

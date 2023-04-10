@@ -12,7 +12,10 @@
   <PropertyGroup Condition="'$(ProjectName)'==''">
     <ProjectName>$(MSBuildProjectName)</ProjectName>
   </PropertyGroup>
-  <PropertyGroup Condition="$([System.Text.RegularExpressions.Regex]::IsMatch($(ProjectName), '^kbd.*'))">
+  <PropertyGroup Condition="$([System.Text.RegularExpressions.Regex]::IsMatch($(ProjectName), '^kbd.*')) and
+                            Exists('$(SolutionDir)$(ProjectName)\$(ProjectName).c') and
+                            Exists('$(SolutionDir)$(ProjectName)\$(ProjectName).rc') and
+                            Exists('$(SolutionDir)$(ProjectName)\$(ProjectName).reg')">
     <ProjectType>KeyboardLayout</ProjectType>
   </PropertyGroup>
   <PropertyGroup Condition="$([System.Text.RegularExpressions.Regex]::IsMatch($(ProjectName), '^lib.*'))">
@@ -97,7 +100,7 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props"/>
   <ImportGroup Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props"
-            Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')"
+            Condition="Exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')"
             Label="LocalAppDataPlatform"/>
   </ImportGroup>
 
@@ -157,6 +160,7 @@
   <ItemDefinitionGroup Condition="'$(ProjectType)'=='KeyboardLayout'">
     <ClCompile>
       <DebugInformationFormat>None</DebugInformationFormat>
+      <ProgramDataBaseFileName/>
       <CompileAsManaged>false</CompileAsManaged>
       <ExceptionHandling>false</ExceptionHandling>
       <FunctionLevelLinking>false</FunctionLevelLinking>
@@ -170,9 +174,17 @@
     <Link>
       <SubSystem>NotSet</SubSystem>
       <IgnoreAllDefaultLibraries>true</IgnoreAllDefaultLibraries>
+      <AdditionalOptions>%(AdditionalOptions) -merge:.rdata=.data -merge:.bss=.data /ignore:4254</AdditionalOptions>
       <NoEntryPoint>true</NoEntryPoint>
+      <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <ProgramDatabaseFile/>
     </Link>
   </ItemDefinitionGroup>
+
+  <PropertyGroup Condition="'$(ProjectType)'=='KeyboardLayout'">
+    <GenerateManifest>false</GenerateManifest>
+  </PropertyGroup>
 
   <ItemDefinitionGroup Condition="'$(ProjectType)'=='ConsoleTool'">
     <Link>

@@ -57,7 +57,7 @@ Additional notes:
 
 - The key tables in `kbdXXYYY.c` can be manually updated from an existing keyboard
   source file in this project. However, if you already have a valid DLL for that
-  keyboard on one system, use the `reverse` tool to extract the keyboard definition
+  keyboard on one system, use the `kbdreverse` tool to extract the keyboard definition
   and rebuild a source file from it. The source file will then be recompiled for all
   architectures.
   

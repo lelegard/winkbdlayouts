@@ -11,6 +11,15 @@
 #pragma once
 #include "platform.h"
 
+// Convenience types.
+typedef std::vector<std::string> StringVector;
+typedef std::list<std::string> StringList;
+
+StringVector operator+(const StringVector&, const std::string&);
+StringVector operator+(const std::string&, const StringVector&);
+StringList operator+(const StringList&, const std::string&);
+StringList operator+(const std::string&, const StringList&);
+
 // Format a C++ string in a printf-way.
 std::string Format(const char* fmt, ...);
 
@@ -22,32 +31,26 @@ size_t WstringSize(const WCHAR*);
 std::string ToLower(const std::string&);
 std::string ToUpper(const std::string&);
 
+// Check if a string starts or end with a string.
+bool StartsWith(const std::string&, const std::string& prefix);
+bool EndsWith(const std::string&, const std::string& suffix);
+
 // Join a container of strings.
 template <class CONTAINER>
 std::string Join(const CONTAINER& container, const std::string& separator = ", ", bool noempty = false);
-
-// Get the value of an environment variable.
-std::string GetEnv(const std::string& name, const std::string& def = "");
-
-// File name (without directory), file base name (without directory and prefix).
-std::string FileName(const std::string& name);
-std::string FileBaseName(const std::string& name);
-
-// Transform an error code into an error message string.
-std::string Error(::DWORD code = ::GetLastError());
-
-// Lists of lists of strings. Each list of strings represents a line in a table.
-typedef std::vector<std::string> GridLine;
-typedef std::list<GridLine> Grid;
-
-// Print a grid of strings. All columns are aligned on their maximum width.
-void PrintGrid(std::ostream& out, const Grid& grid, const std::string& margin = "", size_t spacing = 1);
 
 // Hexadecimal digit.
 char Hexa(int nibble);
 
 // Hexadecimal dump.
 void PrintHexa(std::ostream& out, const void* addr, size_t size, const std::string& margin = "", bool show_addr = false);
+
+// Zero a memory area.
+inline void Zero(void* base, size_t size) { ::memset(base, 0, size); }
+
+// Check if a memory area is not empty and full of zeroes.
+bool IsZero(const void* base, size_t size);
+bool IsZero(const void* base, const void* end);
 
 //----------------------------------------------------------------------------
 // Template expansions...

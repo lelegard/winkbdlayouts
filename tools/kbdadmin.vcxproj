@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{425001BB-6EB8-4CD3-AB70-2F88244F63E9}</ProjectGuid>
+    <ProjectGuid>{599FF9E1-4CB8-4511-9D55-A5CBC6191DC3}</ProjectGuid>
   </PropertyGroup>
   <ImportGroup Label="PropertySheets">
-    <Import Project="$(SolutionDir)msbuild.props"/>
+    <Import Project="$(SolutionDir)msbuild.props" />
   </ImportGroup>
 </Project>

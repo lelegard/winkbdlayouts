@@ -14,6 +14,41 @@
 
 
 //---------------------------------------------------------------------------
+// Operators on string containers.
+//---------------------------------------------------------------------------
+
+StringVector operator+(const StringVector& v, const std::string& s)
+{
+    StringVector res(v);
+    res.push_back(s);
+    return res;
+}
+
+StringVector operator+(const std::string& s, const StringVector& v)
+{
+    StringVector res;
+    res.push_back(s);
+    res.insert(res.end(), v.begin(), v.end());
+    return res;
+}
+
+StringList operator+(const StringList& l, const std::string& s)
+{
+    StringList res(l);
+    res.push_back(s);
+    return res;
+}
+
+StringList operator+(const std::string& s, const StringList& l)
+{
+    StringList res;
+    res.push_back(s);
+    res.insert(res.end(), l.begin(), l.end());
+    return res;
+}
+
+
+//---------------------------------------------------------------------------
 // Format a C++ string in a printf-way.
 //---------------------------------------------------------------------------
 
@@ -84,98 +119,46 @@ std::string ToUpper(const std::string& s)
 }
 
 
-//----------------------------------------------------------------------------
-// File name (without directory), file base name (without directory and prefix).
-//----------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+// Check if a string starts or end with a string.
+//---------------------------------------------------------------------------
 
-std::string FileName(const std::string& name)
+bool StartsWith(const std::string& s, const std::string& prefix)
 {
-    const size_t pos = name.find_last_of(":/\\");
-    return pos == std::string::npos ? name : name.substr(pos + 1);
+    return !prefix.empty() && s.length() >= prefix.length() && s.substr(0, prefix.length()) == prefix;
 }
 
-std::string FileBaseName(const std::string& name)
+bool EndsWith(const std::string& s, const std::string& suffix)
 {
-    const std::string filename(FileName(name));
-    const size_t pos = filename.find_last_of(".");
-    return pos == std::string::npos ? filename : filename.substr(0, pos);
+    return !suffix.empty() && s.length() >= suffix.length() && s.substr(s.length() - suffix.length()) == suffix;
 }
 
 
-//----------------------------------------------------------------------------
-// Transform an error code into an error message string.
-//----------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+// Check if a memory area is not empty and full of zeroes.
+//---------------------------------------------------------------------------
 
-std::string Error(::DWORD code)
+bool IsZero(const void* base, size_t size)
 {
-    std::string message(1024, ' ');
-    size_t length = ::FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM, nullptr, code, 0, &message[0], ::DWORD(message.size()), nullptr);
-    message.resize(std::min(length, message.size()));
+    const char* p = reinterpret_cast<const char*>(base);
+    return IsZero(p, p + size);
+}
 
-    while (!message.empty() && std::isspace(message.back())) {
-        message.pop_back();
-    }
-
-    if (!message.empty()) {
-        return message;
+bool IsZero(const void* base, const void* end)
+{
+    if (base == nullptr || end == nullptr || end <= base) {
+        return false;
     }
     else {
-        // Message is not found.
-        return Format("System error %d (0x%X)", code, code);
-    }
-}
-
-
-//---------------------------------------------------------------------------
-// Get the value of an environment variable.
-//---------------------------------------------------------------------------
-
-std::string GetEnv(const std::string& name, const std::string& def)
-{
-    std::string value(1024, ' ');
-    ::DWORD size = ::GetEnvironmentVariableA(name.c_str(), &value[0], ::DWORD(value.size()));
-    if (size >= ::DWORD(value.size())) {
-        value.resize(size_t(size + 1));
-        size = ::GetEnvironmentVariableA(name.c_str(), &value[0], ::DWORD(value.size()));
-    }
-    value.resize(std::max<size_t>(0, std::min<size_t>(value.size(), size)));
-    return value.empty() ? def : value;
-}
-
-
-//---------------------------------------------------------------------------
-// Print a grid of strings. All columns are aligned on their maximum width.
-//---------------------------------------------------------------------------
-
-void PrintGrid(std::ostream& out, const Grid& grid, const std::string& margin, size_t spacing)
-{
-    std::vector<size_t> widths;
-
-    // Compute columns widths.
-    for (const auto& row : grid) {
-        for (size_t i = 0; i < row.size(); ++i) {
-            const size_t w = row[i].length();
-            if (widths.size() <= i) {
-                widths.push_back(w);
-            }
-            else if (widths[i] < w) {
-                widths[i] = w;
+        for (const char* p = reinterpret_cast<const char*>(base); p < reinterpret_cast<const char*>(end); ++p) {
+            if (*p != 0) {
+                return false;
             }
         }
-    }
-
-    // Then print the grid.
-    for (const auto& row : grid) {
-        out << margin;
-        for (size_t i = 0; i < row.size(); ++i) {
-            out << row[i];
-            if (i < row.size() - 1) {
-                out << std::string(widths[i] - row[i].length() + spacing, ' ');
-            }
-        }
-        out << std::endl;
+        return true;
     }
 }
+
 
 //---------------------------------------------------------------------------
 // Hexadecimal dump.
