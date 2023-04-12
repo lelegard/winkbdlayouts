@@ -12,8 +12,9 @@
 #include "options.h"
 #include "strutils.h"
 #include "winutils.h"
-#include "resources.h"
 #include "grid.h"
+#include "fileversion.h"
+#include "kbdrc.h"
 
 // Entry point of all keyboard layout DLL's.
 #define KBD_DLL_ENTRY_NAME "KbdLayerDescriptor"
@@ -708,7 +709,7 @@ public:
     SourceGenerator(ReverseOptions& opt) : _ou(opt.out()), _opt(opt), _alldata() {}
 
     // Generate the source 
-    void generate(::HMODULE);
+    void generate(const ::KBDTABLES&);
 
 private:
     std::ostream&            _ou;
@@ -1302,27 +1303,12 @@ void SourceGenerator::genVscToVk(const ::VSC_VK* vtvk, const std::string& name, 
 
 //---------------------------------------------------------------------------
 
-void SourceGenerator::generate(::HMODULE hmod)
+void SourceGenerator::generate(const ::KBDTABLES& tables)
 {
-    // Get the DLL entry point.
-    ::FARPROC proc_addr = ::GetProcAddress(hmod, KBD_DLL_ENTRY_NAME);
-    if (proc_addr == nullptr) {
-        const ::DWORD err = ::GetLastError();
-        _opt.fatal("cannot find " KBD_DLL_ENTRY_NAME " in " + _opt.input + ": " + Error(err));
-        return;
-    }
-
-    // Call the entry point to get the keyboard tables.
-    // The entry point profile is: PKBDTABLES KbdLayerDescriptor()
-    ::PKBDTABLES tables = reinterpret_cast<::PKBDTABLES(*)()>(proc_addr)();
-    if (tables == nullptr) {
-        _opt.fatal(KBD_DLL_ENTRY_NAME "() returned null in " + _opt.input);
-    }
-
     // Keyboard type are typically lower than 42. The field dwType was not used in older
     // versions and may contain crap. Try to guess a realistic value for keyboard type.
     // The last default keyord type is 4 (classical 101/102-key keyboard).
-    const int kbd_type = _opt.kbd_type > 0 ? _opt.kbd_type : (tables->dwType > 0 && tables->dwType < 48 ? tables->dwType : 4);
+    const int kbd_type = _opt.kbd_type > 0 ? _opt.kbd_type : (tables.dwType > 0 && tables.dwType < 48 ? tables.dwType : 4);
 
     _ou << "//" << _opt.dashed << std::endl
         << "// " << _opt.comment << std::endl
@@ -1337,53 +1323,53 @@ void SourceGenerator::generate(::HMODULE hmod)
         << std::endl;
 
     const std::string char_modifiers_name = "char_modifiers";
-    if (tables->pCharModifiers != nullptr) {
-        genCharModifiers(*tables->pCharModifiers, char_modifiers_name);
+    if (tables.pCharModifiers != nullptr) {
+        genCharModifiers(*tables.pCharModifiers, char_modifiers_name);
     }
 
     const std::string vk_to_wchar_name = "vk_to_wchar";
-    if (tables->pVkToWcharTable != nullptr) {
-        genVkToWchar(tables->pVkToWcharTable, vk_to_wchar_name, *tables->pCharModifiers);
+    if (tables.pVkToWcharTable != nullptr) {
+        genVkToWchar(tables.pVkToWcharTable, vk_to_wchar_name, *tables.pCharModifiers);
     }
 
     const std::string dead_keys_name = "dead_keys";
-    if (tables->pDeadKey != nullptr) {
-        genDeadKeys(tables->pDeadKey, dead_keys_name);
+    if (tables.pDeadKey != nullptr) {
+        genDeadKeys(tables.pDeadKey, dead_keys_name);
     }
 
     const std::string key_names_name = "key_names";
-    if (tables->pKeyNames != nullptr) {
-        genVscToString(tables->pKeyNames, key_names_name);
+    if (tables.pKeyNames != nullptr) {
+        genVscToString(tables.pKeyNames, key_names_name);
     }
 
     const std::string key_names_ext_name = "key_names_ext";
-    if (tables->pKeyNamesExt != nullptr) {
-        genVscToString(tables->pKeyNamesExt, key_names_ext_name, " (extended keypad)");
+    if (tables.pKeyNamesExt != nullptr) {
+        genVscToString(tables.pKeyNamesExt, key_names_ext_name, " (extended keypad)");
     }
 
     const std::string key_names_dead_name = "key_names_dead";
-    if (tables->pKeyNamesDead != nullptr) {
-        genKeyNames(tables->pKeyNamesDead, key_names_dead_name);
+    if (tables.pKeyNamesDead != nullptr) {
+        genKeyNames(tables.pKeyNamesDead, key_names_dead_name);
     }
 
     const std::string scancode_to_vk_name = "scancode_to_vk";
-    if (tables->pusVSCtoVK != nullptr) {
-        genScanToVk(tables->pusVSCtoVK, tables->bMaxVSCtoVK, scancode_to_vk_name);
+    if (tables.pusVSCtoVK != nullptr) {
+        genScanToVk(tables.pusVSCtoVK, tables.bMaxVSCtoVK, scancode_to_vk_name);
     }
 
     const std::string scancode_to_vk_e0_name = "scancode_to_vk_e0";
-    if (tables->pVSCtoVK_E0 != nullptr) {
-        genVscToVk(tables->pVSCtoVK_E0, scancode_to_vk_e0_name, " (scancodes with E0 prefix)");
+    if (tables.pVSCtoVK_E0 != nullptr) {
+        genVscToVk(tables.pVSCtoVK_E0, scancode_to_vk_e0_name, " (scancodes with E0 prefix)");
     }
 
     const std::string scancode_to_vk_e1_name = "scancode_to_vk_e1";
-    if (tables->pVSCtoVK_E1 != nullptr) {
-        genVscToVk(tables->pVSCtoVK_E1, scancode_to_vk_e1_name, " (scancodes with E1 prefix)");
+    if (tables.pVSCtoVK_E1 != nullptr) {
+        genVscToVk(tables.pVSCtoVK_E1, scancode_to_vk_e1_name, " (scancodes with E1 prefix)");
     }
 
     const std::string ligatures_name = "ligatures";
-    if (tables->pLigature != nullptr) {
-        genLgToWchar(tables->pLigature, tables->nLgMax, tables->cbLgEntry, ligatures_name);
+    if (tables.pLigature != nullptr) {
+        genLgToWchar(tables.pLigature, tables.nLgMax, tables.cbLgEntry, ligatures_name);
     }
 
     // Generate main table.
@@ -1394,22 +1380,22 @@ void SourceGenerator::generate(::HMODULE hmod)
         << "//" << _opt.dashed << std::endl
         << std::endl
         << "static KBDTABLES " << kbd_table_name << " = {" << std::endl
-        << "    .pCharModifiers  = " << pointer(tables->pCharModifiers, "&" + char_modifiers_name) << "," << std::endl
-        << "    .pVkToWcharTable = " << pointer(tables->pVkToWcharTable, vk_to_wchar_name) << "," << std::endl
-        << "    .pDeadKey        = " << pointer(tables->pDeadKey, dead_keys_name) << "," << std::endl
-        << "    .pKeyNames       = " << pointer(tables->pKeyNames, key_names_name) << "," << std::endl
-        << "    .pKeyNamesExt    = " << pointer(tables->pKeyNamesExt, key_names_ext_name) << "," << std::endl
-        << "    .pKeyNamesDead   = " << pointer(tables->pKeyNamesDead, key_names_dead_name) << "," << std::endl
-        << "    .pusVSCtoVK      = " << pointer(tables->pusVSCtoVK, scancode_to_vk_name) << "," << std::endl
-        << "    .bMaxVSCtoVK     = " << (tables->pusVSCtoVK == nullptr ? "0," : "ARRAYSIZE(" + scancode_to_vk_name + "),") << std::endl
-        << "    .pVSCtoVK_E0     = " << pointer(tables->pVSCtoVK_E0, scancode_to_vk_e0_name) << "," << std::endl
-        << "    .pVSCtoVK_E1     = " << pointer(tables->pVSCtoVK_E1, scancode_to_vk_e1_name) << "," << std::endl
-        << "    .fLocaleFlags    = " << localeFlags(tables->fLocaleFlags) << "," << std::endl
-        << "    .nLgMax          = " << int(tables->nLgMax) << "," << std::endl
-        << "    .cbLgEntry       = " << (tables->pLigature == nullptr ? "0," : "sizeof(" + ligatures_name + "[0]),") << std::endl
-        << "    .pLigature       = " << pointer(tables->pLigature, "(PLIGATURE1)" + ligatures_name) << "," << std::endl
-        << "    .dwType          = " << tables->dwType << "," << std::endl
-        << "    .dwSubType       = " << tables->dwSubType << "," << std::endl
+        << "    .pCharModifiers  = " << pointer(tables.pCharModifiers, "&" + char_modifiers_name) << "," << std::endl
+        << "    .pVkToWcharTable = " << pointer(tables.pVkToWcharTable, vk_to_wchar_name) << "," << std::endl
+        << "    .pDeadKey        = " << pointer(tables.pDeadKey, dead_keys_name) << "," << std::endl
+        << "    .pKeyNames       = " << pointer(tables.pKeyNames, key_names_name) << "," << std::endl
+        << "    .pKeyNamesExt    = " << pointer(tables.pKeyNamesExt, key_names_ext_name) << "," << std::endl
+        << "    .pKeyNamesDead   = " << pointer(tables.pKeyNamesDead, key_names_dead_name) << "," << std::endl
+        << "    .pusVSCtoVK      = " << pointer(tables.pusVSCtoVK, scancode_to_vk_name) << "," << std::endl
+        << "    .bMaxVSCtoVK     = " << (tables.pusVSCtoVK == nullptr ? "0," : "ARRAYSIZE(" + scancode_to_vk_name + "),") << std::endl
+        << "    .pVSCtoVK_E0     = " << pointer(tables.pVSCtoVK_E0, scancode_to_vk_e0_name) << "," << std::endl
+        << "    .pVSCtoVK_E1     = " << pointer(tables.pVSCtoVK_E1, scancode_to_vk_e1_name) << "," << std::endl
+        << "    .fLocaleFlags    = " << localeFlags(tables.fLocaleFlags) << "," << std::endl
+        << "    .nLgMax          = " << int(tables.nLgMax) << "," << std::endl
+        << "    .cbLgEntry       = " << (tables.pLigature == nullptr ? "0," : "sizeof(" + ligatures_name + "[0]),") << std::endl
+        << "    .pLigature       = " << pointer(tables.pLigature, "(PLIGATURE1)" + ligatures_name) << "," << std::endl
+        << "    .dwType          = " << tables.dwType << "," << std::endl
+        << "    .dwSubType       = " << tables.dwSubType << "," << std::endl
         << "};" << std::endl
         << std::endl
         << "//" << _opt.dashed << std::endl
@@ -1494,19 +1480,48 @@ int main(int argc, char* argv[])
         opt.fatal("error opening " + opt.input + ": " + Error(err));
     }
 
+    // Get the DLL entry point.
+    ::FARPROC proc_addr = ::GetProcAddress(dll, KBD_DLL_ENTRY_NAME);
+    if (proc_addr == nullptr) {
+        const ::DWORD err = ::GetLastError();
+        opt.fatal("cannot find " KBD_DLL_ENTRY_NAME " in " + opt.input + ": " + Error(err));
+    }
+
+    // Call the entry point to get the keyboard tables.
+    // The entry point profile is: PKBDTABLES KbdLayerDescriptor()
+    ::PKBDTABLES tables = reinterpret_cast<::PKBDTABLES(*)()>(proc_addr)();
+    if (tables == nullptr) {
+        opt.fatal(KBD_DLL_ENTRY_NAME "() returned null in " + opt.input);
+    }
+
     // Open the output file when specified.
     opt.setOutput(opt.output);
 
     // Generate the source file.
     if (opt.gen_resources) {
-        Resources res(&std::cerr);
-        if (res.load(dll)) {
-            //@@@@
+        FileVersionInfo info(&std::cerr);
+        if (info.load(dll)) {
+            opt.out()
+                << "FileVersion:      " << info.FileVersion1 << "." << info.FileVersion2 << "." << info.FileVersion3 << "." << info.FileVersion4 << std::endl
+                << "ProductVersion:   " << info.ProductVersion1 << "." << info.ProductVersion2 << "." << info.ProductVersion3 << "." << info.ProductVersion4 << std::endl
+                << "FileType:         " << info.FileType << std::endl
+                << "FileSubtype:      " << info.FileSubtype << std::endl
+                << "CompanyName:      \"" << ToUTF8(info.CompanyName) << "\"" << std::endl
+                << "FileDescription:  \"" << ToUTF8(info.FileDescription) << "\"" << std::endl
+                << "FileVersion:      \"" << ToUTF8(info.FileVersion) << "\"" << std::endl
+                << "InternalName:     \"" << ToUTF8(info.InternalName) << "\"" << std::endl
+                << "LegalCopyright:   \"" << ToUTF8(info.LegalCopyright) << "\"" << std::endl
+                << "OriginalFilename: \"" << ToUTF8(info.OriginalFilename) << "\"" << std::endl
+                << "ProductName:      \"" << ToUTF8(info.ProductName) << "\"" << std::endl
+                << "ProductVersion:   \"" << ToUTF8(info.ProductVersion) << "\"" << std::endl
+                << "LayoutText:       \"" << ToUTF8(info.LayoutText) << "\"" << std::endl
+                << "BaseLanguage:     \"" << ToUTF8(info.BaseLanguage) << "\"" << std::endl;
         }
     }
     else {
         SourceGenerator gen(opt);
-        gen.generate(dll);
+        gen.generate(*tables);
     }
     opt.exit(EXIT_SUCCESS);
 }
+#include "common.ver"

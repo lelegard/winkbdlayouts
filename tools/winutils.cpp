@@ -34,10 +34,10 @@ std::string FileBaseName(const std::string& name)
 // Transform an error code into an error message string.
 //----------------------------------------------------------------------------
 
-std::string Error(::DWORD code)
+std::string Error(DWORD code)
 {
     std::string message(1024, ' ');
-    size_t length = ::FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM, nullptr, code, 0, &message[0], ::DWORD(message.size()), nullptr);
+    size_t length = FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM, nullptr, code, 0, &message[0], ::DWORD(message.size()), nullptr);
     message.resize(std::min(length, message.size()));
 
     while (!message.empty() && std::isspace(message.back())) {
@@ -61,10 +61,10 @@ std::string Error(::DWORD code)
 std::string GetEnv(const std::string& name, const std::string& def)
 {
     std::string value(1024, ' ');
-    ::DWORD size = ::GetEnvironmentVariableA(name.c_str(), &value[0], ::DWORD(value.size()));
-    if (size >= ::DWORD(value.size())) {
+    DWORD size = GetEnvironmentVariableA(name.c_str(), &value[0], DWORD(value.size()));
+    if (size >= DWORD(value.size())) {
         value.resize(size_t(size + 1));
-        size = ::GetEnvironmentVariableA(name.c_str(), &value[0], ::DWORD(value.size()));
+        size = GetEnvironmentVariableA(name.c_str(), &value[0], DWORD(value.size()));
     }
     value.resize(std::max<size_t>(0, std::min<size_t>(value.size(), size)));
     return value.empty() ? def : value;
@@ -75,12 +75,30 @@ std::string GetEnv(const std::string& name, const std::string& def)
 // Get the file name of a module in a process.
 //---------------------------------------------------------------------------
 
-std::string ModuleFileName(::HANDLE process, ::HMODULE module)
+std::string ModuleFileName(HANDLE process, HMODULE module)
 {
     std::string name(2048, ' ');
-    ::DWORD size = ::GetModuleFileNameExA(process, module, &name[0], ::DWORD(name.size()));
+    DWORD size = GetModuleFileNameExA(process, module, &name[0], DWORD(name.size()));
     name.resize(std::min<size_t>(size, name.size()));
     return name;
+}
+
+
+//---------------------------------------------------------------------------
+// Get a resource string in a module.
+//---------------------------------------------------------------------------
+
+std::wstring GetResourceWString(HMODULE module, int resource_index)
+{
+    // Start with a 1kB buffer and iterate with double size as long as the
+    // value seems to be longer. Stop at 1MB (fool-proof check).
+    std::wstring value(1024, L'\0');
+    int length = 0;
+    while ((length = LoadStringW(module, resource_index, &value[0], int(value.size()))) >= int(value.size()) - 1 && value.size() < 1000000) {
+        value.resize(2 * value.size());
+    }
+    value.resize(std::min<size_t>(value.size(), std::max(0, length)));
+    return value;
 }
 
 
@@ -91,24 +109,24 @@ std::string ModuleFileName(::HANDLE process, ::HMODULE module)
 bool IsAdmin()
 {
     // Allocate and initialize an SID of the administrators group.
-    ::SID_IDENTIFIER_AUTHORITY nt_auth = SECURITY_NT_AUTHORITY;
-    ::PSID admin_group = nullptr;
-    if (!::AllocateAndInitializeSid(&nt_auth, 2, SECURITY_BUILTIN_DOMAIN_RID, DOMAIN_ALIAS_RID_ADMINS, 0, 0, 0, 0, 0, 0, &admin_group)) {
-        const ::DWORD err = ::GetLastError();
+    SID_IDENTIFIER_AUTHORITY nt_auth = SECURITY_NT_AUTHORITY;
+    PSID admin_group = nullptr;
+    if (!AllocateAndInitializeSid(&nt_auth, 2, SECURITY_BUILTIN_DOMAIN_RID, DOMAIN_ALIAS_RID_ADMINS, 0, 0, 0, 0, 0, 0, &admin_group)) {
+        const DWORD err = GetLastError();
         std::cerr << "AllocateAndInitializeSid error: " << Error(err) << std::endl;
         return false;
     }
 
     // Check if the SID of administrators group is enabled in the primary access token of the process.
-    ::BOOL is_admin = false;
-    if (!::CheckTokenMembership(nullptr, admin_group, &is_admin)) {
-        const ::DWORD err = ::GetLastError();
+    BOOL is_admin = false;
+    if (!CheckTokenMembership(nullptr, admin_group, &is_admin)) {
+        const DWORD err = GetLastError();
         std::cerr << "CheckTokenMembership error: " << Error(err) << std::endl;
         return false;
     }
 
     // Free allocated SID.
-    ::FreeSid(admin_group);
+    FreeSid(admin_group);
     return is_admin;
 }
 
@@ -122,7 +140,7 @@ bool RestartAsAdmin(const StringVector& args, bool wait_process)
     const std::string program(GetCurrentProgram());
     const std::string all_args(Join(args, " "));
 
-    ::SHELLEXECUTEINFOA sei;
+    SHELLEXECUTEINFOA sei;
     Zero(&sei, sizeof(sei));
     sei.cbSize = sizeof(sei);
     sei.fMask = wait_process ? (SEE_MASK_NOCLOSEPROCESS | SEE_MASK_NOASYNC) : 0;
@@ -132,10 +150,10 @@ bool RestartAsAdmin(const StringVector& args, bool wait_process)
     sei.nShow = SW_NORMAL;
 
     // Initialize COM, if not already done. Required for ShellExecute.
-    ::CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
+    CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
 
-    if (!::ShellExecuteExA(&sei)) {
-        const ::DWORD err = ::GetLastError();
+    if (!ShellExecuteExA(&sei)) {
+        const DWORD err = GetLastError();
         if (err != ERROR_CANCELLED) {
             // Real error, not user cancelled UAC.
             std::cerr << "ShellExecuteEx error: " << Error(err) << std::endl;
@@ -145,7 +163,7 @@ bool RestartAsAdmin(const StringVector& args, bool wait_process)
 
     // Wait for process completion.
     if (wait_process) {
-        ::WaitForSingleObject(sei.hProcess, INFINITE);
+        WaitForSingleObject(sei.hProcess, INFINITE);
     }
     return true;
 }

@@ -31,6 +31,10 @@ size_t WstringSize(const WCHAR*);
 std::string ToLower(const std::string&);
 std::string ToUpper(const std::string&);
 
+// UTF-8 / UTF-16 conversions.
+std::wstring ToUTF16(const std::string&);
+std::string ToUTF8(const std::wstring&);
+
 // Check if a string starts or end with a string.
 bool StartsWith(const std::string&, const std::string& prefix);
 bool EndsWith(const std::string&, const std::string& suffix);

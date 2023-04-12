@@ -1,3 +1,0 @@
-#include "../kbdrc.h"
-#define VER_FILEDESCRIPTION_STR "United Kingdom Apple Keyboard Layout (WKL)"
-#include "common.ver"

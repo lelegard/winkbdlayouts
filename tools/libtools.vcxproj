@@ -13,8 +13,8 @@
     <ClCompile Include="winutils.cpp"/>
     <ClInclude Include="registry.h"/>
     <ClCompile Include="registry.cpp"/>
-    <ClInclude Include="resources.h"/>
-    <ClCompile Include="resources.cpp"/>
+    <ClInclude Include="fileversion.h"/>
+    <ClCompile Include="fileversion.cpp"/>
     <ClInclude Include="grid.h"/>
     <ClCompile Include="grid.cpp"/>
   </ItemGroup>

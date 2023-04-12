@@ -14,8 +14,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="$([System.Text.RegularExpressions.Regex]::IsMatch($(ProjectName), '^kbd.*')) and
                             Exists('$(SolutionDir)$(ProjectName)\$(ProjectName).c') and
-                            Exists('$(SolutionDir)$(ProjectName)\$(ProjectName).rc') and
-                            Exists('$(SolutionDir)$(ProjectName)\$(ProjectName).reg')">
+                            Exists('$(SolutionDir)$(ProjectName)\strings.rc')">
     <ProjectType>KeyboardLayout</ProjectType>
   </PropertyGroup>
   <PropertyGroup Condition="$([System.Text.RegularExpressions.Regex]::IsMatch($(ProjectName), '^lib.*'))">
@@ -115,12 +114,10 @@
       <TreatWarningAsError>true</TreatWarningAsError>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(SolutionDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ResourceCompile>
-      <PreprocessorDefinitions>WKL_PROJECT_NAME=$(ProjectName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ResourceCompile>
     <Link>
       <EnableUAC>false</EnableUAC>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -190,16 +187,21 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <AdditionalLibraryDirectories>$(OutDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>libtools.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libtools.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
 
   <!-- File names for keyboard layouts -->
   <ItemGroup Condition="'$(ProjectType)'=='KeyboardLayout'">
     <ClCompile Include="$(ProjectName).c"/>
-    <ResourceCompile Include="$(ProjectName).rc"/>
-    <None Include="$(ProjectName).reg"/>
+    <ResourceCompile Include="$(SolutionDir)kbd.rc"/>
   </ItemGroup>
+  <ItemDefinitionGroup Condition="'$(ProjectType)'=='KeyboardLayout'">
+    <ResourceCompile>
+      <PreprocessorDefinitions>WKL_PROJECT_NAME=$(ProjectName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(SolutionDir)$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
 
   <!-- One main source file per console application -->
   <ItemGroup Condition="'$(ProjectType)'=='ConsoleTool'">

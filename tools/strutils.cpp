@@ -11,6 +11,7 @@
 #include "strutils.h"
 #include <cstdarg>
 #include <algorithm>
+#include <codecvt>
 
 
 //---------------------------------------------------------------------------
@@ -116,6 +117,23 @@ std::string ToUpper(const std::string& s)
     std::string res(s);
     std::transform(res.begin(), res.end(), res.begin(), [](unsigned char c){ return std::toupper(c); });
     return res;
+}
+
+
+//---------------------------------------------------------------------------
+// UTF-8 / UTF-16 conversions.
+//---------------------------------------------------------------------------
+
+std::wstring ToUTF16(const std::string& str)
+{
+    std::wstring_convert<std::codecvt_utf8<wchar_t>> myconv;
+    return myconv.from_bytes(str);
+}
+
+std::string ToUTF8(const std::wstring& str)
+{
+    std::wstring_convert<std::codecvt_utf8<wchar_t>> myconv;
+    return myconv.to_bytes(str);
 }
 
 

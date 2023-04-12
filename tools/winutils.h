@@ -19,13 +19,16 @@ std::string FileName(const std::string& name);
 std::string FileBaseName(const std::string& name);
 
 // Transform an error code into an error message string.
-std::string Error(::DWORD code = ::GetLastError());
+std::string Error(DWORD code = GetLastError());
 
 // Get the file name of a module in a process.
-std::string ModuleFileName(::HANDLE process, ::HMODULE module);
+std::string ModuleFileName(HANDLE process, HMODULE module);
 
 // Get current executable.
-inline std::string GetCurrentProgram() { return ModuleFileName(::GetCurrentProcess(), nullptr); }
+inline std::string GetCurrentProgram() { return ModuleFileName(GetCurrentProcess(), nullptr); }
+
+// Get a resource string in a module.
+std::wstring GetResourceWString(::HMODULE module, int resource_index);
 
 // Check if current process is admin.
 bool IsAdmin();

@@ -50,8 +50,6 @@ $Archive = "$PSScriptRoot\$ProjectName.zip"
 Write-Output "Archive: $Archive"
 $TempRoot = Create-NewDirectory "$PSScriptRoot\tmp"
 $InstallRoot = Create-NewDirectory "$TempRoot\$ProjectName"
-$RegFiles = Get-ChildItem $PSScriptRoot -Depth 2 -Include "kbd*.reg"
-Copy-Item $RegFiles -Destination $InstallRoot
 Copy-Item "$PSScriptRoot\install.ps1" -Destination $InstallRoot
 foreach ($Arch in ("x86", "x64", "arm64")) {
     $Files = Get-ChildItem "$PSScriptRoot\$Arch\Release\kbd*.dll"

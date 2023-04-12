@@ -1,0 +1,70 @@
+//----------------------------------------------------------------------------
+//
+// Windows Keyboards Layouts (WKL)
+// Copyright (c) 2023, Thierry Lelegard
+// BSD-2-Clause license, see the LICENSE file.
+//
+// Common resource file for keyboard DLL's.
+// The project file must define WKL_PROJECT_NAME.
+//
+//----------------------------------------------------------------------------
+
+#include <windows.h>
+#include <ntverp.h>
+#include "kbdrc.h"
+
+// Stringification macro.
+#define WKL_NAME_1(symbol)      #symbol
+#define WKL_NAME(symbol,suffix) WKL_NAME_1(symbol) suffix
+
+// Make sure WKL_PROJECT_NAME is defined in environment.
+#if !defined(WKL_PROJECT_NAME)
+#error "WKL_PROJECT_NAME not defined by project file"
+#endif
+
+// Include the header file for the project.
+// All keyboard layout shall include a file named strings.rc.
+#include "strings.rc"
+
+// Make sure WKL_TEXT and WKL_LANG are defined in WKL_PROJECT_NAME.rc
+#if !defined(WKL_TEXT)
+#error "WKL_TEXT not defined in strings.rc file"
+#endif
+#if !defined(WKL_LANG)
+#error "WKL_LANG not defined in strings.rc file"
+#endif
+
+// Define resources which will be read to install the layout.
+STRINGTABLE
+BEGIN
+  WKL_RES_TEXT WKL_TEXT
+  WKL_RES_LANG WKL_LANG
+END
+
+// Cleanup predefined version definitions.
+#if defined(VER_PRODUCTNAME_STR)
+#undef VER_PRODUCTNAME_STR
+#endif
+#if defined(VER_PRODUCTVERSION)
+#undef VER_PRODUCTVERSION
+#endif
+#if defined(VER_PRODUCTVERSION_STR)
+#undef VER_PRODUCTVERSION_STR
+#endif
+#if defined(VER_COMPANYNAME_STR)
+#undef VER_COMPANYNAME_STR
+#endif
+
+// Build the VERSIONINFO structure.
+#define VER_FILETYPE              VFT_DLL
+#define VER_FILESUBTYPE           VFT2_DRV_KEYBOARD
+#define VER_PRODUCTNAME_STR       "Windows Keyboards Layouts (WKL)"
+#define VER_COMPANYNAME_STR       "WKL Project"
+#define VER_LEGALCOPYRIGHT_STR    "(c) WKL Project"
+#define VER_FILEDESCRIPTION_STR   WKL_TEXT " Keyboard Layout (WKL)"
+#define VER_PRODUCTVERSION        1,0,0,0
+#define VER_PRODUCTVERSION_STR    "1.0"
+#define VER_INTERNALNAME_STR      WKL_NAME(WKL_PROJECT_NAME, "")
+#define VER_ORIGINALFILENAME_STR  WKL_NAME(WKL_PROJECT_NAME, ".dll")
+#define VER_LANGNEUTRAL
+#include "common.ver"

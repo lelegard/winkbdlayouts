@@ -1,36 +1,18 @@
-//---------------------------------------------------------------------------
+//----------------------------------------------------------------------------
+//
 // Windows Keyboards Layouts (WKL)
-// Header for keyboard DLL resource files (.rc)
-//---------------------------------------------------------------------------
+// Copyright (c) 2023, Thierry Lelegard
+// BSD-2-Clause license, see the LICENSE file.
+//
+// Header for keyboard DLL resource files.
+//
+//----------------------------------------------------------------------------
 
-#include <windows.h>
-#include <ntverp.h>
+#if !defined(KBDRC_H)
+#define KBDRC_H 1
 
-#ifdef VER_PRODUCTNAME_STR
-#undef VER_PRODUCTNAME_STR
-#endif
+// Identification of resource strings, used in .cpp and .rc files.
+#define WKL_RES_TEXT 100
+#define WKL_RES_LANG 101
 
-#ifdef VER_PRODUCTVERSION
-#undef VER_PRODUCTVERSION
-#endif
-
-#ifdef VER_PRODUCTVERSION_STR
-#undef VER_PRODUCTVERSION_STR
-#endif
-
-#ifdef VER_LEGALCOPYRIGHT_STR
-#undef VER_LEGALCOPYRIGHT_STR
-#endif
-
-#define WKL_NAME_1(symbol)      #symbol
-#define WKL_NAME(symbol,suffix) WKL_NAME_1(symbol) suffix
-
-#define VER_FILETYPE              VFT_DLL
-#define VER_FILESUBTYPE           VFT2_DRV_KEYBOARD
-#define VER_PRODUCTNAME_STR       "Windows Keyboards Layouts (WKL)"
-#define VER_LEGALCOPYRIGHT_STR    "(c) WKL Project"
-#define VER_PRODUCTVERSION        1,0,0,0
-#define VER_PRODUCTVERSION_STR    "1.0"
-#define VER_INTERNALNAME_STR      WKL_NAME(WKL_PROJECT_NAME, "")
-#define VER_ORIGINALFILENAME_STR  WKL_NAME(WKL_PROJECT_NAME, ".dll")
-#define VER_LANGNEUTRAL
+#endif // KBDRC_H

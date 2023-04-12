@@ -1,3 +1,0 @@
-#include "../kbdrc.h"
-#define VER_FILEDESCRIPTION_STR "French (Numerical) Apple Keyboard Layout (WKL)"
-#include "common.ver"
