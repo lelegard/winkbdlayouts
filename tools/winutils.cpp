@@ -13,31 +13,13 @@
 
 
 //----------------------------------------------------------------------------
-// File name (without directory), file base name (without directory and prefix).
-//----------------------------------------------------------------------------
-
-std::string FileName(const std::string& name)
-{
-    const size_t pos = name.find_last_of(":/\\");
-    return pos == std::string::npos ? name : name.substr(pos + 1);
-}
-
-std::string FileBaseName(const std::string& name)
-{
-    const std::string filename(FileName(name));
-    const size_t pos = filename.find_last_of(".");
-    return pos == std::string::npos ? filename : filename.substr(0, pos);
-}
-
-
-//----------------------------------------------------------------------------
 // Transform an error code into an error message string.
 //----------------------------------------------------------------------------
 
-std::string Error(DWORD code)
+std::wstring ErrorText(DWORD code)
 {
-    std::string message(1024, ' ');
-    size_t length = FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM, nullptr, code, 0, &message[0], ::DWORD(message.size()), nullptr);
+    std::wstring message(1024, ' ');
+    size_t length = FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM, nullptr, code, 0, &message[0], DWORD(message.size()), nullptr);
     message.resize(std::min(length, message.size()));
 
     while (!message.empty() && std::isspace(message.back())) {
@@ -49,8 +31,109 @@ std::string Error(DWORD code)
     }
     else {
         // Message is not found.
-        return Format("System error %d (0x%X)", code, code);
+        return Format(L"System error %d (0x%X)", code, code);
     }
+}
+
+
+//----------------------------------------------------------------------------
+// File name (without directory), file base name (without directory and prefix).
+//----------------------------------------------------------------------------
+
+std::wstring FullName(const std::wstring& name, bool include_dir, bool include_file)
+{
+    if (!include_dir && !include_file) {
+        return std::wstring();
+    }
+
+    std::wstring path(1024, L'\0');
+    wchar_t* file_part = nullptr;
+    DWORD size = GetFullPathNameW(name.c_str(), DWORD(path.size()), &path[0], &file_part);
+    if (size >= DWORD(path.size())) {
+        path.resize(size_t(size + 1));
+        size = GetFullPathNameW(name.c_str(), DWORD(path.size()), &path[0], &file_part);
+    }
+
+    if (!include_dir) {
+        return file_part == nullptr ? std::wstring() : file_part;
+    }
+    if (!include_file && file_part != nullptr) {
+        path.resize(std::min<size_t>(path.size(), file_part - path.data()));
+    }
+    else {
+        path.resize(std::min<size_t>(path.size(), size));
+    }
+    return path;
+}
+
+std::wstring DirName(const std::wstring& name)
+{
+    return FullName(name, true, false);
+}
+
+std::wstring FileName(const std::wstring& name)
+{
+    return FullName(name, false, true);
+}
+
+std::wstring FileBaseName(const std::wstring& name)
+{
+    const std::wstring filename(FileName(name));
+    const size_t pos = filename.rfind(L'.');
+    return pos == std::string::npos ? filename : filename.substr(0, pos);
+}
+
+
+//----------------------------------------------------------------------------
+// Check if a file or directory exists
+//----------------------------------------------------------------------------
+
+bool FileExists(const std::wstring& path)
+{
+    return GetFileAttributesW(path.c_str()) != INVALID_FILE_ATTRIBUTES;
+}
+
+bool IsDirectory(const std::wstring& path)
+{
+    const DWORD attr = GetFileAttributesW(path.c_str());
+    return attr != INVALID_FILE_ATTRIBUTES && (attr & FILE_ATTRIBUTE_DIRECTORY) != 0;
+}
+
+
+//---------------------------------------------------------------------------
+// Search files matching a wildcard.
+//---------------------------------------------------------------------------
+
+bool SearchFiles(WStringList& files, const std::wstring& directory, const std::wstring& pattern)
+{
+    files.clear();
+
+    // Initiate the search
+    const std::wstring full_pattern(directory + L"\\" + pattern);
+    WIN32_FIND_DATAW fdata;
+    HANDLE handle = FindFirstFileW(full_pattern.c_str(), &fdata);
+    if (handle == INVALID_HANDLE_VALUE) {
+        // No file matching the pattern is not an error
+        const DWORD err = GetLastError();
+        return err == ERROR_SUCCESS || err == ERROR_FILE_NOT_FOUND;
+    }
+
+    // Loop on all file matching the pattern
+    do {
+        // Get next file name.
+        fdata.cFileName[sizeof(fdata.cFileName) / sizeof(fdata.cFileName[0]) - 1] = 0;
+        const std::wstring file(fdata.cFileName);
+
+        // Filter out . and ..
+        if (file != L"." && file != L"..") {
+            files.push_back(file);
+        }
+    } while (FindNextFileW(handle, &fdata) != 0);
+    const DWORD err = GetLastError(); // FindNextFile status
+
+    // Cleanup the search context
+    FindClose(handle);
+    return err == ERROR_SUCCESS || err == ERROR_NO_MORE_FILES; // normal end of search
 }
 
 
@@ -58,15 +141,15 @@ std::string Error(DWORD code)
 // Get the value of an environment variable.
 //---------------------------------------------------------------------------
 
-std::string GetEnv(const std::string& name, const std::string& def)
+std::wstring GetEnv(const std::wstring& name, const std::wstring& def)
 {
-    std::string value(1024, ' ');
-    DWORD size = GetEnvironmentVariableA(name.c_str(), &value[0], DWORD(value.size()));
+    std::wstring value(2048, ' ');
+    DWORD size = GetEnvironmentVariableW(name.c_str(), &value[0], DWORD(value.size()));
     if (size >= DWORD(value.size())) {
         value.resize(size_t(size + 1));
-        size = GetEnvironmentVariableA(name.c_str(), &value[0], DWORD(value.size()));
+        size = GetEnvironmentVariableW(name.c_str(), &value[0], DWORD(value.size()));
     }
-    value.resize(std::max<size_t>(0, std::min<size_t>(value.size(), size)));
+    value.resize(std::min<size_t>(value.size(), size));
     return value.empty() ? def : value;
 }
 
@@ -75,10 +158,10 @@ std::string GetEnv(const std::string& name, const std::string& def)
 // Get the file name of a module in a process.
 //---------------------------------------------------------------------------
 
-std::string ModuleFileName(HANDLE process, HMODULE module)
+std::wstring ModuleFileName(HANDLE process, HMODULE module)
 {
-    std::string name(2048, ' ');
-    DWORD size = GetModuleFileNameExA(process, module, &name[0], DWORD(name.size()));
+    std::wstring name(2048, ' ');
+    DWORD size = GetModuleFileNameExW(process, module, &name[0], DWORD(name.size()));
     name.resize(std::min<size_t>(size, name.size()));
     return name;
 }
@@ -88,7 +171,18 @@ std::string ModuleFileName(HANDLE process, HMODULE module)
 // Get a resource string in a module.
 //---------------------------------------------------------------------------
 
-std::wstring GetResourceWString(HMODULE module, int resource_index)
+std::wstring GetResourceString(const std::wstring& filename, int resource_index)
+{
+    std::wstring str;
+    HMODULE hmod = LoadLibraryExW(filename.c_str(), nullptr, LOAD_LIBRARY_AS_DATAFILE);
+    if (hmod != nullptr) {
+        str = GetResourceString(hmod, resource_index);
+        FreeLibrary(hmod);
+    }
+    return str;
+}
+
+std::wstring GetResourceString(HMODULE module, int resource_index)
 {
     // Start with a 1kB buffer and iterate with double size as long as the
     // value seems to be longer. Stop at 1MB (fool-proof check).
@@ -113,7 +207,7 @@ bool IsAdmin()
     PSID admin_group = nullptr;
     if (!AllocateAndInitializeSid(&nt_auth, 2, SECURITY_BUILTIN_DOMAIN_RID, DOMAIN_ALIAS_RID_ADMINS, 0, 0, 0, 0, 0, 0, &admin_group)) {
         const DWORD err = GetLastError();
-        std::cerr << "AllocateAndInitializeSid error: " << Error(err) << std::endl;
+        std::cerr << "AllocateAndInitializeSid error: " << ErrorText(err) << std::endl;
         return false;
     }
 
@@ -121,7 +215,7 @@ bool IsAdmin()
     BOOL is_admin = false;
     if (!CheckTokenMembership(nullptr, admin_group, &is_admin)) {
         const DWORD err = GetLastError();
-        std::cerr << "CheckTokenMembership error: " << Error(err) << std::endl;
+        std::cerr << "CheckTokenMembership error: " << ErrorText(err) << std::endl;
         return false;
     }
 
@@ -135,16 +229,16 @@ bool IsAdmin()
 // Restart current program as admin.
 //---------------------------------------------------------------------------
 
-bool RestartAsAdmin(const StringVector& args, bool wait_process)
+bool RestartAsAdmin(const WStringVector& args, bool wait_process)
 {
-    const std::string program(GetCurrentProgram());
-    const std::string all_args(Join(args, " "));
+    const std::wstring program(GetCurrentProgram());
+    const std::wstring all_args(Join(args, L" "));
 
-    SHELLEXECUTEINFOA sei;
+    SHELLEXECUTEINFOW sei;
     Zero(&sei, sizeof(sei));
     sei.cbSize = sizeof(sei);
     sei.fMask = wait_process ? (SEE_MASK_NOCLOSEPROCESS | SEE_MASK_NOASYNC) : 0;
-    sei.lpVerb = "runas";
+    sei.lpVerb = L"runas";
     sei.lpFile = program.c_str();
     sei.lpParameters = args.empty() ? nullptr : all_args.c_str();
     sei.nShow = SW_NORMAL;
@@ -152,11 +246,11 @@ bool RestartAsAdmin(const StringVector& args, bool wait_process)
     // Initialize COM, if not already done. Required for ShellExecute.
     CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
 
-    if (!ShellExecuteExA(&sei)) {
+    if (!ShellExecuteExW(&sei)) {
         const DWORD err = GetLastError();
         if (err != ERROR_CANCELLED) {
             // Real error, not user cancelled UAC.
-            std::cerr << "ShellExecuteEx error: " << Error(err) << std::endl;
+            std::cerr << "ShellExecuteEx error: " << ErrorText(err) << std::endl;
         }
         return false;
     }
@@ -166,4 +260,23 @@ bool RestartAsAdmin(const StringVector& args, bool wait_process)
         WaitForSingleObject(sei.hProcess, INFINITE);
     }
     return true;
+}
+
+
+//---------------------------------------------------------------------------
+// Setting the Windwos console (DOS or PowerShell) to UTF-8 mode.
+//---------------------------------------------------------------------------
+
+ConsoleState::ConsoleState() :
+    _input_cp(GetConsoleCP()),
+    _output_cp(GetConsoleOutputCP())
+{
+    SetConsoleCP(CP_UTF8);
+    SetConsoleOutputCP(CP_UTF8);
+}
+
+ConsoleState::~ConsoleState()
+{
+    SetConsoleCP(_input_cp);
+    SetConsoleOutputCP(_output_cp);
 }

@@ -10,6 +10,8 @@
 
 #pragma once
 
+#define _CRT_SECURE_NO_WARNINGS 1 // don't complain about string rtl.
+
 #include <windows.h>
 #include <psapi.h>
 #include <kbd.h>
@@ -29,3 +31,14 @@
 #include <vector>
 #include <list>
 #include <map>
+
+// Registry entry of all keyboard layouts.
+#define REGISTRY_LAYOUT_KEY        L"HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts"
+#define REGISTRY_USER_PRELOAD_KEY  L"HKEY_CURRENT_USER\\Keyboard Layout\\Preload"
+#define REGISTRY_USER_SUBSTS_KEY   L"HKEY_CURRENT_USER\\Keyboard Layout\\Substitutes"
+#define REGISTRY_LAYOUT_FILE       L"Layout File"
+#define REGISTRY_LAYOUT_TEXT       L"Layout Text"
+#define REGISTRY_LAYOUT_DISPLAY    L"Layout Display Name"
+
+// Entry point of all keyboard layout DLL's.
+#define KBD_DLL_ENTRY_NAME "KbdLayerDescriptor"

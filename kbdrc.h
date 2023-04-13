@@ -12,7 +12,8 @@
 #define KBDRC_H 1
 
 // Identification of resource strings, used in .cpp and .rc files.
-#define WKL_RES_TEXT 100
-#define WKL_RES_LANG 101
+#define WKL_RES_TEXT      100
+#define WKL_RES_LANG      101
+#define WKL_RES_PROVIDER  102
 
 #endif // KBDRC_H

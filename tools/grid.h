@@ -9,16 +9,16 @@
 //----------------------------------------------------------------------------
 
 #pragma once
-#include "platform.h"
+#include "strutils.h"
 
 class Grid
 {
 public:
     // A line in the grid.
-    typedef std::vector<std::string> Line;
+    typedef WStringVector Line;
 
     // Constructor.
-    Grid(const std::string& margin = "", const std::string& spacing = " ");
+    Grid(const std::wstring& margin = L"", const std::wstring& spacing = L" ");
 
     // Clear content.
     void clear() { _lines.clear(); }
@@ -27,22 +27,22 @@ public:
     void addLine(const Line& line) { _lines.push_back(line); }
 
     // Add one column on last line.
-    void addColumn(const std::string& text);
+    void addColumn(const std::wstring& text);
 
     // Add underlines under previous line.
-    void addUnderlines(const Line& first_colums = Line(), char underline = '-');
+    void addUnderlines(const Line& first_colums = Line(), wchar_t underline = L'-');
 
     // Set attributes.
-    void setMargin(const std::string& margin) { _margin = margin; }
-    void setMargin(size_t width) { _margin = std::string(width, ' '); }
-    void setSpacing(const std::string& spacing) { _spacing = spacing; }
-    void setSpacing(size_t width) { _spacing = std::string(width, ' '); }
+    void setMargin(const std::wstring& margin) { _margin = margin; }
+    void setMargin(size_t width) { _margin = std::wstring(width, L' '); }
+    void setSpacing(const std::wstring& spacing) { _spacing = spacing; }
+    void setSpacing(size_t width) { _spacing = std::wstring(width, L' '); }
 
     // Print the grid. All columns are aligned on their maximum width.
     void print(std::ostream& out);
 
 private:
     std::list<Line> _lines;
-    std::string     _margin;
-    std::string     _spacing;
+    std::wstring    _margin;
+    std::wstring    _spacing;
 };

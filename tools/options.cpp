@@ -16,8 +16,8 @@
 // Constructor.
 //----------------------------------------------------------------------------
 
-Options::Options(int argc, char* argv[], const std::string syntax) :
-    command(argc < 1 ? "" : FileBaseName(argv[0])),
+Options::Options(int argc, wchar_t* argv[], const std::string syntax) :
+    command(argc < 1 ? L"" : FileBaseName(argv[0])),
     args(),
     _syntax(syntax),
     _outfile(),
@@ -34,7 +34,7 @@ Options::Options(int argc, char* argv[], const std::string syntax) :
 // Set an output file or use std::cout.
 //----------------------------------------------------------------------------
 
-void Options::setOutput(const std::string& filename)
+void Options::setOutput(const std::wstring& filename)
 {
     closeOutput();
     if (!filename.empty()) {
@@ -62,13 +62,18 @@ void Options::closeOutput()
 [[noreturn]] void Options::usage()
 {
     std::cerr << std::endl << "Syntax: " << command << " " << _syntax << std::endl << std::endl;
-    exit(EXIT_FAILURE);
+    ::exit(EXIT_FAILURE);
 }
 
-[[noreturn]] void Options::fatal(const std::string& message)
+[[noreturn]] void Options::fatal(const std::wstring& message)
 {
     std::cerr << command << ": " << message << std::endl;
-    exit(EXIT_FAILURE);
+    ::exit(EXIT_FAILURE);
+}
+
+void Options::error(const std::wstring& message)
+{
+    std::cerr << command << ": " << message << std::endl;
 }
 
 

@@ -9,14 +9,11 @@
 #include <kbd.h>
 #include <dontuse.h>
 
-#pragma section(".rdata")
-#define KBD_DATA static __declspec(allocate(".rdata")) 
-
 //---------------------------------------------------------------------------
 // Associate a virtual key with a modifier bitmask
 //---------------------------------------------------------------------------
 
-KBD_DATA VK_TO_BIT vk_to_bits[] = {
+static VK_TO_BIT vk_to_bits[] = {
     {VK_SHIFT,   KBDSHIFT},
     {VK_CONTROL, KBDCTRL},
     {VK_MENU,    KBDALT},
@@ -27,7 +24,7 @@ KBD_DATA VK_TO_BIT vk_to_bits[] = {
 // Map character modifier bits to modification number
 //---------------------------------------------------------------------------
 
-KBD_DATA MODIFIERS char_modifiers = {
+static MODIFIERS char_modifiers = {
     .pVkToBit    = vk_to_bits,
     .wMaxModBits = 7,
     .ModNumber   = {
@@ -46,7 +43,7 @@ KBD_DATA MODIFIERS char_modifiers = {
 // Virtual Key to WCHAR translations for 3 shift states
 //---------------------------------------------------------------------------
 
-KBD_DATA VK_TO_WCHARS3 vk_to_wchar3[] = {
+static VK_TO_WCHARS3 vk_to_wchar3[] = {
     //                         Shift   Ctrl
     //                         =====   ====
     {VK_BACK,   0x00, {0x0008, 0x0008, 0x007F}}, // BS, BS, DEL
@@ -60,7 +57,7 @@ KBD_DATA VK_TO_WCHARS3 vk_to_wchar3[] = {
 // Virtual Key to WCHAR translations for 5 shift states
 //---------------------------------------------------------------------------
 
-KBD_DATA VK_TO_WCHARS5 vk_to_wchar5[] = {
+static VK_TO_WCHARS5 vk_to_wchar5[] = {
     //                                      Shift     Ctrl      Ctrl/Alt  Shift/Ctrl/Alt
     //                                      =====     ====      ========  ==============
     {'1',           CAPLOK,      {L'&',     L'1',     WCH_NONE, 0x2225,   WCH_DEAD}},
@@ -124,7 +121,7 @@ KBD_DATA VK_TO_WCHARS5 vk_to_wchar5[] = {
 // Virtual Key to WCHAR translations for 2 shift states
 //---------------------------------------------------------------------------
 
-KBD_DATA VK_TO_WCHARS2 vk_to_wchar2[] = {
+static VK_TO_WCHARS2 vk_to_wchar2[] = {
     //                          Shift
     //                          =====
     {VK_TAB,      0x00, {L'\t', L'\t'}},
@@ -140,7 +137,7 @@ KBD_DATA VK_TO_WCHARS2 vk_to_wchar2[] = {
 // Virtual Key to WCHAR translations for 1 shift states
 //---------------------------------------------------------------------------
 
-KBD_DATA VK_TO_WCHARS1 vk_to_wchar1[] = {
+static VK_TO_WCHARS1 vk_to_wchar1[] = {
     {VK_NUMPAD0, 0x00, {L'0'}},
     {VK_NUMPAD1, 0x00, {L'1'}},
     {VK_NUMPAD2, 0x00, {L'2'}},
@@ -158,7 +155,7 @@ KBD_DATA VK_TO_WCHARS1 vk_to_wchar1[] = {
 // Virtual Key to WCHAR translations with shift states
 //---------------------------------------------------------------------------
 
-KBD_DATA VK_TO_WCHAR_TABLE vk_to_wchar[] = {
+static VK_TO_WCHAR_TABLE vk_to_wchar[] = {
     {(PVK_TO_WCHARS1)vk_to_wchar3, 3, sizeof(vk_to_wchar3[0])},
     {(PVK_TO_WCHARS1)vk_to_wchar5, 5, sizeof(vk_to_wchar5[0])},
     {(PVK_TO_WCHARS1)vk_to_wchar2, 2, sizeof(vk_to_wchar2[0])},
@@ -170,7 +167,7 @@ KBD_DATA VK_TO_WCHAR_TABLE vk_to_wchar[] = {
 // Dead keys sequences translations
 //---------------------------------------------------------------------------
 
-KBD_DATA DEADKEY dead_keys[] = {
+static DEADKEY dead_keys[] = {
     DEADTRANS(L'e', 0x00B4, 0x00E9, 0x0000), // Acute, e acute
     DEADTRANS(L'u', 0x00B4, 0x00FA, 0x0000), // Acute, u acute
     DEADTRANS(L'i', 0x00B4, 0x00ED, 0x0000), // Acute, i acute
@@ -263,7 +260,7 @@ KBD_DATA DEADKEY dead_keys[] = {
 // Scan codes to key names
 //---------------------------------------------------------------------------
 
-KBD_DATA VSC_LPWSTR key_names[] = {
+static VSC_LPWSTR key_names[] = {
     {0x01, L"Esc"},
     {0x0E, L"Backspace"},
     {0x0F, L"Tab"},
@@ -322,7 +319,7 @@ KBD_DATA VSC_LPWSTR key_names[] = {
 // Scan codes to key names (extended keypad)
 //---------------------------------------------------------------------------
 
-KBD_DATA VSC_LPWSTR key_names_ext[] = {
+static VSC_LPWSTR key_names_ext[] = {
     {0x1C, L"Num Enter"},
     {0x1D, L"Right Ctrl"},
     {0x35, L"Num /"},
@@ -352,7 +349,7 @@ KBD_DATA VSC_LPWSTR key_names_ext[] = {
 // Names of dead keys
 //---------------------------------------------------------------------------
 
-KBD_DATA DEADKEY_LPWSTR key_names_dead[] = {
+static DEADKEY_LPWSTR key_names_dead[] = {
     L"\x00b4" L"ACUTE ACCENT",
     L"^"      L"CIRCUMFLEX ACCENT",
     L"\x00a8" L"DIAERESIS",
@@ -365,7 +362,7 @@ KBD_DATA DEADKEY_LPWSTR key_names_dead[] = {
 // Scan code to virtual key conversion table
 //---------------------------------------------------------------------------
 
-KBD_DATA USHORT scancode_to_vk[] = {
+static USHORT scancode_to_vk[] = {
     /* 00 */ VK__none_,
     /* 01 */ VK_ESCAPE,
     /* 02 */ '1',
@@ -499,7 +496,7 @@ KBD_DATA USHORT scancode_to_vk[] = {
 // Scan code to virtual key conversion table (scancodes with E0 prefix)
 //---------------------------------------------------------------------------
 
-KBD_DATA VSC_VK scancode_to_vk_e0[] = {
+static VSC_VK scancode_to_vk_e0[] = {
     {0x10, VK_MEDIA_PREV_TRACK | KBDEXT},
     {0x19, VK_MEDIA_NEXT_TRACK | KBDEXT},
     {0x1D, VK_RCONTROL | KBDEXT},
@@ -545,7 +542,7 @@ KBD_DATA VSC_VK scancode_to_vk_e0[] = {
 // Scan code to virtual key conversion table (scancodes with E1 prefix)
 //---------------------------------------------------------------------------
 
-KBD_DATA VSC_VK scancode_to_vk_e1[] = {
+static VSC_VK scancode_to_vk_e1[] = {
     {0x1D, VK_PAUSE},
     {0x00, 0x0000}
 };
@@ -554,7 +551,7 @@ KBD_DATA VSC_VK scancode_to_vk_e1[] = {
 // Main keyboard layout structure, point to all tables
 //---------------------------------------------------------------------------
 
-KBD_DATA KBDTABLES kbd_tables = {
+static KBDTABLES kbd_tables = {
     .pCharModifiers  = &char_modifiers,
     .pVkToWcharTable = vk_to_wchar,
     .pDeadKey        = dead_keys,

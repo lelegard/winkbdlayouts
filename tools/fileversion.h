@@ -9,9 +9,9 @@
 //----------------------------------------------------------------------------
 
 #pragma once
-#include "strutils.h"
+#include "error.h"
 
-class FileVersionInfo
+class FileVersionInfo : public Error
 {
 public:
     // Constructor. Specify where to report errors.
@@ -44,20 +44,15 @@ public:
     std::wstring BaseLanguage;  // lower 4 hexa digits of id.
 
     // Load the information from one file.
-    bool load(const std::string& filename);
+    bool load(const std::wstring& filename);
     bool load(HMODULE = nullptr); // default to current exe
 
     // Clear content.
     void clear();
 
 private:
-    std::ostream* _err;
-
-    // Report an error.
-    void error(const std::string& message);
-
     // Individual loading functions.
-    bool loadByName(const std::string& filename);
+    bool loadByName(const std::wstring& filename);
     bool loadByHandle(HMODULE);
     std::wstring getVersionString(void* data, const std::wstring& name);
 };

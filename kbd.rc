@@ -37,8 +37,9 @@
 // Define resources which will be read to install the layout.
 STRINGTABLE
 BEGIN
-  WKL_RES_TEXT WKL_TEXT
-  WKL_RES_LANG WKL_LANG
+  WKL_RES_TEXT      WKL_TEXT  // Description of this keyboard.
+  WKL_RES_LANG      WKL_LANG  // Base language (4 heac digits).
+  WKL_RES_PROVIDER  "WKL"     // Mark this DLL as part of this project.
 END
 
 // Cleanup predefined version definitions.

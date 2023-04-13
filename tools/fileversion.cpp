@@ -18,6 +18,7 @@
 //-----------------------------------------------------------------------------
 
 FileVersionInfo::FileVersionInfo(std::ostream* err) :
+    Error(err),
     FileVersion1(0),
     FileVersion2(0),
     FileVersion3(0),
@@ -37,8 +38,7 @@ FileVersionInfo::FileVersionInfo(std::ostream* err) :
     ProductName(),
     ProductVersion(),
     LayoutText(),
-    BaseLanguage(),
-    _err(err)
+    BaseLanguage()
 {
 }
 
@@ -73,30 +73,18 @@ void FileVersionInfo::clear()
 
 
 //-----------------------------------------------------------------------------
-// Report an error.
-//-----------------------------------------------------------------------------
-
-void FileVersionInfo::error(const std::string& message)
-{
-    if (_err != nullptr) {
-        *_err << message << std::endl;
-    }
-}
-
-
-//-----------------------------------------------------------------------------
 // Load the FileVersionInfo from one file.
 //-----------------------------------------------------------------------------
 
-bool FileVersionInfo::load(const std::string& filename)
+bool FileVersionInfo::load(const std::wstring& filename)
 {
     clear();
     bool success = loadByName(filename);
 
-    HMODULE hmod = LoadLibraryExA(filename.c_str(), nullptr, LOAD_LIBRARY_AS_DATAFILE);
+    HMODULE hmod = LoadLibraryExW(filename.c_str(), nullptr, LOAD_LIBRARY_AS_DATAFILE);
     if (hmod == nullptr) {
         const DWORD err = GetLastError();
-        error("error opening " + filename + ": " + Error(err));
+        error("error opening " + filename + ": " + ErrorText(err));
         success = false;
     }
     else {
@@ -107,14 +95,14 @@ bool FileVersionInfo::load(const std::string& filename)
     return success;
 }
 
-bool FileVersionInfo::load(::HMODULE hmod)
+bool FileVersionInfo::load(HMODULE hmod)
 {
     clear();
     bool success = loadByHandle(hmod);
 
-    const std::string filename(ModuleFileName(::GetCurrentProcess(), hmod));
+    const std::wstring filename(ModuleFileName(GetCurrentProcess(), hmod));
     if (filename.empty()) {
-        error(Format("Cannot get file name for handle 0x%08llX", uint64_t(hmod)));
+        error(Format(L"Cannot get file name for handle 0x%08llX", uint64_t(hmod)));
         success = false;
     }
     else {
@@ -131,37 +119,35 @@ bool FileVersionInfo::load(::HMODULE hmod)
 
 bool FileVersionInfo::loadByHandle(HMODULE hmod)
 {
-    LayoutText = GetResourceWString(hmod, WKL_RES_TEXT);
-    BaseLanguage = GetResourceWString(hmod, WKL_RES_LANG);
+    LayoutText = GetResourceString(hmod, WKL_RES_TEXT);
+    BaseLanguage = GetResourceString(hmod, WKL_RES_LANG);
     return true;
 }
 
-bool FileVersionInfo::loadByName(const std::string& filename)
+bool FileVersionInfo::loadByName(const std::wstring& filename)
 {
-    const std::wstring wfilename(ToUTF16(filename));
-
     // Get size of version info.
     DWORD handle = 0;
-    const DWORD size = GetFileVersionInfoSizeExW(FILE_VER_GET_NEUTRAL, wfilename.c_str(), &handle);
+    const DWORD size = GetFileVersionInfoSizeExW(FILE_VER_GET_NEUTRAL, filename.c_str(), &handle);
     if (size == 0) {
         const DWORD err = GetLastError();
-        error("error reading version info from " + filename + ": " + Error(err));
+        error("error reading version info from " + filename + ": " + ErrorText(err));
         return false;
     }
 
     // Get version info content.
     std::vector<uint8_t> buffer(size, 0);
     void* const data = &buffer[0];
-    if (!GetFileVersionInfoExW(FILE_VER_GET_NEUTRAL, wfilename.c_str(), handle, size, data)) {
+    if (!GetFileVersionInfoExW(FILE_VER_GET_NEUTRAL, filename.c_str(), handle, size, data)) {
         const DWORD err = GetLastError();
-        error("error reading version info from " + filename + ": " + Error(err));
+        error("error reading version info from " + filename + ": " + ErrorText(err));
         return false;
     }
 
     // Get fixed version info (the integer values).
     void* value = nullptr;
     UINT length = 0;
-    if (::VerQueryValueW(data, L"\\", &value, &length) && value != nullptr && length >= sizeof(VS_FIXEDFILEINFO)) {
+    if (VerQueryValueW(data, L"\\", &value, &length) && value != nullptr && length >= sizeof(VS_FIXEDFILEINFO)) {
         VS_FIXEDFILEINFO* fixed = reinterpret_cast<VS_FIXEDFILEINFO*>(value);
         FileVersion1 = HIWORD(fixed->dwFileVersionMS);
         FileVersion2 = LOWORD(fixed->dwFileVersionMS);
@@ -198,7 +184,6 @@ std::wstring FileVersionInfo::getVersionString(void* data, const std::wstring& n
 
     for (const wchar_t* const* lang = languages; *lang != nullptr; ++lang) {
         const std::wstring path(L"\\StringFileInfo\\" + std::wstring(*lang) + L"\\" + name);
-        std::cout << "@@@ trying \"" << ToUTF8(path) << "\"" << std::endl << std::flush;
         if (VerQueryValueW(data, path.c_str(), &value, &length) && value != nullptr && length > 0) {
             // The returned length is in (w)characters, not bytes.
             const wchar_t* str = reinterpret_cast<const wchar_t*>(value);

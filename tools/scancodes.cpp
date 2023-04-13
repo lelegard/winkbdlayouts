@@ -280,13 +280,13 @@ static const char* const vk_names[256] = {
 // Display one key message.
 //---------------------------------------------------------------------------
 
-static void print_key(const char* name, WPARAM wParam, LPARAM lParam)
+static void print_key(const wchar_t* name, WPARAM wParam, LPARAM lParam)
 {
     const int vk = int(wParam);
     const int scancode = int((lParam >> 16) & 0xFF);
     const int ext = int((lParam >> 24) & 0x01);
     const int alt = int((lParam >> 29) & 0x01);
-    std::cout << Format("%-10s  Scan code: 0x%02X, Ext (Ctrl, Right-Alt): %d, Alt: %d, VK: 0x%04X", name, scancode, ext, alt, vk);
+    std::cout << Format(L"%-10s  Scan code: 0x%02X, Ext (Ctrl, Right-Alt): %d, Alt: %d, VK: 0x%04X", name, scancode, ext, alt, vk);
     if (vk < 256 && vk_names[vk] != nullptr) {
         std::cout << " (" << vk_names[vk] << ")";
     }
@@ -298,18 +298,18 @@ static void print_key(const char* name, WPARAM wParam, LPARAM lParam)
 // Application entry point.
 //---------------------------------------------------------------------------
 
-int main(int argc, char* argv[])
+int wmain(int argc, wchar_t* argv[])
 {
-    WNDCLASS wclass;
+    WNDCLASSW wclass;
     memset(&wclass, 0, sizeof(wclass));
     wclass.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
-    wclass.lpfnWndProc = DefWindowProc;
-    wclass.lpszClassName = "ScanCodesClass";
-    wclass.hCursor = LoadCursor(0, IDC_ARROW);
+    wclass.lpfnWndProc = DefWindowProcW;
+    wclass.lpszClassName = L"ScanCodesClass";
+    wclass.hCursor = LoadCursorA(0, IDC_ARROW);
     wclass.cbWndExtra = 0;
-    RegisterClass(&wclass);
+    RegisterClassW(&wclass);
 
-    HWND window = CreateWindowExA(0, "ScanCodesClass", "ScanCodes", WS_OVERLAPPEDWINDOW, 0, 0, 200, 200, 0, 0, 0, 0);
+    HWND window = CreateWindowExW(0, L"ScanCodesClass", L"ScanCodes", WS_OVERLAPPEDWINDOW, 0, 0, 200, 200, 0, 0, 0, 0);
     ShowWindow(window, SW_SHOW);
 
     std::cout << "Click on the small window and press keys to see their scan codes." << std::endl
@@ -319,16 +319,16 @@ int main(int argc, char* argv[])
     while (GetMessageA(&msg, window, 0, 0) > 0) {
         switch (msg.message) {
             case WM_SYSKEYDOWN:
-                print_key("SYSKEYDOWN", msg.wParam, msg.lParam);
+                print_key(L"SYSKEYDOWN", msg.wParam, msg.lParam);
                 break;
             case WM_SYSKEYUP:
-                print_key("SYSKEYUP", msg.wParam, msg.lParam);
+                print_key(L"SYSKEYUP", msg.wParam, msg.lParam);
                 break;
             case WM_KEYDOWN:
-                print_key("KEYDOWN", msg.wParam, msg.lParam);
+                print_key(L"KEYDOWN", msg.wParam, msg.lParam);
                 break;
             case WM_KEYUP:
-                print_key("KEYUP", msg.wParam, msg.lParam);
+                print_key(L"KEYUP", msg.wParam, msg.lParam);
                 break;
             case WM_PAINT: {
                 // Make sure the window stops complaining about paint.

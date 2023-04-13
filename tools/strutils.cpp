@@ -15,108 +15,85 @@
 
 
 //---------------------------------------------------------------------------
-// Operators on string containers.
-//---------------------------------------------------------------------------
-
-StringVector operator+(const StringVector& v, const std::string& s)
-{
-    StringVector res(v);
-    res.push_back(s);
-    return res;
-}
-
-StringVector operator+(const std::string& s, const StringVector& v)
-{
-    StringVector res;
-    res.push_back(s);
-    res.insert(res.end(), v.begin(), v.end());
-    return res;
-}
-
-StringList operator+(const StringList& l, const std::string& s)
-{
-    StringList res(l);
-    res.push_back(s);
-    return res;
-}
-
-StringList operator+(const std::string& s, const StringList& l)
-{
-    StringList res;
-    res.push_back(s);
-    res.insert(res.end(), l.begin(), l.end());
-    return res;
-}
-
-
-//---------------------------------------------------------------------------
 // Format a C++ string in a printf-way.
 //---------------------------------------------------------------------------
 
-std::string Format(const char* fmt, ...)
+std::wstring Format(const wchar_t* fmt, ...)
 {
     va_list ap;
 
     // Get required output size.
     va_start(ap, fmt);
-    int len = ::vsnprintf(nullptr, 0, fmt, ap);
+    int len = _vsnwprintf(nullptr, 0, fmt, ap);
     va_end(ap);
 
     if (len < 0) {
-        return std::string(); // error
+        return std::wstring(); // error
     }
 
     // Actual formatting.
-    std::string buf(len + 1, '\0');
+    std::wstring buf(len + 1, '\0');
     va_start(ap, fmt);
-    len = ::vsnprintf(&buf[0], buf.size(), fmt, ap);
+    len = _vsnwprintf(&buf[0], buf.size(), fmt, ap);
     va_end(ap);
 
-    buf.resize(std::max(0, len));
+    buf.resize(std::min<size_t>(buf.size(), std::max(0, len)));
     return buf;
 }
 
 
-//----------------------------------------------------------------------------
-// Length of a WSTRING. Size in bytes of it (including trailing null).
-//----------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+// Length of a string. Size in bytes of it (including trailing null).
+//---------------------------------------------------------------------------
 
-size_t WstringLength(const WCHAR* s)
+size_t StringLength(const wchar_t* s)
 {
-    if (s == nullptr) {
-        return 0;
-    }
-    else {
-        size_t len = 0;
+    size_t len = 0;
+    if (s != nullptr) {
         while (*s++ != 0) {
             len++;
         }
-        return len;
     }
+    return len;
 }
 
-size_t WstringSize(const WCHAR* s)
+size_t StringSize(const wchar_t* s)
 {
-    return s == nullptr ? 0 : (WstringLength(s) + 1) * sizeof(WCHAR);
+    return s == nullptr ? 0 : (StringLength(s) + 1) * sizeof(wchar_t);
 }
 
 
-//----------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 // Case conversions.
-//----------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 
-std::string ToLower(const std::string& s)
+std::wstring ToLower(const std::wstring& s)
 {
-    std::string res(s);
-    std::transform(res.begin(), res.end(), res.begin(), [](unsigned char c){ return std::tolower(c); });
+    std::wstring res(s);
+    std::transform(res.begin(), res.end(), res.begin(), [](wchar_t c){ return std::tolower(c); });
     return res;
 }
 
-std::string ToUpper(const std::string& s)
+std::wstring ToUpper(const std::wstring& s)
 {
-    std::string res(s);
-    std::transform(res.begin(), res.end(), res.begin(), [](unsigned char c){ return std::toupper(c); });
+    std::wstring res(s);
+    std::transform(res.begin(), res.end(), res.begin(), [](wchar_t c){ return std::toupper(c); });
     return res;
+}
+
+
+//---------------------------------------------------------------------------
+// Check if a string starts or end with a string.
+//---------------------------------------------------------------------------
+
+bool StartsWith(const std::wstring& s, const std::wstring& prefix)
+{
+    return !prefix.empty() && s.length() >= prefix.length() && s.substr(0, prefix.length()) == prefix;
+}
+
+bool EndsWith(const std::wstring& s, const std::wstring& suffix)
+{
+    return !suffix.empty() && s.length() >= suffix.length() && s.substr(s.length() - suffix.length()) == suffix;
 }
 
 
@@ -134,21 +111,6 @@ std::string ToUTF8(const std::wstring& str)
 {
     std::wstring_convert<std::codecvt_utf8<wchar_t>> myconv;
     return myconv.to_bytes(str);
-}
-
-
-//---------------------------------------------------------------------------
-// Check if a string starts or end with a string.
-//---------------------------------------------------------------------------
-
-bool StartsWith(const std::string& s, const std::string& prefix)
-{
-    return !prefix.empty() && s.length() >= prefix.length() && s.substr(0, prefix.length()) == prefix;
-}
-
-bool EndsWith(const std::string& s, const std::string& suffix)
-{
-    return !suffix.empty() && s.length() >= suffix.length() && s.substr(s.length() - suffix.length()) == suffix;
 }
 
 
@@ -188,7 +150,7 @@ char Hexa(int nibble)
     return (n < 10 ? '0' : 'A' - 10) + n;
 }
 
-void PrintHexa(std::ostream& out, const void* addr, size_t size, const std::string& margin, bool show_addr)
+void PrintHexa(std::ostream& out, const void* addr, size_t size, const std::wstring& margin, bool show_addr)
 {
     const uint8_t* cur = reinterpret_cast<const uint8_t*>(addr);
     const uint8_t* end = cur + size;
@@ -198,7 +160,7 @@ void PrintHexa(std::ostream& out, const void* addr, size_t size, const std::stri
         const size_t count = std::min<size_t>(bytes_per_line, end - cur);
         out << margin;
         if (show_addr) {
-            out << Format("0x%08llX: ", size_t(cur));
+            out << Format(L"0x%08llX: ", size_t(cur));
         }
         for (size_t i = 0; i < count; ++i) {
             out << Hexa(cur[i] >> 4) << Hexa(cur[i]) << ' ';
