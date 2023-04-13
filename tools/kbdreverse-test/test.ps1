@@ -33,11 +33,11 @@ if ($MSBuild -eq $null) {
 Write-Output "MSBuild: $MSBuild"
 
 # Build the project for each architecture.
-& $MSBuild $ProjectSolutionFile /nologo /property:Configuration=Release /property:Platform=$Arch /target:reverse
+& $MSBuild $ProjectSolutionFile /nologo /property:Configuration=Release /property:Platform=$Arch /target:kbdreverse
 
 # Run the generated reverse.exe on the "fr" keyboard from the system.
 Remove-Item $TestSourceFile -Force -ErrorAction SilentlyContinue
-. "$PSScriptRoot\..\..\$Arch\Release\reverse.exe" fr | Out-File $TestSourceFile -Encoding ascii
+. "$PSScriptRoot\..\..\$Arch\Release\kbdreverse.exe" fr | Out-File $TestSourceFile -Encoding ascii
 & $MSBuild $TestSolutionFile /nologo /property:Configuration=Release /property:Platform=$Arch
 
 Exit-Script

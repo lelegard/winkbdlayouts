@@ -16,9 +16,9 @@
 // Transform an error code into an error message string.
 //----------------------------------------------------------------------------
 
-std::wstring ErrorText(DWORD code)
+WString ErrorText(DWORD code)
 {
-    std::wstring message(1024, ' ');
+    WString message(1024, ' ');
     size_t length = FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM, nullptr, code, 0, &message[0], DWORD(message.size()), nullptr);
     message.resize(std::min(length, message.size()));
 
@@ -40,13 +40,13 @@ std::wstring ErrorText(DWORD code)
 // File name (without directory), file base name (without directory and prefix).
 //----------------------------------------------------------------------------
 
-std::wstring FullName(const std::wstring& name, bool include_dir, bool include_file)
+WString FullName(const WString& name, bool include_dir, bool include_file)
 {
     if (!include_dir && !include_file) {
-        return std::wstring();
+        return WString();
     }
 
-    std::wstring path(1024, L'\0');
+    WString path(1024, L'\0');
     wchar_t* file_part = nullptr;
     DWORD size = GetFullPathNameW(name.c_str(), DWORD(path.size()), &path[0], &file_part);
     if (size >= DWORD(path.size())) {
@@ -55,7 +55,7 @@ std::wstring FullName(const std::wstring& name, bool include_dir, bool include_f
     }
 
     if (!include_dir) {
-        return file_part == nullptr ? std::wstring() : file_part;
+        return file_part == nullptr ? WString() : file_part;
     }
     if (!include_file && file_part != nullptr) {
         path.resize(std::min<size_t>(path.size(), file_part - path.data()));
@@ -66,19 +66,19 @@ std::wstring FullName(const std::wstring& name, bool include_dir, bool include_f
     return path;
 }
 
-std::wstring DirName(const std::wstring& name)
+WString DirName(const WString& name)
 {
     return FullName(name, true, false);
 }
 
-std::wstring FileName(const std::wstring& name)
+WString FileName(const WString& name)
 {
     return FullName(name, false, true);
 }
 
-std::wstring FileBaseName(const std::wstring& name)
+WString FileBaseName(const WString& name)
 {
-    const std::wstring filename(FileName(name));
+    const WString filename(FileName(name));
     const size_t pos = filename.rfind(L'.');
     return pos == std::string::npos ? filename : filename.substr(0, pos);
 }
@@ -88,12 +88,12 @@ std::wstring FileBaseName(const std::wstring& name)
 // Check if a file or directory exists
 //----------------------------------------------------------------------------
 
-bool FileExists(const std::wstring& path)
+bool FileExists(const WString& path)
 {
     return GetFileAttributesW(path.c_str()) != INVALID_FILE_ATTRIBUTES;
 }
 
-bool IsDirectory(const std::wstring& path)
+bool IsDirectory(const WString& path)
 {
     const DWORD attr = GetFileAttributesW(path.c_str());
     return attr != INVALID_FILE_ATTRIBUTES && (attr & FILE_ATTRIBUTE_DIRECTORY) != 0;
@@ -104,12 +104,12 @@ bool IsDirectory(const std::wstring& path)
 // Search files matching a wildcard.
 //---------------------------------------------------------------------------
 
-bool SearchFiles(WStringList& files, const std::wstring& directory, const std::wstring& pattern)
+bool SearchFiles(WStringList& files, const WString& directory, const WString& pattern)
 {
     files.clear();
 
     // Initiate the search
-    const std::wstring full_pattern(directory + L"\\" + pattern);
+    const WString full_pattern(directory + L"\\" + pattern);
     WIN32_FIND_DATAW fdata;
     HANDLE handle = FindFirstFileW(full_pattern.c_str(), &fdata);
     if (handle == INVALID_HANDLE_VALUE) {
@@ -122,7 +122,7 @@ bool SearchFiles(WStringList& files, const std::wstring& directory, const std::w
     do {
         // Get next file name.
         fdata.cFileName[sizeof(fdata.cFileName) / sizeof(fdata.cFileName[0]) - 1] = 0;
-        const std::wstring file(fdata.cFileName);
+        const WString file(fdata.cFileName);
 
         // Filter out . and ..
         if (file != L"." && file != L"..") {
@@ -141,9 +141,9 @@ bool SearchFiles(WStringList& files, const std::wstring& directory, const std::w
 // Get the value of an environment variable.
 //---------------------------------------------------------------------------
 
-std::wstring GetEnv(const std::wstring& name, const std::wstring& def)
+WString GetEnv(const WString& name, const WString& def)
 {
-    std::wstring value(2048, ' ');
+    WString value(2048, ' ');
     DWORD size = GetEnvironmentVariableW(name.c_str(), &value[0], DWORD(value.size()));
     if (size >= DWORD(value.size())) {
         value.resize(size_t(size + 1));
@@ -158,9 +158,9 @@ std::wstring GetEnv(const std::wstring& name, const std::wstring& def)
 // Get the file name of a module in a process.
 //---------------------------------------------------------------------------
 
-std::wstring ModuleFileName(HANDLE process, HMODULE module)
+WString ModuleFileName(HANDLE process, HMODULE module)
 {
-    std::wstring name(2048, ' ');
+    WString name(2048, ' ');
     DWORD size = GetModuleFileNameExW(process, module, &name[0], DWORD(name.size()));
     name.resize(std::min<size_t>(size, name.size()));
     return name;
@@ -171,9 +171,9 @@ std::wstring ModuleFileName(HANDLE process, HMODULE module)
 // Get a resource string in a module.
 //---------------------------------------------------------------------------
 
-std::wstring GetResourceString(const std::wstring& filename, int resource_index)
+WString GetResourceString(const WString& filename, int resource_index)
 {
-    std::wstring str;
+    WString str;
     HMODULE hmod = LoadLibraryExW(filename.c_str(), nullptr, LOAD_LIBRARY_AS_DATAFILE);
     if (hmod != nullptr) {
         str = GetResourceString(hmod, resource_index);
@@ -182,11 +182,11 @@ std::wstring GetResourceString(const std::wstring& filename, int resource_index)
     return str;
 }
 
-std::wstring GetResourceString(HMODULE module, int resource_index)
+WString GetResourceString(HMODULE module, int resource_index)
 {
     // Start with a 1kB buffer and iterate with double size as long as the
     // value seems to be longer. Stop at 1MB (fool-proof check).
-    std::wstring value(1024, L'\0');
+    WString value(1024, L'\0');
     int length = 0;
     while ((length = LoadStringW(module, resource_index, &value[0], int(value.size()))) >= int(value.size()) - 1 && value.size() < 1000000) {
         value.resize(2 * value.size());
@@ -231,8 +231,8 @@ bool IsAdmin()
 
 bool RestartAsAdmin(const WStringVector& args, bool wait_process)
 {
-    const std::wstring program(GetCurrentProgram());
-    const std::wstring all_args(Join(args, L" "));
+    const WString program(GetCurrentProgram());
+    const WString all_args(Join(args, L" "));
 
     SHELLEXECUTEINFOW sei;
     Zero(&sei, sizeof(sei));

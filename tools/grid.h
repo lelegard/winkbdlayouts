@@ -18,7 +18,7 @@ public:
     typedef WStringVector Line;
 
     // Constructor.
-    Grid(const std::wstring& margin = L"", const std::wstring& spacing = L" ");
+    Grid(const WString& margin = L"", const WString& spacing = L" ");
 
     // Clear content.
     void clear() { _lines.clear(); }
@@ -27,22 +27,22 @@ public:
     void addLine(const Line& line) { _lines.push_back(line); }
 
     // Add one column on last line.
-    void addColumn(const std::wstring& text);
+    void addColumn(const WString& text);
 
     // Add underlines under previous line.
     void addUnderlines(const Line& first_colums = Line(), wchar_t underline = L'-');
 
     // Set attributes.
-    void setMargin(const std::wstring& margin) { _margin = margin; }
-    void setMargin(size_t width) { _margin = std::wstring(width, L' '); }
-    void setSpacing(const std::wstring& spacing) { _spacing = spacing; }
-    void setSpacing(size_t width) { _spacing = std::wstring(width, L' '); }
+    void setMargin(const WString& margin) { _margin = margin; }
+    void setMargin(size_t width) { _margin = WString(width, L' '); }
+    void setSpacing(const WString& spacing) { _spacing = spacing; }
+    void setSpacing(size_t width) { _spacing = WString(width, L' '); }
 
     // Print the grid. All columns are aligned on their maximum width.
     void print(std::ostream& out);
 
 private:
     std::list<Line> _lines;
-    std::wstring    _margin;
-    std::wstring    _spacing;
+    WString    _margin;
+    WString    _spacing;
 };

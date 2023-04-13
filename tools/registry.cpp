@@ -16,13 +16,13 @@
 // Return the root key of a registry path.
 //-----------------------------------------------------------------------------
 
-bool Registry::splitKey(const std::wstring& key, HKEY& root_key, std::wstring& subkey)
+bool Registry::splitKey(const WString& key, HKEY& root_key, WString& subkey)
 {
     // Get end if root key name.
     const size_t sep = key.find(L'\\');
 
     // Root key name and subkey name.
-    std::wstring root;
+    WString root;
     if (sep == std::string::npos) {
         root = key;
         subkey.clear();
@@ -59,7 +59,7 @@ bool Registry::splitKey(const std::wstring& key, HKEY& root_key, std::wstring& s
     return true;
 }
 
-bool Registry::splitKey(const std::wstring& key, HKEY& root_key, std::wstring& midkey, std::wstring& final_key)
+bool Registry::splitKey(const WString& key, HKEY& root_key, WString& midkey, WString& final_key)
 {
     midkey.clear();
     const bool ok = splitKey(key, root_key, final_key);
@@ -78,10 +78,10 @@ bool Registry::splitKey(const std::wstring& key, HKEY& root_key, std::wstring& m
 // Check if a registry value exists.
 //-----------------------------------------------------------------------------
 
-bool Registry::valueExists(const std::wstring& key, const std::wstring& value_name)
+bool Registry::valueExists(const WString& key, const WString& value_name)
 {
     HKEY root;
-    std::wstring subkey;
+    WString subkey;
 
     // Split the key without error reporting.
     muteErrors();
@@ -110,7 +110,7 @@ bool Registry::valueExists(const std::wstring& key, const std::wstring& value_na
 // Open a registry key.
 //-----------------------------------------------------------------------------
 
-bool Registry::openKey(HKEY root, const std::wstring& key, REGSAM sam, HKEY& handle)
+bool Registry::openKey(HKEY root, const WString& key, REGSAM sam, HKEY& handle)
 {
     LONG hr = RegOpenKeyExW(root, key.c_str(), 0, sam, &handle);
     if (hr == ERROR_SUCCESS) {
@@ -127,13 +127,13 @@ bool Registry::openKey(HKEY root, const std::wstring& key, REGSAM sam, HKEY& han
 // Get a value in a registry key as a string.
 //-----------------------------------------------------------------------------
 
-std::wstring Registry::getValue(const std::wstring& key, const std::wstring& value_name, bool expand)
+WString Registry::getValue(const WString& key, const WString& value_name, bool expand)
 {
     // Split name
     HKEY root;
-    std::wstring subkey;
+    WString subkey;
     if (!splitKey(key, root, subkey)) {
-        return std::wstring();
+        return WString();
     }
 
     // RegGetValue flags.
@@ -145,7 +145,7 @@ std::wstring Registry::getValue(const std::wstring& key, const std::wstring& val
     LONG hr = RegGetValueW(root, subkey.c_str(), value_name.c_str(), flags, &type, nullptr, &size);
     if ((hr != ERROR_SUCCESS && hr != ERROR_MORE_DATA) || size <= 0) {
         error("error querying " + key + L"\\" + value_name + ": " + ErrorText(hr));
-        return std::wstring();
+        return WString();
     }
 
     // Allocate new buffer and actually get the value
@@ -160,7 +160,7 @@ std::wstring Registry::getValue(const std::wstring& key, const std::wstring& val
     buf[size] = buf[size+1] = 0; // if improperly terminated string
 
     // Convert value to a string
-    std::wstring value;
+    WString value;
     switch (type) {
         case REG_SZ:
         case REG_MULTI_SZ:
@@ -185,12 +185,12 @@ std::wstring Registry::getValue(const std::wstring& key, const std::wstring& val
     // Expand resource strings.
     if (expand && StartsWith(value, L"@")) {
         const size_t sep = value.find(L",-");
-        if (sep != std::wstring::npos) {
+        if (sep != WString::npos) {
             int index = -1;
             char dummy = 0;
             const std::string istr(ToUTF8(value.c_str() + sep + 2));
             if (sscanf(istr.c_str(), "%d%c", &index, &dummy) == 1) {
-                const std::wstring res(GetResourceString(value.substr(1, sep - 1), index));
+                const WString res(GetResourceString(value.substr(1, sep - 1), index));
                 if (!res.empty()) {
                     value = res;
                 }
@@ -206,13 +206,13 @@ std::wstring Registry::getValue(const std::wstring& key, const std::wstring& val
 // Get all value names in a key.
 //-----------------------------------------------------------------------------
 
-bool Registry::getValueNames(const std::wstring& key, WStringList& names)
+bool Registry::getValueNames(const WString& key, WStringList& names)
 {
     names.clear();
 
     // Split name
     HKEY root, hkey;
-    std::wstring subkey;
+    WString subkey;
     if (!splitKey(key, root, subkey) || !openKey(root, subkey, KEY_QUERY_VALUE, hkey)) {
         return false;
     }
@@ -220,7 +220,7 @@ bool Registry::getValueNames(const std::wstring& key, WStringList& names)
     // Enumerate all value names.
     bool success = true;
     for (DWORD index = 0; success; index++) {
-        std::wstring name(2048, L'\0');
+        WString name(2048, L'\0');
         DWORD size = DWORD(name.size());
         LSTATUS hr = RegEnumValueW(hkey, index, &name[0], &size, nullptr, nullptr, nullptr, nullptr);
         if (hr == ERROR_NO_MORE_ITEMS) {
@@ -243,13 +243,13 @@ bool Registry::getValueNames(const std::wstring& key, WStringList& names)
 // Get all subkeys in a key.
 //-----------------------------------------------------------------------------
 
-bool Registry::getSubKeys(const std::wstring& key, WStringList& subkeys)
+bool Registry::getSubKeys(const WString& key, WStringList& subkeys)
 {
     subkeys.clear();
 
     // Split name
     HKEY root, hkey;
-    std::wstring subkey;
+    WString subkey;
     if (!splitKey(key, root, subkey) || !openKey(root, subkey, KEY_ENUMERATE_SUB_KEYS, hkey)) {
         return false;
     }
@@ -257,7 +257,7 @@ bool Registry::getSubKeys(const std::wstring& key, WStringList& subkeys)
     // Enumerate all subkeys.
     bool success = true;
     for (DWORD index = 0; success; index++) {
-        std::wstring name(2048, L'\0');
+        WString name(2048, L'\0');
         DWORD size = DWORD(name.size());
         LSTATUS hr = RegEnumKeyExW(hkey, index, &name[0], &size, nullptr, nullptr, nullptr, nullptr);
         if (hr == ERROR_NO_MORE_ITEMS) {
@@ -280,11 +280,11 @@ bool Registry::getSubKeys(const std::wstring& key, WStringList& subkeys)
 // Set value of a registry key.
 //-----------------------------------------------------------------------------
 
-bool Registry::setValue(const std::wstring& key, const std::wstring& value_name, const std::wstring& value, bool expandable)
+bool Registry::setValue(const WString& key, const WString& value_name, const WString& value, bool expandable)
 {
     // Split name
     HKEY root;
-    std::wstring subkey;
+    WString subkey;
     if (!splitKey(key, root, subkey)) {
         return false;
     }
@@ -306,10 +306,10 @@ bool Registry::setValue(const std::wstring& key, const std::wstring& value_name,
 // Set value of a registry key.
 //-----------------------------------------------------------------------------
 
-bool Registry::setValue(const std::wstring& key, const std::wstring& value_name, DWORD value)
+bool Registry::setValue(const WString& key, const WString& value_name, DWORD value)
 {
     HKEY root;
-    std::wstring subkey;
+    WString subkey;
     if (!splitKey(key, root, subkey)) {
         return false;
     }
@@ -328,11 +328,11 @@ bool Registry::setValue(const std::wstring& key, const std::wstring& value_name,
 // Delete a value of a registry key.
 //-----------------------------------------------------------------------------
 
-bool Registry::deleteValue(const std::wstring& key, const std::wstring& value_name)
+bool Registry::deleteValue(const WString& key, const WString& value_name)
 {
     // Split name
     HKEY root, hkey;
-    std::wstring subkey;
+    WString subkey;
     if (!splitKey(key, root, subkey) || !openKey(root, subkey, KEY_SET_VALUE, hkey)) {
         return false;
     }
@@ -352,11 +352,11 @@ bool Registry::deleteValue(const std::wstring& key, const std::wstring& value_na
 // Create a registry key.
 //-----------------------------------------------------------------------------
 
-bool Registry::createKey(const std::wstring& key, bool is_volatile)
+bool Registry::createKey(const WString& key, bool is_volatile)
 {
     // Split name
     HKEY root, hkey;
-    std::wstring midkey, newkey;
+    WString midkey, newkey;
     if (!splitKey(key, root, midkey, newkey) || !openKey(root, midkey, KEY_CREATE_SUB_KEY | KEY_READ, hkey)) {
         return false;
     }
@@ -383,11 +383,11 @@ bool Registry::createKey(const std::wstring& key, bool is_volatile)
 // Delete a registry key.
 //-----------------------------------------------------------------------------
 
-bool Registry::deleteKey(const std::wstring& key)
+bool Registry::deleteKey(const WString& key)
 {
     // Split name
     HKEY root, hkey;
-    std::wstring midkey, endkey;
+    WString midkey, endkey;
     if (!splitKey(key, root, midkey, endkey) || !openKey(root, midkey, KEY_WRITE, hkey)) {
         return false;
     }

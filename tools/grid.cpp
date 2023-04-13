@@ -16,7 +16,7 @@
 // Constructor.
 //----------------------------------------------------------------------------
 
-Grid::Grid(const std::wstring& margin, const std::wstring& spacing) :
+Grid::Grid(const WString& margin, const WString& spacing) :
     _lines(),
     _margin(margin),
     _spacing(spacing)
@@ -28,7 +28,7 @@ Grid::Grid(const std::wstring& margin, const std::wstring& spacing) :
 // Add one column on last line.
 //----------------------------------------------------------------------------
 
-void Grid::addColumn(const std::wstring& text)
+void Grid::addColumn(const WString& text)
 {
     if (_lines.empty()) {
         _lines.push_back(Line());
@@ -47,7 +47,7 @@ void Grid::addUnderlines(const Line& first_colums, wchar_t underline)
         const Line& prev(_lines.back());
         Line next(first_colums);
         while (next.size() < prev.size()) {
-            next.push_back(std::wstring(prev[next.size()].length(), underline));
+            next.push_back(WString(prev[next.size()].length(), underline));
         }
         _lines.push_back(next);
     }

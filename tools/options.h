@@ -15,14 +15,14 @@ class Options
 {
 public:
     // Constructor.
-    Options(int argc, wchar_t* argv[], const std::string syntax);
+    Options(int argc, wchar_t* argv[], const WString syntax);
 
     // Command name and arguments.
-    const std::wstring command;
-    WStringVector      args;
+    const WString command;
+    WStringVector args;
 
     // Set an output file or use std::cout.
-    void setOutput(const std::wstring& filename);
+    void setOutput(const WString& filename);
     void closeOutput();
     std::ostream& out() { return *_out; }
     
@@ -36,14 +36,14 @@ public:
     [[noreturn]] void usage();
 
     // Print a fatal error and exit.
-    [[noreturn]] void fatal(const std::wstring& message);
+    [[noreturn]] void fatal(const WString& message);
 
     // Print an error and continue.
-    void error(const std::wstring& message);
+    void error(const WString& message);
 
 private:
-    const std::string _syntax;
-    std::ofstream     _outfile;
-    std::ostream*     _out;
-    bool              _prompt_on_exit;
+    const WString _syntax;
+    std::ofstream _outfile;
+    std::ostream* _out;
+    bool          _prompt_on_exit;
 };

@@ -30,7 +30,7 @@ public:
     AdminOptions(int argc, wchar_t* argv[]);
 
     // Command line options.
-    std::wstring  output;
+    WString       output;
     WStringVector dll_install;
     bool          list_keyboards;
     bool          show_user;
@@ -39,18 +39,18 @@ public:
 
 AdminOptions::AdminOptions(int argc, wchar_t* argv[]) :
     Options(argc, argv,
-        "[options]\n"
-        "\n"
-        "Options:\n"
-        "\n"
-        "  -h : display this help text\n"
-        "  -i dll-or-directory : install specified keyboard DLL\n"
-        "  -l : list installed keyboards\n"
-        "  -o file : output file name, default is standard output\n"
-        "  -p : prompt user on end of execution\n"
-        "  -np : ignore -p, don't prompt\n"
-        "  -s : search active keyboard layout DLL's in all processes\n"
-        "  -u : display user setup"),
+        L"[options]\n"
+        L"\n"
+        L"Options:\n"
+        L"\n"
+        L"  -h : display this help text\n"
+        L"  -i dll-or-directory : install specified keyboard DLL\n"
+        L"  -l : list installed keyboards\n"
+        L"  -o file : output file name, default is standard output\n"
+        L"  -p : prompt user on end of execution\n"
+        L"  -np : ignore -p, don't prompt\n"
+        L"  -s : search active keyboard layout DLL's in all processes\n"
+        L"  -u : display user setup"),
     output(),
     list_keyboards(false),
     show_user(false),
@@ -93,7 +93,7 @@ AdminOptions::AdminOptions(int argc, wchar_t* argv[]) :
     // Default action if nothing is specified.
     if (!list_keyboards && !show_user && !search_active && dll_install.empty()) {
         // If the exe is named "setup.exe", default to "-i same-directory-as-exe".
-        const std::wstring exe(GetCurrentProgram());
+        const WString exe(GetCurrentProgram());
         if (ToLower(FileName(exe)) == L"setup.exe") {
             dll_install.push_back(DirName(exe));
         }
@@ -122,13 +122,13 @@ void ListKeyboards(AdminOptions& opt)
     grid.addUnderlines();
 
     for (const auto& id : layout_ids) {
-        const std::wstring key(REGISTRY_LAYOUT_KEY "\\" + id);
-        const std::wstring file(reg.getValue(key, REGISTRY_LAYOUT_FILE));
-        std::wstring text(reg.getValue(key, REGISTRY_LAYOUT_DISPLAY, true));
+        const WString key(REGISTRY_LAYOUT_KEY "\\" + id);
+        const WString file(reg.getValue(key, REGISTRY_LAYOUT_FILE));
+        WString text(reg.getValue(key, REGISTRY_LAYOUT_DISPLAY, true));
         if (text.empty()) {
             text = reg.getValue(key, REGISTRY_LAYOUT_TEXT);
         }
-        std::wstring lang(FileBaseName(ToLower(file)));
+        WString lang(FileBaseName(ToLower(file)));
         if (StartsWith(lang, L"kbd")) {
             lang.erase(0, 3);
         }
@@ -157,9 +157,9 @@ void DisplayUserSetup(AdminOptions& opt)
 
     Grid grid(L"", L"  ");
     for (const auto& n : names) {
-        const std::wstring id(reg.getValue(REGISTRY_USER_PRELOAD_KEY, n));
+        const WString id(reg.getValue(REGISTRY_USER_PRELOAD_KEY, n));
         grid.addLine({n + L":", id});
-        const std::wstring idkey(REGISTRY_LAYOUT_KEY "\\" + id);
+        const WString idkey(REGISTRY_LAYOUT_KEY "\\" + id);
         if (reg.keyExists(idkey)) {
             grid.addColumn(reg.getValue(idkey, REGISTRY_LAYOUT_TEXT) + L" (" + reg.getValue(idkey, REGISTRY_LAYOUT_FILE) + L")");
         }
@@ -177,9 +177,9 @@ void DisplayUserSetup(AdminOptions& opt)
 
     grid.clear();
     for (const auto& n : names) {
-        const std::wstring id(reg.getValue(REGISTRY_USER_SUBSTS_KEY, n));
+        const WString id(reg.getValue(REGISTRY_USER_SUBSTS_KEY, n));
         grid.addLine({n, L"->", id});
-        const std::wstring idkey(REGISTRY_LAYOUT_KEY "\\" + id);
+        const WString idkey(REGISTRY_LAYOUT_KEY "\\" + id);
         if (reg.keyExists(idkey)) {
             grid.addColumn(reg.getValue(idkey, REGISTRY_LAYOUT_TEXT) + L" (" + reg.getValue(idkey, REGISTRY_LAYOUT_FILE) + L")");
         }
@@ -238,8 +238,8 @@ void SearchActiveKeyboards(AdminOptions& opt)
 
         // Get the module names and display potential keyboards DLL's.
         for (auto hmod : mods) {
-            const std::wstring file(ModuleFileName(hproc, hmod));
-            const std::wstring base(ToLower(FileName(file)));
+            const WString file(ModuleFileName(hproc, hmod));
+            const WString base(ToLower(FileName(file)));
             if (StartsWith(base, L"kbd") && EndsWith(base, L".dll")) {
                 opt.out() << Format(L"Process 0x%08X ", pid)
                           << FileName(ModuleFileName(hproc, nullptr))
@@ -256,7 +256,7 @@ void SearchActiveKeyboards(AdminOptions& opt)
 // Install one keyboard DLL's.
 //---------------------------------------------------------------------------
 
-void InstallOneKeyboard(AdminOptions& opt, const std::wstring& dll)
+void InstallOneKeyboard(AdminOptions& opt, const WString& dll)
 {
     // Map the library file.
     HMODULE hmod = LoadLibraryExW(dll.c_str(), nullptr, LOAD_LIBRARY_AS_DATAFILE);
@@ -267,16 +267,41 @@ void InstallOneKeyboard(AdminOptions& opt, const std::wstring& dll)
     }
 
     // Get all expected resource strings from a WKL DLL.
-    const std::wstring text(GetResourceString(hmod, WKL_RES_TEXT));
-    const std::wstring lang(GetResourceString(hmod, WKL_RES_LANG));
-    const std::wstring provider(GetResourceString(hmod, WKL_RES_PROVIDER));
+    const WString text(GetResourceString(hmod, WKL_RES_TEXT));
+    const WString lang(ToLower(GetResourceString(hmod, WKL_RES_LANG)));
+    const WString provider(GetResourceString(hmod, WKL_RES_PROVIDER));
     FreeLibrary(hmod);
 
     if (provider != L"WKL") {
         return; // not a WKL library
     }
 
-    opt.out() << "Installing " << dll << " (" << text << ")" << std::endl;
+    opt.out() << "==== Installing " << dll << " (" << text << ")" << std::endl;
+
+    // Enumerate keyboard layouts in registry.
+    Registry reg(&std::cerr);
+    WStringList layout_ids;
+    if (!reg.getSubKeys(REGISTRY_LAYOUT_KEY, layout_ids)) {
+        return;
+    }
+
+    // Build a list of ids with matching base language.
+    WStringSet matching_ids;
+    WString final_id;
+    const WString file_name(ToLower(FileName(dll)));
+
+    for (const auto& id : layout_ids) {
+        // Check if the id matches the base language of the new keyboard.
+        if (EndsWith(ToLower(id), lang)) {
+            const WString key(REGISTRY_LAYOUT_KEY "\\" + id);
+            if (ToLower(reg.getValue(key, REGISTRY_LAYOUT_FILE)) == file_name) {
+                opt.out() << file_name << " already registered, replacing it" << std::endl;
+                final_id = id;
+                break;
+            }
+            matching_ids.insert(id);
+        }
+    }
 
     // TBC
 }
@@ -313,7 +338,7 @@ int wmain(int argc, wchar_t* argv[])
     AdminOptions opt(argc, argv);
 
     // Need to be admin to install keyboards or explore all processes.
-    if ((!opt.dll_install.empty() || opt.list_keyboards) && !IsAdmin()) {
+    if ((!opt.dll_install.empty() || opt.search_active) && !IsAdmin()) {
         std::cout << "Restarting as admin..." << std::endl;
         RestartAsAdmin(opt.args + L"-p", true);
         opt.exit(EXIT_SUCCESS);

@@ -76,7 +76,7 @@ void FileVersionInfo::clear()
 // Load the FileVersionInfo from one file.
 //-----------------------------------------------------------------------------
 
-bool FileVersionInfo::load(const std::wstring& filename)
+bool FileVersionInfo::load(const WString& filename)
 {
     clear();
     bool success = loadByName(filename);
@@ -100,7 +100,7 @@ bool FileVersionInfo::load(HMODULE hmod)
     clear();
     bool success = loadByHandle(hmod);
 
-    const std::wstring filename(ModuleFileName(GetCurrentProcess(), hmod));
+    const WString filename(ModuleFileName(GetCurrentProcess(), hmod));
     if (filename.empty()) {
         error(Format(L"Cannot get file name for handle 0x%08llX", uint64_t(hmod)));
         success = false;
@@ -124,7 +124,7 @@ bool FileVersionInfo::loadByHandle(HMODULE hmod)
     return true;
 }
 
-bool FileVersionInfo::loadByName(const std::wstring& filename)
+bool FileVersionInfo::loadByName(const WString& filename)
 {
     // Get size of version info.
     DWORD handle = 0;
@@ -174,7 +174,7 @@ bool FileVersionInfo::loadByName(const std::wstring& filename)
     return true;
 }
 
-std::wstring FileVersionInfo::getVersionString(void* data, const std::wstring& name)
+WString FileVersionInfo::getVersionString(void* data, const WString& name)
 {
     void* value = nullptr;
     UINT length = 0;
@@ -183,7 +183,7 @@ std::wstring FileVersionInfo::getVersionString(void* data, const std::wstring& n
     static const wchar_t* const languages[] = {L"000004B0", L"000004E4", L"040904E4", nullptr};
 
     for (const wchar_t* const* lang = languages; *lang != nullptr; ++lang) {
-        const std::wstring path(L"\\StringFileInfo\\" + std::wstring(*lang) + L"\\" + name);
+        const WString path(L"\\StringFileInfo\\" + WString(*lang) + L"\\" + name);
         if (VerQueryValueW(data, path.c_str(), &value, &length) && value != nullptr && length > 0) {
             // The returned length is in (w)characters, not bytes.
             const wchar_t* str = reinterpret_cast<const wchar_t*>(value);
@@ -191,8 +191,8 @@ std::wstring FileVersionInfo::getVersionString(void* data, const std::wstring& n
                 length--;
 
             }
-            return std::wstring(str, length);
+            return WString(str, length);
         }
     }
-    return std::wstring();
+    return WString();
 }

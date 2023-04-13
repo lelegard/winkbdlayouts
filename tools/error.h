@@ -20,7 +20,7 @@ public:
 protected:
     // Report an error.
     void error(const std::string& msg)  { if (_err != nullptr) { *_err << msg << std::endl; } }
-    void error(const std::wstring& msg) { if (_err != nullptr) { *_err << msg << std::endl; } }
+    void error(const WString& msg) { if (_err != nullptr) { *_err << msg << std::endl; } }
 
     // Temporary mute errors.
     void muteErrors() { if (_err != nullptr) { _saved = _err; _err = nullptr; } }

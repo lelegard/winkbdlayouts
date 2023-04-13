@@ -12,35 +12,35 @@
 #include "strutils.h"
 
 // Transform an error code into an error message string.
-std::wstring ErrorText(DWORD code = GetLastError());
+WString ErrorText(DWORD code = GetLastError());
 
 // Get the value of an environment variable.
-std::wstring GetEnv(const std::wstring& name, const std::wstring& def = L"");
+WString GetEnv(const WString& name, const WString& def = L"");
 
 // Directory name, file name (without directory), file base name (without directory and prefix).
-std::wstring FullName(const std::wstring&, bool include_dir = true, bool include_file = true);
-std::wstring DirName(const std::wstring&);
-std::wstring FileName(const std::wstring&);
-std::wstring FileBaseName(const std::wstring&);
+WString FullName(const WString&, bool include_dir = true, bool include_file = true);
+WString DirName(const WString&);
+WString FileName(const WString&);
+WString FileBaseName(const WString&);
 
 // Check if a file or directory exists
-bool FileExists(const std::wstring&);
+bool FileExists(const WString&);
 
 // Check if a path exists and is a directory
-bool IsDirectory(const std::wstring&);
+bool IsDirectory(const WString&);
 
 // Search files matching a wildcard in a directory.
-bool SearchFiles(WStringList& files, const std::wstring& directory, const std::wstring& pattern);
+bool SearchFiles(WStringList& files, const WString& directory, const WString& pattern);
 
 // Get the file name of a module in a process.
-std::wstring ModuleFileName(HANDLE process, HMODULE module);
+WString ModuleFileName(HANDLE process, HMODULE module);
 
 // Get current executable.
-inline std::wstring GetCurrentProgram() { return ModuleFileName(GetCurrentProcess(), nullptr); }
+inline WString GetCurrentProgram() { return ModuleFileName(GetCurrentProcess(), nullptr); }
 
 // Get a resource string in a module.
-std::wstring GetResourceString(const std::wstring& filename, int resource_index);
-std::wstring GetResourceString(HMODULE module, int resource_index);
+WString GetResourceString(const WString& filename, int resource_index);
+WString GetResourceString(HMODULE module, int resource_index);
 
 // Check if current process is admin.
 bool IsAdmin();

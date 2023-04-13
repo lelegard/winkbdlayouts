@@ -18,7 +18,7 @@
 
 // Tables of values => symbols
 typedef __int64 Value;
-typedef std::map<Value, std::wstring> SymbolTable;
+typedef std::map<Value, WString> SymbolTable;
 #define SYM(e) {e, L#e}
 
 // Configure the terminal console on init, restore on exit.
@@ -36,33 +36,33 @@ public:
     ReverseOptions(int argc, wchar_t* argv[]);
 
     // Command line options.
-    std::string  dashed;
-    std::wstring input;
-    std::wstring output;
-    std::wstring comment;
-    int          kbd_type;
-    bool         num_only;
-    bool         hexa_dump;
-    bool         gen_resources;
+    WString dashed;
+    WString input;
+    WString output;
+    WString comment;
+    int     kbd_type;
+    bool    num_only;
+    bool    hexa_dump;
+    bool    gen_resources;
 };
 
 ReverseOptions::ReverseOptions(int argc, wchar_t* argv[]) :
     Options(argc, argv,
-        "[options] kbd-name-or-file\n"
-        "\n"
-        "  kbd-name-or-file : Either the file name of a keyboard layout DLL or the\n"
-        "  name of a keyboard layout, for instance \"fr\" for C:\\Windows\\System32\\kbdfr.dll\n"
-        "\n"
-        "Options:\n"
-        "\n"
-        "  -c \"string\" : comment string in the header\n"
-        "  -d : add hexa dump in final comments\n"
-        "  -h : display this help text\n"
-        "  -n : numerical output only, do not attempt to translate to source macros\n"
-        "  -o file : output file name, default is standard output\n"
-        "  -r : generate a resource file instead of a C source file\n"
-        "  -t value : keyboard type, defaults to dwType in kbd table or 4 if unspecified"),
-    dashed(75, '-'),
+        L"[options] kbd-name-or-file\n"
+        L"\n"
+        L"  kbd-name-or-file : Either the file name of a keyboard layout DLL or the\n"
+        L"  name of a keyboard layout, for instance \"fr\" for C:\\Windows\\System32\\kbdfr.dll\n"
+        L"\n"
+        L"Options:\n"
+        L"\n"
+        L"  -c \"string\" : comment string in the header\n"
+        L"  -d : add hexa dump in final comments\n"
+        L"  -h : display this help text\n"
+        L"  -n : numerical output only, do not attempt to translate to source macros\n"
+        L"  -o file : output file name, default is standard output\n"
+        L"  -r : generate a resource file instead of a C source file\n"
+        L"  -t value : keyboard type, defaults to dwType in kbd table or 4 if unspecified"),
+    dashed(75, L'-'),
     input(),
     output(),
     comment(L"Windows Keyboards Layouts (WKL)"),
@@ -662,16 +662,16 @@ const SymbolTable wchar_descriptions {
 class DataStructure
 {
 public:
-    std::wstring name;
+    WString name;
     const void*  address;
     size_t       size;
 
     // Constructors with address or integer.
-    DataStructure(const std::wstring& n = L"", const void* a = nullptr, size_t s = 0)
+    DataStructure(const WString& n = L"", const void* a = nullptr, size_t s = 0)
         : name(n), address(a), size(s) {}
-    DataStructure(const std::wstring& n, const void* a, const void* end)
+    DataStructure(const WString& n, const void* a, const void* end)
         : name(n), address(a), size(uintptr_t(end) - uintptr_t(a)) {}
-    DataStructure(const std::wstring& n, uintptr_t a, size_t s = 0)
+    DataStructure(const WString& n, uintptr_t a, size_t s = 0)
         : name(n), address(reinterpret_cast<const void*>(a)), size(s) {}
 
     // Get/set address after last byte.
@@ -687,7 +687,7 @@ public:
 
 void DataStructure::dump(std::ostream& out) const
 {
-    const std::wstring header(name + Format(L" (%d bytes)", int(size)));
+    const WString header(name + Format(L" (%d bytes)", int(size)));
     out << "//" << std::endl
         << "// " << header << std::endl
         << "// " << std::string(header.length(), '-') << std::endl;
@@ -715,58 +715,58 @@ private:
 
     // Format an integer as a decimal or hexadecimal string.
     // If hex_digits is zero, format in decimal.
-    std::wstring integer(Value value, int hex_digits = 0);
+    WString integer(Value value, int hex_digits = 0);
 
     // Format an integer as a string, using a table of symbols.
     // If no symbol found or option -n, return a number.
     // If hex_digits is zero, format in decimal.
-    std::wstring symbol(const SymbolTable& symbols, Value value, int hex_digits = 0);
+    WString symbol(const SymbolTable& symbols, Value value, int hex_digits = 0);
 
     // Format a bit mask of symbols, same principle as symbol().
-    std::wstring bitMask(const SymbolTable& symbols, Value value, int hex_digits = 0);
+    WString bitMask(const SymbolTable& symbols, Value value, int hex_digits = 0);
 
     // Format a symbol and a bit mask of attributes, same principle as Symbol().
-    std::wstring attributes(const SymbolTable& symbols, const SymbolTable& attributes, Value value, int hex_digits = 0);
+    WString attributes(const SymbolTable& symbols, const SymbolTable& attributes, Value value, int hex_digits = 0);
 
     // Format locale flags according to symbols.
-    std::wstring localeFlags(DWORD flags);
+    WString localeFlags(DWORD flags);
 
     // Format a Pointer
-    std::wstring pointer(const void* value, const std::wstring& name);
+    WString pointer(const void* value, const WString& name);
 
     // Format a WCHAR. Add description in descs if one exists.
-    std::wstring wchar(wchar_t value, WStringList& descs);
+    WString wchar(wchar_t value, WStringList& descs);
 
     // Format a string of WCHAR
-    std::wstring wstring(const wchar_t*);
+    WString wstring(const wchar_t*);
 
     // Sort and merge adjacent data structures with same names (typically "Strings in ...").
     void sortDataStructures();
 
     // Generate the various data structures.
-    void genVkToBits(const VK_TO_BIT*, const std::wstring& name);
-    void genCharModifiers(const MODIFIERS&, const std::wstring& name);
-    void genSubVkToWchar(const VK_TO_WCHARS10*, size_t count, size_t size, const std::wstring& name, const MODIFIERS&);
-    void genVkToWchar(const VK_TO_WCHAR_TABLE*, const std::wstring& name, const::MODIFIERS& mods);
-    void genLgToWchar(const LIGATURE1*, size_t count, size_t size, const std::wstring& name);
-    void genDeadKeys(const DEADKEY*, const std::wstring& name);
-    void genVscToString(const VSC_LPWSTR*, const std::wstring& name, const std::wstring& comment = L"");
-    void genKeyNames(const DEADKEY_LPWSTR*, const std::wstring& name);
-    void genScanToVk(const USHORT* vk, size_t vk_count, const std::wstring& name);
-    void genVscToVk(const VSC_VK*, const std::wstring& name, const std::wstring& comment = L"");
+    void genVkToBits(const VK_TO_BIT*, const WString& name);
+    void genCharModifiers(const MODIFIERS&, const WString& name);
+    void genSubVkToWchar(const VK_TO_WCHARS10*, size_t count, size_t size, const WString& name, const MODIFIERS&);
+    void genVkToWchar(const VK_TO_WCHAR_TABLE*, const WString& name, const::MODIFIERS& mods);
+    void genLgToWchar(const LIGATURE1*, size_t count, size_t size, const WString& name);
+    void genDeadKeys(const DEADKEY*, const WString& name);
+    void genVscToString(const VSC_LPWSTR*, const WString& name, const WString& comment = L"");
+    void genKeyNames(const DEADKEY_LPWSTR*, const WString& name);
+    void genScanToVk(const USHORT* vk, size_t vk_count, const WString& name);
+    void genVscToVk(const VSC_VK*, const WString& name, const WString& comment = L"");
     void genHexaDump();
 };
 
 //---------------------------------------------------------------------------
 
-std::wstring SourceGenerator::integer(Value value, int hex_digits)
+WString SourceGenerator::integer(Value value, int hex_digits)
 {
     return hex_digits <= 0 ? Format(L"%lld", value) : Format(L"0x%0*llX", hex_digits, value);
 }
 
 //---------------------------------------------------------------------------
 
-std::wstring SourceGenerator::symbol(const SymbolTable& symbols, Value value, int hex_digits)
+WString SourceGenerator::symbol(const SymbolTable& symbols, Value value, int hex_digits)
 {
     if (!_opt.num_only) {
         const auto it = symbols.find(value);
@@ -779,10 +779,10 @@ std::wstring SourceGenerator::symbol(const SymbolTable& symbols, Value value, in
 
 //---------------------------------------------------------------------------
 
-std::wstring SourceGenerator::bitMask(const SymbolTable& symbols, Value value, int hex_digits)
+WString SourceGenerator::bitMask(const SymbolTable& symbols, Value value, int hex_digits)
 {
     if (!_opt.num_only) {
-        std::wstring str;
+        WString str;
         Value bits = 0;
         for (const auto& sym : symbols) {
             if (sym.first == 0 && value == 0) {
@@ -814,7 +814,7 @@ std::wstring SourceGenerator::bitMask(const SymbolTable& symbols, Value value, i
 
 //---------------------------------------------------------------------------
 
-std::wstring SourceGenerator::attributes(const SymbolTable& symbols, const SymbolTable& attributes, Value value, int hex_digits)
+WString SourceGenerator::attributes(const SymbolTable& symbols, const SymbolTable& attributes, Value value, int hex_digits)
 {
     if (!_opt.num_only) {
         // Compute mask of all possible attributes.
@@ -823,7 +823,7 @@ std::wstring SourceGenerator::attributes(const SymbolTable& symbols, const Symbo
             all_attributes |= sym.first;
         }
         // Base value.
-        std::wstring str(symbol(symbols, value & ~all_attributes, hex_digits));
+        WString str(symbol(symbols, value & ~all_attributes, hex_digits));
         // Add attributes.
         if ((value & all_attributes) != 0) {
             str += L" | " + bitMask(attributes, value & all_attributes, hex_digits);
@@ -835,28 +835,28 @@ std::wstring SourceGenerator::attributes(const SymbolTable& symbols, const Symbo
 
 //---------------------------------------------------------------------------
 
-std::wstring SourceGenerator::localeFlags(const DWORD flags)
+WString SourceGenerator::localeFlags(const DWORD flags)
 {
     if (_opt.num_only) {
         return Format(L"0x%08X", flags);
     }
     else {
-        std::wstring lostr(bitMask({ SYM(KLLF_ALTGR), SYM(KLLF_SHIFTLOCK), SYM(KLLF_LRM_RLM) }, LOWORD(flags), 4));
-        std::wstring histr(symbol({ SYM(KBD_VERSION) }, HIWORD(flags), 4));
+        WString lostr(bitMask({ SYM(KLLF_ALTGR), SYM(KLLF_SHIFTLOCK), SYM(KLLF_LRM_RLM) }, LOWORD(flags), 4));
+        WString histr(symbol({ SYM(KBD_VERSION) }, HIWORD(flags), 4));
         return L"MAKELONG(" + lostr + L", " + histr + L")";
     }
 }
 
 //---------------------------------------------------------------------------
 
-std::wstring SourceGenerator::pointer(const void* value, const std::wstring& name)
+WString SourceGenerator::pointer(const void* value, const WString& name)
 {
     return value == nullptr ? L"NULL" : name;
 }
 
 //---------------------------------------------------------------------------
 
-std::wstring SourceGenerator::wchar(wchar_t value, WStringList& descs)
+WString SourceGenerator::wchar(wchar_t value, WStringList& descs)
 {
     // Format a WCHAR. Add description in descs if one exists.
     if (!_opt.num_only) {
@@ -866,12 +866,12 @@ std::wstring SourceGenerator::wchar(wchar_t value, WStringList& descs)
         }
     }
     if (value == L'\'' || value == L'\\') {
-        std::wstring res(L"L'\\ '");
+        WString res(L"L'\\ '");
         res[3] = value;
         return res;
     }
     else if (value >= L' ' && value < 0x007F) {
-        std::wstring res(L"L' '");
+        WString res(L"L' '");
         res[2] = value;
         return res;
     }
@@ -889,13 +889,13 @@ std::wstring SourceGenerator::wchar(wchar_t value, WStringList& descs)
 
 //---------------------------------------------------------------------------
 
-std::wstring SourceGenerator::wstring(const wchar_t* value)
+WString SourceGenerator::wstring(const wchar_t* value)
 {
     // Format a string of WCHAR
     if (value == nullptr) {
         return L"NULL";
     }
-    std::wstring str(L"L\"");
+    WString str(L"L\"");
     for (; *value != 0; ++value) {
         const auto it = wchar_literals.find(*value);
         if (it != wchar_literals.end()) {
@@ -946,7 +946,7 @@ void SourceGenerator::sortDataStructures()
 
 //---------------------------------------------------------------------------
 
-void SourceGenerator::genVkToBits(const VK_TO_BIT* vtb, const std::wstring& name)
+void SourceGenerator::genVkToBits(const VK_TO_BIT* vtb, const WString& name)
 {
     DataStructure ds(name, vtb);
 
@@ -975,7 +975,7 @@ void SourceGenerator::genVkToBits(const VK_TO_BIT* vtb, const std::wstring& name
 
 //---------------------------------------------------------------------------
 
-void SourceGenerator::genCharModifiers(const MODIFIERS& mods, const std::wstring& name)
+void SourceGenerator::genCharModifiers(const MODIFIERS& mods, const WString& name)
 {
     const wchar_t* vk_to_bits_name = L"vk_to_bits";
     if (mods.pVkToBit != nullptr) {
@@ -1012,7 +1012,7 @@ void SourceGenerator::genCharModifiers(const MODIFIERS& mods, const std::wstring
 
 //---------------------------------------------------------------------------
 
-void SourceGenerator::genSubVkToWchar(const VK_TO_WCHARS10* vtwc, size_t count, size_t size, const std::wstring& name, const MODIFIERS& mods)
+void SourceGenerator::genSubVkToWchar(const VK_TO_WCHARS10* vtwc, size_t count, size_t size, const WString& name, const MODIFIERS& mods)
 {
     DataStructure ds(name, vtwc);
 
@@ -1041,7 +1041,7 @@ void SourceGenerator::genSubVkToWchar(const VK_TO_WCHARS10* vtwc, size_t count, 
         });
         WStringList comments;
         for (size_t i = 0; i < count; ++i) {
-            std::wstring str(wchar(vtwc->wch[i], comments));
+            WString str(wchar(vtwc->wch[i], comments));
             if (i == 0) {
                 str.insert(0, 1, L'{');
             }
@@ -1078,13 +1078,13 @@ void SourceGenerator::genSubVkToWchar(const VK_TO_WCHARS10* vtwc, size_t count, 
 
 //---------------------------------------------------------------------------
 
-void SourceGenerator::genVkToWchar(const VK_TO_WCHAR_TABLE* vtwc, const std::wstring& name, const::MODIFIERS& mods)
+void SourceGenerator::genVkToWchar(const VK_TO_WCHAR_TABLE* vtwc, const WString& name, const::MODIFIERS& mods)
 {
     DataStructure ds(name, vtwc);
 
     Grid grid;
     for (; vtwc->pVkToWchars != nullptr; vtwc++) {
-        const std::wstring sub_name(Format(L"vk_to_wchar%d", vtwc->nModifications));
+        const WString sub_name(Format(L"vk_to_wchar%d", vtwc->nModifications));
         genSubVkToWchar(reinterpret_cast<PVK_TO_WCHARS10>(vtwc->pVkToWchars), vtwc->nModifications, vtwc->cbSize, sub_name, mods);
         grid.addLine({
             L"{(PVK_TO_WCHARS1)" + sub_name + L",",
@@ -1110,7 +1110,7 @@ void SourceGenerator::genVkToWchar(const VK_TO_WCHAR_TABLE* vtwc, const std::wst
 
 //---------------------------------------------------------------------------
 
-void SourceGenerator::genLgToWchar(const LIGATURE1* ligatures, size_t count, size_t size, const std::wstring& name)
+void SourceGenerator::genLgToWchar(const LIGATURE1* ligatures, size_t count, size_t size, const WString& name)
 {
     DataStructure ds(name, ligatures);
     const LIGATURE5* lg = reinterpret_cast<const LIGATURE5*>(ligatures);
@@ -1123,7 +1123,7 @@ void SourceGenerator::genLgToWchar(const LIGATURE1* ligatures, size_t count, siz
         });
         WStringList comments;
         for (size_t i = 0; i < count; ++i) {
-            std::wstring str(wchar(lg->wch[i], comments));
+            WString str(wchar(lg->wch[i], comments));
             if (i == 0) {
                 str.insert(0, 1, '{');
             }
@@ -1160,7 +1160,7 @@ void SourceGenerator::genLgToWchar(const LIGATURE1* ligatures, size_t count, siz
 
 //---------------------------------------------------------------------------
 
-void SourceGenerator::genDeadKeys(const DEADKEY* dk, const std::wstring& name)
+void SourceGenerator::genDeadKeys(const DEADKEY* dk, const WString& name)
 {
     DataStructure ds(name, dk);
 
@@ -1196,7 +1196,7 @@ void SourceGenerator::genDeadKeys(const DEADKEY* dk, const std::wstring& name)
 
 //---------------------------------------------------------------------------
 
-void SourceGenerator::genVscToString(const VSC_LPWSTR* vts, const std::wstring& name, const std::wstring& comment)
+void SourceGenerator::genVscToString(const VSC_LPWSTR* vts, const WString& name, const WString& comment)
 {
     DataStructure ds(name, vts);
 
@@ -1226,7 +1226,7 @@ void SourceGenerator::genVscToString(const VSC_LPWSTR* vts, const std::wstring& 
 
 //---------------------------------------------------------------------------
 
-void SourceGenerator::genKeyNames(const DEADKEY_LPWSTR* names, const std::wstring& name)
+void SourceGenerator::genKeyNames(const DEADKEY_LPWSTR* names, const WString& name)
 {
     DataStructure ds(name, names);
 
@@ -1255,7 +1255,7 @@ void SourceGenerator::genKeyNames(const DEADKEY_LPWSTR* names, const std::wstrin
 
 //---------------------------------------------------------------------------
 
-void SourceGenerator::genScanToVk(const USHORT* vk, size_t vk_count, const std::wstring& name)
+void SourceGenerator::genScanToVk(const USHORT* vk, size_t vk_count, const WString& name)
 {
     DataStructure ds(name, vk, vk_count * sizeof(*vk));
     _alldata.push_back(ds);
@@ -1275,7 +1275,7 @@ void SourceGenerator::genScanToVk(const USHORT* vk, size_t vk_count, const std::
 
 //---------------------------------------------------------------------------
 
-void SourceGenerator::genVscToVk(const VSC_VK* vtvk, const std::wstring& name, const std::wstring& comment)
+void SourceGenerator::genVscToVk(const VSC_VK* vtvk, const WString& name, const WString& comment)
 {
     DataStructure ds(name, vtvk);
 
@@ -1323,58 +1323,58 @@ void SourceGenerator::generate(const KBDTABLES& tables)
         << "#include <dontuse.h>" << std::endl
         << std::endl;
 
-    const std::wstring char_modifiers_name(L"char_modifiers");
+    const WString char_modifiers_name(L"char_modifiers");
     if (tables.pCharModifiers != nullptr) {
         genCharModifiers(*tables.pCharModifiers, char_modifiers_name);
     }
 
-    const std::wstring vk_to_wchar_name(L"vk_to_wchar");
+    const WString vk_to_wchar_name(L"vk_to_wchar");
     if (tables.pVkToWcharTable != nullptr) {
         genVkToWchar(tables.pVkToWcharTable, vk_to_wchar_name, *tables.pCharModifiers);
     }
 
-    const std::wstring dead_keys_name(L"dead_keys");
+    const WString dead_keys_name(L"dead_keys");
     if (tables.pDeadKey != nullptr) {
         genDeadKeys(tables.pDeadKey, dead_keys_name);
     }
 
-    const std::wstring key_names_name(L"key_names");
+    const WString key_names_name(L"key_names");
     if (tables.pKeyNames != nullptr) {
         genVscToString(tables.pKeyNames, key_names_name);
     }
 
-    const std::wstring key_names_ext_name(L"key_names_ext");
+    const WString key_names_ext_name(L"key_names_ext");
     if (tables.pKeyNamesExt != nullptr) {
         genVscToString(tables.pKeyNamesExt, key_names_ext_name, L" (extended keypad)");
     }
 
-    const std::wstring key_names_dead_name(L"key_names_dead");
+    const WString key_names_dead_name(L"key_names_dead");
     if (tables.pKeyNamesDead != nullptr) {
         genKeyNames(tables.pKeyNamesDead, key_names_dead_name);
     }
 
-    const std::wstring scancode_to_vk_name(L"scancode_to_vk");
+    const WString scancode_to_vk_name(L"scancode_to_vk");
     if (tables.pusVSCtoVK != nullptr) {
         genScanToVk(tables.pusVSCtoVK, tables.bMaxVSCtoVK, scancode_to_vk_name);
     }
 
-    const std::wstring scancode_to_vk_e0_name(L"scancode_to_vk_e0");
+    const WString scancode_to_vk_e0_name(L"scancode_to_vk_e0");
     if (tables.pVSCtoVK_E0 != nullptr) {
         genVscToVk(tables.pVSCtoVK_E0, scancode_to_vk_e0_name, L" (scancodes with E0 prefix)");
     }
 
-    const std::wstring scancode_to_vk_e1_name(L"scancode_to_vk_e1");
+    const WString scancode_to_vk_e1_name(L"scancode_to_vk_e1");
     if (tables.pVSCtoVK_E1 != nullptr) {
         genVscToVk(tables.pVSCtoVK_E1, scancode_to_vk_e1_name, L" (scancodes with E1 prefix)");
     }
 
-    const std::wstring ligatures_name(L"ligatures");
+    const WString ligatures_name(L"ligatures");
     if (tables.pLigature != nullptr) {
         genLgToWchar(tables.pLigature, tables.nLgMax, tables.cbLgEntry, ligatures_name);
     }
 
     // Generate main table.
-    const std::wstring kbd_table_name(L"kbd_tables");
+    const WString kbd_table_name(L"kbd_tables");
     _alldata.push_back(DataStructure(kbd_table_name, &tables, sizeof(tables)));
     _ou << "//" << _opt.dashed << std::endl
         << "// Main keyboard layout structure, point to all tables" << std::endl
@@ -1472,8 +1472,8 @@ void GenerateResourceFile(ReverseOptions& opt, HMODULE hmod)
     }
 
     // This is the information we need for the resource file.
-    std::wstring wkl_text(info.LayoutText);
-    std::wstring wkl_lang(info.BaseLanguage);
+    WString wkl_text(info.LayoutText);
+    WString wkl_lang(info.BaseLanguage);
 
     // All possible matches from registry.
     WStringVector ids;
@@ -1484,7 +1484,7 @@ void GenerateResourceFile(ReverseOptions& opt, HMODULE hmod)
     if (wkl_text.empty() || wkl_lang.empty()) {
 
         // Get DLL name.
-        const std::wstring dllname(ToLower(FileName(opt.input)));
+        const WString dllname(ToLower(FileName(opt.input)));
 
         // Enumerate keyboard layouts in registry to find an entry matching the DLL name.
         // Count the number matching entries, some DLL's are registered several times.
@@ -1494,7 +1494,7 @@ void GenerateResourceFile(ReverseOptions& opt, HMODULE hmod)
             for (const auto& id : layout_ids) {
                 // The base language is the last 4 hexa digits in layout id. need at least 4 chars.
                 if (id.size() >= 4 && ToLower(reg.getValue(REGISTRY_LAYOUT_KEY "\\" + id, REGISTRY_LAYOUT_FILE)) == dllname) {
-                    std::wstring text(reg.getValue(REGISTRY_LAYOUT_KEY "\\" + id, REGISTRY_LAYOUT_DISPLAY, true));
+                    WString text(reg.getValue(REGISTRY_LAYOUT_KEY "\\" + id, REGISTRY_LAYOUT_DISPLAY, true));
                     if (text.empty()) {
                         text = reg.getValue(REGISTRY_LAYOUT_KEY "\\" + id, REGISTRY_LAYOUT_TEXT);
                     }
@@ -1512,7 +1512,7 @@ void GenerateResourceFile(ReverseOptions& opt, HMODULE hmod)
             // When there are multiple entry, the shortest description is the base one, usually.
             // What would be the right strategy?
             size_t index = 0;
-            size_t desc_length = std::wstring::npos;
+            size_t desc_length = WString::npos;
             for (size_t i = 0; i < ids.size(); i++) {
                 const size_t len = texts[i].length();
                 if (len > 0 && len < desc_length) {
@@ -1564,7 +1564,7 @@ int wmain(int argc, wchar_t* argv[])
     ReverseOptions opt(argc, argv);
 
     // Resolve keyboard DLL file name.
-    if (opt.input.find_first_of(L":\\/.") == std::wstring::npos) {
+    if (opt.input.find_first_of(L":\\/.") == WString::npos) {
         // No separator, must be a keyboard name, not a DLL file name.
         opt.input = GetEnv(L"SYSTEMROOT", L"C:\\Windows") + L"\\System32\\kbd" + opt.input + L".dll";
     }

@@ -31,6 +31,7 @@
 #include <vector>
 #include <list>
 #include <map>
+#include <set>
 
 // Registry entry of all keyboard layouts.
 #define REGISTRY_LAYOUT_KEY        L"HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts"

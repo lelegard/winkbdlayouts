@@ -30,21 +30,21 @@ public:
     uint32_t FileSubtype;    // e.g. VFT2_DRV_KEYBOARD
 
     // Standard version information strings.
-    std::wstring CompanyName;
-    std::wstring FileDescription;
-    std::wstring FileVersion;
-    std::wstring InternalName;
-    std::wstring LegalCopyright;
-    std::wstring OriginalFilename;
-    std::wstring ProductName;
-    std::wstring ProductVersion;
+    WString CompanyName;
+    WString FileDescription;
+    WString FileVersion;
+    WString InternalName;
+    WString LegalCopyright;
+    WString OriginalFilename;
+    WString ProductName;
+    WString ProductVersion;
 
     // Additional string resources for keyboard layouts.
-    std::wstring LayoutText;
-    std::wstring BaseLanguage;  // lower 4 hexa digits of id.
+    WString LayoutText;
+    WString BaseLanguage;  // lower 4 hexa digits of id.
 
     // Load the information from one file.
-    bool load(const std::wstring& filename);
+    bool load(const WString& filename);
     bool load(HMODULE = nullptr); // default to current exe
 
     // Clear content.
@@ -52,7 +52,7 @@ public:
 
 private:
     // Individual loading functions.
-    bool loadByName(const std::wstring& filename);
+    bool loadByName(const WString& filename);
     bool loadByHandle(HMODULE);
-    std::wstring getVersionString(void* data, const std::wstring& name);
+    WString getVersionString(void* data, const WString& name);
 };

@@ -18,7 +18,7 @@
 // Format a C++ string in a printf-way.
 //---------------------------------------------------------------------------
 
-std::wstring Format(const wchar_t* fmt, ...)
+WString Format(const wchar_t* fmt, ...)
 {
     va_list ap;
 
@@ -28,11 +28,11 @@ std::wstring Format(const wchar_t* fmt, ...)
     va_end(ap);
 
     if (len < 0) {
-        return std::wstring(); // error
+        return WString(); // error
     }
 
     // Actual formatting.
-    std::wstring buf(len + 1, '\0');
+    WString buf(len + 1, '\0');
     va_start(ap, fmt);
     len = _vsnwprintf(&buf[0], buf.size(), fmt, ap);
     va_end(ap);
@@ -67,16 +67,16 @@ size_t StringSize(const wchar_t* s)
 // Case conversions.
 //---------------------------------------------------------------------------
 
-std::wstring ToLower(const std::wstring& s)
+WString ToLower(const WString& s)
 {
-    std::wstring res(s);
+    WString res(s);
     std::transform(res.begin(), res.end(), res.begin(), [](wchar_t c){ return std::tolower(c); });
     return res;
 }
 
-std::wstring ToUpper(const std::wstring& s)
+WString ToUpper(const WString& s)
 {
-    std::wstring res(s);
+    WString res(s);
     std::transform(res.begin(), res.end(), res.begin(), [](wchar_t c){ return std::toupper(c); });
     return res;
 }
@@ -86,12 +86,12 @@ std::wstring ToUpper(const std::wstring& s)
 // Check if a string starts or end with a string.
 //---------------------------------------------------------------------------
 
-bool StartsWith(const std::wstring& s, const std::wstring& prefix)
+bool StartsWith(const WString& s, const WString& prefix)
 {
     return !prefix.empty() && s.length() >= prefix.length() && s.substr(0, prefix.length()) == prefix;
 }
 
-bool EndsWith(const std::wstring& s, const std::wstring& suffix)
+bool EndsWith(const WString& s, const WString& suffix)
 {
     return !suffix.empty() && s.length() >= suffix.length() && s.substr(s.length() - suffix.length()) == suffix;
 }
@@ -101,13 +101,13 @@ bool EndsWith(const std::wstring& s, const std::wstring& suffix)
 // UTF-8 / UTF-16 conversions.
 //---------------------------------------------------------------------------
 
-std::wstring ToUTF16(const std::string& str)
+WString ToUTF16(const std::string& str)
 {
     std::wstring_convert<std::codecvt_utf8<wchar_t>> myconv;
     return myconv.from_bytes(str);
 }
 
-std::string ToUTF8(const std::wstring& str)
+std::string ToUTF8(const WString& str)
 {
     std::wstring_convert<std::codecvt_utf8<wchar_t>> myconv;
     return myconv.to_bytes(str);
@@ -150,7 +150,7 @@ char Hexa(int nibble)
     return (n < 10 ? '0' : 'A' - 10) + n;
 }
 
-void PrintHexa(std::ostream& out, const void* addr, size_t size, const std::wstring& margin, bool show_addr)
+void PrintHexa(std::ostream& out, const void* addr, size_t size, const WString& margin, bool show_addr)
 {
     const uint8_t* cur = reinterpret_cast<const uint8_t*>(addr);
     const uint8_t* end = cur + size;
