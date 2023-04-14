@@ -1,7 +1,7 @@
 # Windows Keyboards Layouts (WKL)
 
-The WKL project collects a few keyboard layouts which are not, or no longer,
-included by default in Windows distributions.
+The WKL project collects the source code of a few keyboard layouts which are not,
+or no longer, included by default in Windows distributions.
 
 Specifically, at least on Windows 11, the Apple keyboards are not available
 by default and need custom mappings. When Windows 11 is installed as a virtual
@@ -14,7 +14,7 @@ does not provide mapping for Mac keyboards, this project is useful.
 The project is built for x86, x64 and arm64 Windows systems. The released archive
 contains binaries for the three architectures.
 
-To build this projet, make sure to install all build tools (compilers and libraries)
+To build this project, make sure to install all build tools (compilers and libraries)
 for all targets when installing or updating Visual Studio.
 
 Available PowerShell scripts:
@@ -27,53 +27,75 @@ Available PowerShell scripts:
 New layouts are welcome as contributions. Please post a pull request with your
 implementation of new layouts.
 
-To add support for a new keyboard layout, start from an existing keyboard in
-this project, for instance `kbdfrapple`.
+To add support for a new keyboard layout, start from an existing keyboard
+which is similar to yours and manually update the source code. There are
+two ways to clone an existing keyboard: from a source file in this project
+or from the binary DLL of an installed keyboard.
 
-- Duplicate the `kbdfrapple` directory under the name `kbdXXYYY` where
-  `XX` is the language code for your keyboard (not necessarily two letters,
-  this is just a convention) and `YYY` is the type or brand of keyboard
-  (for instance `apple`).
-- Rename all files as `kbdXXYYY.*` in the new directory.
-- Update the files `kbdXXYYY.rc` and `kbdXXYYY.reg` with the appropriate
-  names and descriptions.
-- Update the key tables in `kbdXXYYY.c`.
-- The file `kbdXXYYY.vcxproj` does not need any modification.
-- Before building it for the first time, open `winkbdlayouts.sln` with
+### Initial steps: create the new directory
+
+- Create a directory with name `kbdXXYYY` where `XX` is the language code for
+  your keyboard (not necessarily two letters, this is just a convention) and
+  `YYY` is the type or brand of keyboard (for instance `apple`).
+
+- Copy any project file from an existing keyboard, for instance `kbdfrapple\kbdfrapple.vcxproj`,
+  as `kbdXXYYY\kbdXXYYY.vcxproj`. No need to update the content, Visual Studio
+  will adjust the project GUID the first time it is used.
+
+### Option 1: duplicate a source file from this project
+
+Let's assume you start from `kbdfrapple`.
+
+- Copy `kbdfrapple\kbdfrapple.c` as `kbdXXYYY\kbdXXYYY.c`. Update the key tables
+  according to your keyboard.
+- Copy `kbdfrapple\strings.rc` as `kbdXXYYY\strings.rc`. Update the two strings
+  in that file.
+
+### Option 2: reverse the content of an existing keyboard DLL
+
+- Use the `kbdreverse` tool in this project to extract the layout definition
+  of an installed keyboard and rebuild a source file from that keyboard.
+
+Example: To rebuild source files for a French keyboard (id `fr`), use these commands:
+~~~
+kbdreverse fr -o kbdXXYYY\kbdXXYYY.c
+kbdreverse fr -r -o kbdXXYYY\strings.rc
+~~~
+
+Using the parameter `fr` means reversing the file `C:\Windows\System32\kbdfr.dll`.
+To reverse a keyboard DLL from another location, specify the full path of the DLL file.
+
+- Update the two new source files according to your keyboard.
+
+### Final steps: add the project into the solution
+
+- In the file `strings.rc`, the `WKL_LANG` string is the base language for which
+  your keyboard is a variant. For instance, `040c` means French. If you do not
+  know which id to choose, use the Registry Editor to browse through the existing
+  keyboard layout ids at
+  `HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Keyboard Layouts`.
+  The subkeys are 8-digit hexadecimal values for installed keyboards. The rightmost
+  4 digits are the base language id.
+
+- Before building the new keyboard for the first time, open `winkbdlayouts.sln` with
   Visual Studio, right-click on the solution => "Add" => "Existing Project" and
   select `kbdXXYYY.vcxproj`. Then, "File" => "Save All".
 
-Additional notes:
+The new keyboard is now part of the solution and will be built with the rest of it.
 
-- In the registry file `kbdXXYYY.reg`, carefully select a unique keyboard id.
-  Use the Registry Editor to browse through the existing keyboard layout ids at
-  `HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Keyboard Layouts`.
-  Typically start from the "standard" id of the keyboard language (for instance
-  `0000040c` for the standard French PC keyboard), and shift it into the private
-  range `b0XXXXXX` (for instance `b000040c` for the French Apple keyboard in this
-  project). In practice the last 4 digits indicate a language (`040c` in the example
-  means French) and the first 4 digits indicate a flavour. By convention, all
-  flavours in this project start with `b0`.
-
-- The key tables in `kbdXXYYY.c` can be manually updated from an existing keyboard
-  source file in this project. However, if you already have a valid DLL for that
-  keyboard on one system, use the `kbdreverse` tool to extract the keyboard definition
-  and rebuild a source file from it. The source file will then be recompiled for all
-  architectures.
-  
 ## Scan codes
 
-If you have difficulties to collect the scan codes for your keyboard, build and run
-the `scancodes` tool.
+If you have difficulties to collect the scan codes for your keyboard, run the
+`scancodes` tool from this project.
 
-The image `scancodes.jpg` shows the scan codes for a standard 101/102-key PC keyboard.
+The image `tools\scancodes.jpg` shows the scan codes for a standard 101/102-key PC keyboard.
 
 There are some specificities on the bottom row of Apple keyboards:
 ~~~
-+--------+--------+--------+-----------------+--------+--------+--------+
-|control | option |command |      space      |command | option |control |
-|  0x1D  | 0x38 a | 0x5B e |      0x39       | 0x5C e | 0x38 e | 0x1D e |
-+--------+--------+--------+-----------------+--------+--------+--------+
++--------+--------+--------+---------------------+--------+--------+--------+
+|control | option |command |        space        |command | option |control |
+|  0x1D  | 0x38 a | 0x5B e |        0x39         | 0x5C e | 0x38 e | 0x1D e |
++--------+--------+--------+---------------------+--------+--------+--------+
 ~~~
 Where `e` means "Extended" (Ctrl or Right-Alt) and `a` means "Alt".
 
