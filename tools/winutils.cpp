@@ -59,6 +59,9 @@ WString FullName(const WString& name, bool include_dir, bool include_file)
     }
     if (!include_file && file_part != nullptr) {
         path.resize(std::min<size_t>(path.size(), file_part - path.data()));
+        while (path.size() >= 2 && path.back() == L'\\' && path[path.size() - 2] != ':') {
+            path.pop_back();
+        }
     }
     else {
         path.resize(std::min<size_t>(path.size(), size));

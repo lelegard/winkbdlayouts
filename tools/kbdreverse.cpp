@@ -1466,7 +1466,7 @@ void SourceGenerator::genHexaDump()
 void GenerateResourceFile(ReverseOptions& opt, HMODULE hmod)
 {
     // Extract file information from the file.
-    FileVersionInfo info(&std::cerr);
+    FileVersionInfo info(opt);
     if (!info.load(hmod)) {
         opt.fatal("Error loading version information from " + opt.input);
     }
@@ -1488,7 +1488,7 @@ void GenerateResourceFile(ReverseOptions& opt, HMODULE hmod)
 
         // Enumerate keyboard layouts in registry to find an entry matching the DLL name.
         // Count the number matching entries, some DLL's are registered several times.
-        Registry reg(&std::cerr);
+        Registry reg(opt);
         WStringList layout_ids;
         if (reg.getSubKeys(REGISTRY_LAYOUT_KEY, layout_ids)) {
             for (const auto& id : layout_ids) {

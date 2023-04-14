@@ -15,18 +15,24 @@ class Error
 {
 public:
     // Constructor. Specify where to report errors.
-    Error(std::ostream* err = nullptr) : _err(err), _saved(nullptr) {}
+    Error(const WString& prefix = WString(), std::ostream* err = nullptr);
 
-protected:
     // Report an error.
-    void error(const std::string& msg)  { if (_err != nullptr) { *_err << msg << std::endl; } }
-    void error(const WString& msg) { if (_err != nullptr) { *_err << msg << std::endl; } }
+    virtual void error(const std::string& msg) const;
+    virtual void error(const WString& msg) const;
 
     // Temporary mute errors.
-    void muteErrors() { if (_err != nullptr) { _saved = _err; _err = nullptr; } }
-    void restoreErrors() { _err = _saved; _saved = nullptr; }
+    virtual void muteErrors();
+    virtual void restoreErrors();
+
+    // Print a fatal error and exit.
+    [[noreturn]] virtual void fatal(const WString& message);
+
+    // Exit process, prompt for user input if setPromptOnExit(true) was called.
+    [[noreturn]] virtual void exit(int status = EXIT_SUCCESS);
 
 private:
+    WString       _prefix;
     std::ostream* _err;
     std::ostream* _saved;
 };

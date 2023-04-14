@@ -52,7 +52,7 @@ bool Registry::splitKey(const WString& key, HKEY& root_key, WString& subkey)
         root_key = HKEY_PERFORMANCE_DATA;
     }
     else {
-        error("invalid root key \"" + root + "\"");
+        _err.error("invalid root key \"" + root + "\"");
         root_key = NULL;
         return false;
     }
@@ -84,9 +84,9 @@ bool Registry::valueExists(const WString& key, const WString& value_name)
     WString subkey;
 
     // Split the key without error reporting.
-    muteErrors();
+    _err.muteErrors();
     bool exists = splitKey(key, root, subkey);
-    restoreErrors();
+    _err.restoreErrors();
 
     if (exists) {
         HKEY hkey;
@@ -117,7 +117,7 @@ bool Registry::openKey(HKEY root, const WString& key, REGSAM sam, HKEY& handle)
         return true;
     }
     else {
-        error("error opening key " + key + ": " + ErrorText(hr));
+        _err.error("error opening key " + key + ": " + ErrorText(hr));
         return false;
     }
 }
@@ -144,7 +144,7 @@ WString Registry::getValue(const WString& key, const WString& value_name, bool e
     DWORD size = 0;
     LONG hr = RegGetValueW(root, subkey.c_str(), value_name.c_str(), flags, &type, nullptr, &size);
     if ((hr != ERROR_SUCCESS && hr != ERROR_MORE_DATA) || size <= 0) {
-        error("error querying " + key + L"\\" + value_name + ": " + ErrorText(hr));
+        _err.error("error querying " + key + L"\\" + value_name + ": " + ErrorText(hr));
         return WString();
     }
 
@@ -228,7 +228,7 @@ bool Registry::getValueNames(const WString& key, WStringList& names)
         }
         success = hr == ERROR_SUCCESS;
         if (!success) {
-            error("error iterating " + key + ": " + ErrorText(hr));
+            _err.error("error iterating " + key + ": " + ErrorText(hr));
         }
         name.resize(std::min<size_t>(size, name.size()));
         names.push_back(name);
@@ -265,7 +265,7 @@ bool Registry::getSubKeys(const WString& key, WStringList& subkeys)
         }
         success = hr == ERROR_SUCCESS;
         if (!success) {
-            error("error iterating " + key + ": " + ErrorText(hr));
+            _err.error("error iterating " + key + ": " + ErrorText(hr));
         }
         name.resize(std::min<size_t>(size, name.size()));
         subkeys.push_back(name);
@@ -292,11 +292,11 @@ bool Registry::setValue(const WString& key, const WString& value_name, const WSt
     // Set the value
     LSTATUS hr = RegSetKeyValueW(root, subkey.c_str(), value_name.c_str(), expandable ? REG_EXPAND_SZ : REG_SZ,
                                  reinterpret_cast<const BYTE*>(value.c_str()),
-                                 DWORD(value.length() + sizeof(wchar_t))); // include terminating nul
+                                 DWORD((value.length() + 1) * sizeof(wchar_t))); // include terminating nul
 
     const bool success = hr == ERROR_SUCCESS;
     if (!success) {
-        error("error setting " + key + L"\\" + value_name + ": " + ErrorText(hr));
+        _err.error("error setting " + key + L"\\" + value_name + ": " + ErrorText(hr));
     }
     return success;
 }
@@ -318,7 +318,7 @@ bool Registry::setValue(const WString& key, const WString& value_name, DWORD val
     LSTATUS hr = RegSetKeyValueW(root, subkey.c_str(), value_name.c_str(), REG_DWORD, reinterpret_cast<const BYTE*>(&value), sizeof(value));
     const bool success = hr == ERROR_SUCCESS;
     if (!success) {
-        error("error setting " + key + L"\\" + value_name + ": " + ErrorText(hr));
+        _err.error("error setting " + key + L"\\" + value_name + ": " + ErrorText(hr));
     }
     return success;
 }
@@ -341,7 +341,7 @@ bool Registry::deleteValue(const WString& key, const WString& value_name)
     const LONG hr = RegDeleteValueW(hkey, value_name.c_str());
     const bool success = hr == ERROR_SUCCESS;
     if (!success) {
-        error("error deleting " + key + L"\\" + value_name + ": " + ErrorText(hr));
+        _err.error("error deleting " + key + L"\\" + value_name + ": " + ErrorText(hr));
     }
     RegCloseKey(hkey);
     return success;
@@ -362,17 +362,16 @@ bool Registry::createKey(const WString& key, bool is_volatile)
     }
 
     // Create the key
-    HKEY hnewkey;
-    const LONG hr = RegCreateKeyExW(hkey, newkey.c_str(), 0, nullptr, 
-                                    is_volatile ? REG_OPTION_VOLATILE : REG_OPTION_NON_VOLATILE,
-                                    0, nullptr, &hnewkey, nullptr);
+    HKEY hnewkey = nullptr;
+    const DWORD options = is_volatile ? REG_OPTION_VOLATILE : REG_OPTION_NON_VOLATILE;
+    const LONG hr = RegCreateKeyExW(hkey, newkey.c_str(), 0, nullptr, options, 0, nullptr, &hnewkey, nullptr);
 
     const bool success = hr == ERROR_SUCCESS;
     if (success) {
         RegCloseKey(hnewkey);
     }
     else {
-        error("error creating " + key + ": " + ErrorText(hr));
+        _err.error("error creating " + key + ": " + ErrorText(hr));
     }
     RegCloseKey(hkey);
     return success;
@@ -396,7 +395,7 @@ bool Registry::deleteKey(const WString& key)
     const LONG hr = RegDeleteKeyW(hkey, endkey.c_str());
     const bool success = hr == ERROR_SUCCESS;
     if (!success) {
-        error("error deleting " + key + ": " + ErrorText(hr));
+        _err.error("error deleting " + key + ": " + ErrorText(hr));
     }
     RegCloseKey(hkey);
     return success;

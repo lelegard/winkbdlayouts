@@ -9,9 +9,9 @@
 //----------------------------------------------------------------------------
 
 #pragma once
-#include "strutils.h"
+#include "error.h"
 
-class Options
+class Options : public Error
 {
 public:
     // Constructor.
@@ -30,16 +30,10 @@ public:
     void setPromptOnExit(bool on) { _prompt_on_exit = on; }
 
     // Exit process, prompt for user input if setPromptOnExit(true) was called.
-    [[noreturn]] void exit(int status = EXIT_SUCCESS);
+    [[noreturn]] virtual void exit(int status = EXIT_SUCCESS) override;
 
     // Print help and exits.
     [[noreturn]] void usage();
-
-    // Print a fatal error and exit.
-    [[noreturn]] void fatal(const WString& message);
-
-    // Print an error and continue.
-    void error(const WString& message);
 
 private:
     const WString _syntax;

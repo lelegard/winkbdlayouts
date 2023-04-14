@@ -17,6 +17,7 @@
 //----------------------------------------------------------------------------
 
 Options::Options(int argc, wchar_t* argv[], const WString syntax) :
+    Error(argc < 1 ? L"" : FileBaseName(argv[0]) + ": ", &std::cerr),
     command(argc < 1 ? L"" : FileBaseName(argv[0])),
     args(),
     _syntax(syntax),
@@ -65,18 +66,6 @@ void Options::closeOutput()
     ::exit(EXIT_FAILURE);
 }
 
-[[noreturn]] void Options::fatal(const WString& message)
-{
-    std::cerr << command << ": " << message << std::endl;
-    ::exit(EXIT_FAILURE);
-}
-
-void Options::error(const WString& message)
-{
-    std::cerr << command << ": " << message << std::endl;
-}
-
-
 //----------------------------------------------------------------------------
 // Exit process, prompt for user input if setPromptOnExit(true) was called.
 //----------------------------------------------------------------------------
@@ -89,5 +78,5 @@ void Options::error(const WString& message)
         std::cout << "Press return to exit: " << std::flush;
         std::cin.getline(&c, 1);
     }
-    ::exit(status);
+    Error::exit(status);
 }

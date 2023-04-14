@@ -37,9 +37,10 @@
 #define REGISTRY_LAYOUT_KEY        L"HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts"
 #define REGISTRY_USER_PRELOAD_KEY  L"HKEY_CURRENT_USER\\Keyboard Layout\\Preload"
 #define REGISTRY_USER_SUBSTS_KEY   L"HKEY_CURRENT_USER\\Keyboard Layout\\Substitutes"
-#define REGISTRY_LAYOUT_FILE       L"Layout File"
-#define REGISTRY_LAYOUT_TEXT       L"Layout Text"
 #define REGISTRY_LAYOUT_DISPLAY    L"Layout Display Name"
+#define REGISTRY_LAYOUT_FILE       L"Layout File"
+#define REGISTRY_LAYOUT_PROVIDER   L"Layout Provider"
+#define REGISTRY_LAYOUT_TEXT       L"Layout Text"
 
 // Entry point of all keyboard layout DLL's.
 #define KBD_DLL_ENTRY_NAME "KbdLayerDescriptor"

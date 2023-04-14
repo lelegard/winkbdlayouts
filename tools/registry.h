@@ -11,11 +11,11 @@
 #pragma once
 #include "error.h"
 
-class Registry : public Error
+class Registry
 {
 public:
     // Constructor. Specify where to report errors.
-    Registry(std::ostream* err = nullptr) : Error(err) {}
+    Registry(Error& err) : _err(err) {}
 
     // Check if a registry key or value exists.
     bool keyExists(const WString& key) { return valueExists(key, L""); }
@@ -46,6 +46,8 @@ public:
     bool splitKey(const WString& key, HKEY& root_key, WString& midkey, WString& final_key);
 
 private:
+    Error& _err;
+
     // Open a registry key.
     bool openKey(HKEY root, const WString& key, REGSAM sam, HKEY& handle);
 };

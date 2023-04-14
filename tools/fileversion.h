@@ -11,11 +11,11 @@
 #pragma once
 #include "error.h"
 
-class FileVersionInfo : public Error
+class FileVersionInfo
 {
 public:
     // Constructor. Specify where to report errors.
-    FileVersionInfo(std::ostream* err = nullptr);
+    FileVersionInfo(Error&);
 
     // Standard version information integers (from VS_FIXEDFILEINFO).
     uint16_t FileVersion1;
@@ -51,6 +51,8 @@ public:
     void clear();
 
 private:
+    Error& _err;
+
     // Individual loading functions.
     bool loadByName(const WString& filename);
     bool loadByHandle(HMODULE);

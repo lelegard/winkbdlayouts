@@ -55,6 +55,7 @@ foreach ($Arch in ("x86", "x64", "arm64")) {
     $Files = Get-ChildItem "$PSScriptRoot\$Arch\Release\kbd*.dll"
     if ($Files -ne $null) {
         Copy-Item $Files -Destination $(Create-NewDirectory "$InstallRoot\$Arch")
+        Copy-Item "$PSScriptRoot\$Arch\Release\kbdadmin.exe" "$InstallRoot\$Arch\setup.exe"
     }
 }
 $ProgressPreference = "SilentlyContinue"

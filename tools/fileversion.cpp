@@ -17,8 +17,7 @@
 // Constructor. Specify where to report errors.
 //-----------------------------------------------------------------------------
 
-FileVersionInfo::FileVersionInfo(std::ostream* err) :
-    Error(err),
+FileVersionInfo::FileVersionInfo(Error& err) :
     FileVersion1(0),
     FileVersion2(0),
     FileVersion3(0),
@@ -38,7 +37,8 @@ FileVersionInfo::FileVersionInfo(std::ostream* err) :
     ProductName(),
     ProductVersion(),
     LayoutText(),
-    BaseLanguage()
+    BaseLanguage(),
+    _err(err)
 {
 }
 
@@ -84,7 +84,7 @@ bool FileVersionInfo::load(const WString& filename)
     HMODULE hmod = LoadLibraryExW(filename.c_str(), nullptr, LOAD_LIBRARY_AS_DATAFILE);
     if (hmod == nullptr) {
         const DWORD err = GetLastError();
-        error("error opening " + filename + ": " + ErrorText(err));
+        _err.error("error opening " + filename + ": " + ErrorText(err));
         success = false;
     }
     else {
@@ -102,7 +102,7 @@ bool FileVersionInfo::load(HMODULE hmod)
 
     const WString filename(ModuleFileName(GetCurrentProcess(), hmod));
     if (filename.empty()) {
-        error(Format(L"Cannot get file name for handle 0x%08llX", uint64_t(hmod)));
+        _err.error(Format(L"Cannot get file name for handle 0x%08llX", uint64_t(hmod)));
         success = false;
     }
     else {
@@ -131,7 +131,7 @@ bool FileVersionInfo::loadByName(const WString& filename)
     const DWORD size = GetFileVersionInfoSizeExW(FILE_VER_GET_NEUTRAL, filename.c_str(), &handle);
     if (size == 0) {
         const DWORD err = GetLastError();
-        error("error reading version info from " + filename + ": " + ErrorText(err));
+        _err.error("error reading version info from " + filename + ": " + ErrorText(err));
         return false;
     }
 
@@ -140,7 +140,7 @@ bool FileVersionInfo::loadByName(const WString& filename)
     void* const data = &buffer[0];
     if (!GetFileVersionInfoExW(FILE_VER_GET_NEUTRAL, filename.c_str(), handle, size, data)) {
         const DWORD err = GetLastError();
-        error("error reading version info from " + filename + ": " + ErrorText(err));
+        _err.error("error reading version info from " + filename + ": " + ErrorText(err));
         return false;
     }
 
