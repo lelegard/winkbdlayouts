@@ -47,9 +47,9 @@ or from the binary DLL of an installed keyboard.
 
 ### Initial steps: create the new directory
 
-- Create a directory with name `kbdXXYYY` where `XX` is the language code for
-  your keyboard (not necessarily two letters, this is just a convention) and
-  `YYY` is the type or brand of keyboard (for instance `apple`).
+- In the directory `keyboards`, create a subdirectory with name `kbdXXYYY` where
+  `XX` is the language code for your keyboard (not necessarily two letters, this is
+  just a convention) and `YYY` is the type or brand of keyboard (for instance `apple`).
 
 - Copy any project file from an existing keyboard, for instance `kbdfrapple\kbdfrapple.vcxproj`,
   as `kbdXXYYY\kbdXXYYY.vcxproj`. No need to update the content, Visual Studio
@@ -99,8 +99,8 @@ The new keyboard is now part of the solution and will be built with the rest of 
 If you have difficulties to collect the scan codes for your keyboard, run the
 `scancodes` tool from this project.
 
-The image `tools\scancodes.jpg` shows the scan codes for a standard 101/102-key
-PC American keyboard.
+The image [tools\scancodes.jpg](tools\scancodes.jpg) shows the scan codes for
+a standard 101/102-key PC American keyboard.
 
 ### Apple keyboards
 
@@ -149,9 +149,9 @@ problem. The two keys send their expected scan codes. On the other hand, using
 VMware or UTM/Qemu, the two keys swap their scan codes.
 
 On the diagram below, the left part shows the expected key codes of a standard
-keyboard. This is also what is received by a Windows VM running in Parallels Desktop.
+keyboard. This is also what is received by a Windows VM running on Parallels Desktop.
 The right part of the diagram shows what is received by a Windows VM running on
-VMware or UTM/Qemu. This has been experienced using the `scancodes` utilisty in
+VMware or UTM/Qemu. This has been experienced using the `scancodes` utility in
 this project.
 ~~~
    Standard scan codes                On some virtual machines
@@ -189,19 +189,18 @@ the existing ones.
 for each keyboard which correctly installs the DLL but the way it is done is never
 described.
 - The problem has been discussed multiple times in various online forums
-but no clear solution was proposed.
+but no clear explanation or solution was proposed.
 
 During the setup of this project, finding how to correctly install a keyboard
 layout DLL was the hardest part. Since this is documented nowhere, this note
-tries to provide the missing answers.
-
-However, note that this procedure was found after various analyses and trials.
-It may be incomplete. It is provided for information only.
+tries to provide the missing answers. However, note that this procedure was
+found after various analyses and trials. It may be incomplete. It is provided
+for information only.
 
 The first step is copying the DLL (for instance `kbdusapple.dll`)
 into `C:\Windows\System32` (or more precisely `%SystemRoot%\system32`).
 
-The second step is registering the DLL in the registry. This is the tricky part.
+The second step is declaring the DLL in the registry. This is the tricky part.
 
 Let's start from a minimum example:
 ~~~
@@ -213,7 +212,8 @@ Let's start from a minimum example:
 
 1. Identify the "base language" for your keyboard. This is a 4-digit hexadecimal
    number, here `0409` for English. If you are not sure, browse through
-   `HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Keyboard Layouts`.
+   `HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Keyboard Layouts` and
+   spot the 4 LSB digits of a similar entry.
 2. Build a unique 8-digit language id. The 4 LSB digits are the base language id.
    The 4 MSB digits must be chosen so that the resulting 8-digit id is unique in
    the system. Typically, during the installation, browse through the registry to
@@ -223,7 +223,7 @@ Let's start from a minimum example:
 3. Create the corresponding registry key. Inside the key, create the value
    "Layout File". It shall contain the DLL file name, without directory.
 4. Create the value "Layout Text" with some short text which will appear in
-   the list of keybords in the System Settings application.
+   the list of keyboards in the System Settings application.
 5. Create a unique 4-digit hexadecimal value for the value "Layout Id".
    This value is mandatory. Without this registry entry, your keyboard will
    be seen in the System Settings but will never be activated. This is the

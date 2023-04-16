@@ -8,69 +8,69 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "scancodes", "tools\scancode
 		{29BD96E0-B6C5-42A0-B683-FD9740810600} = {29BD96E0-B6C5-42A0-B683-FD9740810600}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kbdadmin", "tools\kbdadmin.vcxproj", "{599FF9E1-4CB8-4511-9D55-A5CBC6191DC3}"
+	ProjectSection(ProjectDependencies) = postProject
+		{29BD96E0-B6C5-42A0-B683-FD9740810600} = {29BD96E0-B6C5-42A0-B683-FD9740810600}
+	EndProjectSection
+EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kbdreverse", "tools\kbdreverse.vcxproj", "{38202AFE-E69D-4994-8943-8F39164776D1}"
 	ProjectSection(ProjectDependencies) = postProject
 		{29BD96E0-B6C5-42A0-B683-FD9740810600} = {29BD96E0-B6C5-42A0-B683-FD9740810600}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kbdfrapple", "kbdfrapple\kbdfrapple.vcxproj", "{B9B80495-01BA-4AFD-99FE-F87822FB832C}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kbdfnapple", "kbdfnapple\kbdfnapple.vcxproj", "{DCCE0BD5-25A8-49E2-A7DA-754E22935020}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libtools", "tools\libtools.vcxproj", "{29BD96E0-B6C5-42A0-B683-FD9740810600}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kbdarapple", "kbdarapple\kbdarapple.vcxproj", "{17469F2D-C088-4F5F-8FBB-74B558E14D7B}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kbdfrapple", "keyboards\kbdfrapple\kbdfrapple.vcxproj", "{B9B80495-01BA-4AFD-99FE-F87822FB832C}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kbdbeapple", "kbdbeapple\kbdbeapple.vcxproj", "{C6E90E80-11BA-4790-80D0-7E237D9B0B98}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kbdfnapple", "keyboards\kbdfnapple\kbdfnapple.vcxproj", "{DCCE0BD5-25A8-49E2-A7DA-754E22935020}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kbdbzapple", "kbdbzapple\kbdbzapple.vcxproj", "{72B3FD20-55F9-4B10-9C0B-AC8150590B2B}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kbdarapple", "keyboards\kbdarapple\kbdarapple.vcxproj", "{17469F2D-C088-4F5F-8FBB-74B558E14D7B}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kbdcaapple", "kbdcaapple\kbdcaapple.vcxproj", "{849E4331-E1A1-406E-A6C0-03100337A62A}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kbdbeapple", "keyboards\kbdbeapple\kbdbeapple.vcxproj", "{C6E90E80-11BA-4790-80D0-7E237D9B0B98}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kbdczapple", "kbdczapple\kbdczapple.vcxproj", "{9D2C48DC-EECB-4026-ABFB-FC7A86D01BC9}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kbdbzapple", "keyboards\kbdbzapple\kbdbzapple.vcxproj", "{72B3FD20-55F9-4B10-9C0B-AC8150590B2B}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kbddaapple", "kbddaapple\kbddaapple.vcxproj", "{F2AA080D-76EF-4CB9-A3E4-1C95CA311037}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kbdcaapple", "keyboards\kbdcaapple\kbdcaapple.vcxproj", "{849E4331-E1A1-406E-A6C0-03100337A62A}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kbddeapple", "kbddeapple\kbddeapple.vcxproj", "{78AA2EFB-1E77-40CA-8CCD-1A94CCBA1593}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kbdczapple", "keyboards\kbdczapple\kbdczapple.vcxproj", "{9D2C48DC-EECB-4026-ABFB-FC7A86D01BC9}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kbdduapple", "kbdduapple\kbdduapple.vcxproj", "{81B54633-81B3-4A8A-9AAA-A8A2EAEFF651}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kbddaapple", "keyboards\kbddaapple\kbddaapple.vcxproj", "{F2AA080D-76EF-4CB9-A3E4-1C95CA311037}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kbddvapple", "kbddvapple\kbddvapple.vcxproj", "{7818C31D-DA42-442D-807D-3CC0E7AE6259}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kbddeapple", "keyboards\kbddeapple\kbddeapple.vcxproj", "{78AA2EFB-1E77-40CA-8CCD-1A94CCBA1593}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kbdejapple", "kbdejapple\kbdejapple.vcxproj", "{A613A0A0-9601-4B8F-AE76-C861993CE1F3}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kbdduapple", "keyboards\kbdduapple\kbdduapple.vcxproj", "{81B54633-81B3-4A8A-9AAA-A8A2EAEFF651}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kbdfiapple", "kbdfiapple\kbdfiapple.vcxproj", "{7C923FFC-728C-4449-9D00-85734024765F}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kbddvapple", "keyboards\kbddvapple\kbddvapple.vcxproj", "{7818C31D-DA42-442D-807D-3CC0E7AE6259}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kbditapple", "kbditapple\kbditapple.vcxproj", "{6C47178B-CA57-4CBB-98BB-CF801E09028D}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kbdejapple", "keyboards\kbdejapple\kbdejapple.vcxproj", "{A613A0A0-9601-4B8F-AE76-C861993CE1F3}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kbdnoapple", "kbdnoapple\kbdnoapple.vcxproj", "{5E9AC9DB-6149-4251-9947-908B6ED25E82}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kbdfiapple", "keyboards\kbdfiapple\kbdfiapple.vcxproj", "{7C923FFC-728C-4449-9D00-85734024765F}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kbdplapple", "kbdplapple\kbdplapple.vcxproj", "{B64E9AE5-5A84-4E43-9340-604F9009D525}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kbditapple", "keyboards\kbditapple\kbditapple.vcxproj", "{6C47178B-CA57-4CBB-98BB-CF801E09028D}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kbdpoapple", "kbdpoapple\kbdpoapple.vcxproj", "{F2C41E2F-915F-4ED5-9EFC-14B3665DAE49}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kbdnoapple", "keyboards\kbdnoapple\kbdnoapple.vcxproj", "{5E9AC9DB-6149-4251-9947-908B6ED25E82}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kbdruapple", "kbdruapple\kbdruapple.vcxproj", "{4D09666E-402D-4F2D-B2C3-1DDACF35032E}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kbdplapple", "keyboards\kbdplapple\kbdplapple.vcxproj", "{B64E9AE5-5A84-4E43-9340-604F9009D525}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kbdsgapple", "kbdsgapple\kbdsgapple.vcxproj", "{10CE9179-0B2D-4FBB-9EA7-EC8A3EE06D06}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kbdpoapple", "keyboards\kbdpoapple\kbdpoapple.vcxproj", "{F2C41E2F-915F-4ED5-9EFC-14B3665DAE49}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kbdspapple", "kbdspapple\kbdspapple.vcxproj", "{2C57A424-E1C6-4BDC-BD5C-D13AD5A53F2E}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kbdruapple", "keyboards\kbdruapple\kbdruapple.vcxproj", "{4D09666E-402D-4F2D-B2C3-1DDACF35032E}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kbdswapple", "kbdswapple\kbdswapple.vcxproj", "{F00074E3-6C20-4997-A7CB-8A9E44AB3661}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kbdsgapple", "keyboards\kbdsgapple\kbdsgapple.vcxproj", "{10CE9179-0B2D-4FBB-9EA7-EC8A3EE06D06}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kbdszapple", "kbdszapple\kbdszapple.vcxproj", "{391CBC76-2100-4981-9B39-1D2F2A7BE812}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kbdspapple", "keyboards\kbdspapple\kbdspapple.vcxproj", "{2C57A424-E1C6-4BDC-BD5C-D13AD5A53F2E}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kbduiapple", "kbduiapple\kbduiapple.vcxproj", "{A5928ACC-083F-42AD-9651-50185BAF8608}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kbdswapple", "keyboards\kbdswapple\kbdswapple.vcxproj", "{F00074E3-6C20-4997-A7CB-8A9E44AB3661}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kbdukapple", "kbdukapple\kbdukapple.vcxproj", "{EE807C4D-4C52-49D6-A08B-7153D5926862}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kbdszapple", "keyboards\kbdszapple\kbdszapple.vcxproj", "{391CBC76-2100-4981-9B39-1D2F2A7BE812}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kbdurapple", "kbdurapple\kbdurapple.vcxproj", "{5E6CD655-9FF5-490B-980C-FAF72F83BF75}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kbduiapple", "keyboards\kbduiapple\kbduiapple.vcxproj", "{A5928ACC-083F-42AD-9651-50185BAF8608}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kbdusapple", "kbdusapple\kbdusapple.vcxproj", "{04AD1307-1C07-4848-93FF-76005FDCC59A}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kbdukapple", "keyboards\kbdukapple\kbdukapple.vcxproj", "{EE807C4D-4C52-49D6-A08B-7153D5926862}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kbdadmin", "tools\kbdadmin.vcxproj", "{599FF9E1-4CB8-4511-9D55-A5CBC6191DC3}"
-	ProjectSection(ProjectDependencies) = postProject
-		{29BD96E0-B6C5-42A0-B683-FD9740810600} = {29BD96E0-B6C5-42A0-B683-FD9740810600}
-	EndProjectSection
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kbdurapple", "keyboards\kbdurapple\kbdurapple.vcxproj", "{5E6CD655-9FF5-490B-980C-FAF72F83BF75}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kbdusapple", "keyboards\kbdusapple\kbdusapple.vcxproj", "{04AD1307-1C07-4848-93FF-76005FDCC59A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

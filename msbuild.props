@@ -90,7 +90,7 @@
 
   <!-- Where the top level resource files are -->
   <PropertyGroup Condition="'$(ResourceDir)'==''">
-    <ResourceDir>$(SolutionDir)</ResourceDir>
+    <ResourceDir>$(SolutionDir)keyboards\</ResourceDir>
   </PropertyGroup>
 
   <!-- Build options -->
@@ -122,7 +122,7 @@
       <TreatWarningAsError>true</TreatWarningAsError>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ResourceDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
