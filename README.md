@@ -9,6 +9,19 @@ machine on a Mac, the hypervisor may include specific mappings for the Apple
 keyboards. This is the case for Parallels but not UTM/Qemu. When the hypervisor
 does not provide mapping for Mac keyboards, this project is useful.
 
+**Contents:**
+
+* [Build instructions](#build-instructions)
+* [Language support and contributions](#language-support-and-contributions)
+  * [Initial steps: create the new directory](#initial-steps-create-the-new-directory)
+  * [Option 1: duplicate a source file from this project](#option-1-duplicate-a-source-file-from-this-project)
+  * [Option 2: reverse the content of an existing keyboard DLL](#option-2-reverse-the-content-of-an-existing-keyboard-dll)
+  * [Final steps: add the project into the solution](#final-steps-add-the-project-into-the-solution)
+* [Scan codes](#scan-codes)
+  * [Apple keyboards](#apple-keyboards)
+  * [Apple keyboards in Windows virtual machines](#apple-keyboards-in-windows-virtual-machines)
+* [Declaring a keyboard layout on windows](#declaring-a-keyboard-layout-on-windows)
+
 ## Build instructions
 
 The project is built for x86, x64 and arm64 Windows systems. The released archive
@@ -46,10 +59,8 @@ or from the binary DLL of an installed keyboard.
 
 Let's assume you start from `kbdfrapple`.
 
-- Copy `kbdfrapple\kbdfrapple.c` as `kbdXXYYY\kbdXXYYY.c`. Update the key tables
-  according to your keyboard.
-- Copy `kbdfrapple\strings.rc` as `kbdXXYYY\strings.rc`. Update the two strings
-  in that file.
+- Copy `kbdfrapple\kbdfrapple.c` as `kbdXXYYY\kbdXXYYY.c`.
+- Copy `kbdfrapple\strings.rc` as `kbdXXYYY\strings.rc`.
 
 ### Option 2: reverse the content of an existing keyboard DLL
 
@@ -65,9 +76,9 @@ kbdreverse fr -r -o kbdXXYYY\strings.rc
 Using the parameter `fr` means reversing the file `C:\Windows\System32\kbdfr.dll`.
 To reverse a keyboard DLL from another location, specify the full path of the DLL file.
 
-- Update the two new source files according to your keyboard.
-
 ### Final steps: add the project into the solution
+
+- Update the key tables in `kbdXXYYY\kbdXXYYY.c` according to your keyboard.
 
 - In the file `strings.rc`, the `WKL_LANG` string is the base language for which
   your keyboard is a variant. For instance, `040c` means French. If you do not
@@ -88,16 +99,20 @@ The new keyboard is now part of the solution and will be built with the rest of 
 If you have difficulties to collect the scan codes for your keyboard, run the
 `scancodes` tool from this project.
 
-The image `tools\scancodes.jpg` shows the scan codes for a standard 101/102-key PC keyboard.
+The image `tools\scancodes.jpg` shows the scan codes for a standard 101/102-key
+PC American keyboard.
 
-There are some specificities on the bottom row of Apple keyboards:
+### Apple keyboards
+
+There are some specificities on the bottom row of Apple keyboards.
 ~~~
 +--------+--------+--------+---------------------+--------+--------+--------+
 |control | option |command |        space        |command | option |control |
 |  0x1D  | 0x38 a | 0x5B e |        0x39         | 0x5C e | 0x38 e | 0x1D e |
 +--------+--------+--------+---------------------+--------+--------+--------+
 ~~~
-Where `e` means "Extended" (Ctrl or Right-Alt) and `a` means "Alt".
+In the diagrams, the hexadecimal values are the scan codes of the keys,
+`e` means "Extended" (Ctrl or Right-Alt) and `a` means "Alt".
 
 And on the right-hand side of Apple keyboards:
 ~~~
@@ -121,3 +136,99 @@ And on the right-hand side of Apple keyboards:
 | 0x4B e | 0x50 e | 0x4D e |    |       0x52      |  0x53  |        |
 +--------+--------+--------+    +--------+--------+--------+--------+
 ~~~
+
+### Apple keyboards in Windows virtual machines
+
+When you run a Windows virtual machine (VM) on a Mac, there is a potential
+issue with two keys on the left side of the keyboard: the keys `@`/`#` and
+`<`/`>` are sometimes inverted.
+
+The core reason for this issue is unknown. We observe that the problem appears
+on some hypervisors and not on others. Using Parallels Desktop, there is no
+problem. The two keys send their expected scan codes. On the other hand, using
+VMware or UTM/Qemu, the two keys swap their scan codes.
+
+On the diagram below, the left part shows the expected key codes of a standard
+keyboard. This is also what is received by a Windows VM running in Parallels Desktop.
+The right part of the diagram shows what is received by a Windows VM running on
+VMware or UTM/Qemu. This has been experienced using the `scancodes` utilisty in
+this project.
+~~~
+   Standard scan codes                On some virtual machines
++------+------+-----------           +------+------+-----------
+| @ #  |   1  |                      | @ #  |   1  |
+| 0x29 | 0x02 | ...                  | 0x56 | 0x02 | ...
++------+---+--+---+-------           +------+---+--+---+-------
+|    TAB   |  Q   |                  |    TAB   |  Q   |
+|    0x0F  | 0x10 | ...              |    0x0F  | 0x10 | ...
++----------+-+----+-+-----           +----------+-+----+-+-----
+| Caps Lock  |  A   |                | Caps Lock  |  A   |
+|    0x3A    | 0x1E | ...            |    0x3A    | 0x1E | ...
++---------+--+---+--+---+-           +---------+--+---+--+---+-
+| L Shift | < >  |  Z   |            | L Shift | < >  |  Z   |
+|   0x2A  | 0x56 | 0x2C |            |   0x2A  | 0x29 | 0x2C |
++---------++-----+--+---+-           +---------++-----+--+---+-
+| Control  | Option |                | Control  | Option |
+|   0x1D   | 0x38 a | ...            |   0x1D   | 0x38 a | ...
++----------+--------+-----           +----------+--------+-----
+~~~
+
+To face the two situations, this project proposes two versions of each
+Apple keyboard. The version named "Apple VM" uses the swapped scan codes
+for the keys `@`/`#` and `<`/`>`.
+
+## Declaring a keyboard layout on windows
+
+The way a keyboard layout DLL shall be installed is poorly documented.
+
+- The [Windows Driver Samples](https://github.com/microsoft/Windows-driver-samples/tree/main/input/layout)
+project on GitHub simply recommends to _"substitute the existing DLL installed by the operating system
+with the customized DLL"_. It does not give any hint on how to install a new layout, in addition to
+the existing ones.
+- The Microsoft Keyboard Layout Creator utility (MSKLC) creates an MSI installer
+for each keyboard which correctly installs the DLL but the way it is done is never
+described.
+- The problem has been discussed multiple times in various online forums
+but no clear solution was proposed.
+
+During the setup of this project, finding how to correctly install a keyboard
+layout DLL was the hardest part. Since this is documented nowhere, this note
+tries to provide the missing answers.
+
+However, note that this procedure was found after various analyses and trials.
+It may be incomplete. It is provided for information only.
+
+The first step is copying the DLL (for instance `kbdusapple.dll`)
+into `C:\Windows\System32` (or more precisely `%SystemRoot%\system32`).
+
+The second step is registering the DLL in the registry. This is the tricky part.
+
+Let's start from a minimum example:
+~~~
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Keyboard Layouts\a0060409]
+"Layout File"="kbdusapple.dll"
+"Layout Text"="United States Apple (WKL)"
+"Layout Id"="00f8"
+~~~
+
+1. Identify the "base language" for your keyboard. This is a 4-digit hexadecimal
+   number, here `0409` for English. If you are not sure, browse through
+   `HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Keyboard Layouts`.
+2. Build a unique 8-digit language id. The 4 LSB digits are the base language id.
+   The 4 MSB digits must be chosen so that the resulting 8-digit id is unique in
+   the system. Typically, during the installation, browse through the registry to
+   find all existing keyboards with the same base language id and select the
+   "next" 4-digit MSB part. In the example, the result is `a0060409`. Using `a`
+   as most significant digit seems to be a convention but may be irrelevant.
+3. Create the corresponding registry key. Inside the key, create the value
+   "Layout File". It shall contain the DLL file name, without directory.
+4. Create the value "Layout Text" with some short text which will appear in
+   the list of keybords in the System Settings application.
+5. Create a unique 4-digit hexadecimal value for the value "Layout Id".
+   This value is mandatory. Without this registry entry, your keyboard will
+   be seen in the System Settings but will never be activated. This is the
+   tricky part of the procedure. Typically, the installation procedure shall
+   browse `HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Keyboard Layouts`
+   and allocate a new unique value.
+
+In this project, all these steps are handled by the utility `kbdadmin -i`.
