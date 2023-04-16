@@ -1489,14 +1489,14 @@ void GenerateResourceFile(ReverseOptions& opt, HMODULE hmod)
         // Enumerate keyboard layouts in registry to find an entry matching the DLL name.
         // Count the number matching entries, some DLL's are registered several times.
         Registry reg(opt);
-        WStringList layout_ids;
-        if (reg.getSubKeys(REGISTRY_LAYOUT_KEY, layout_ids)) {
-            for (const auto& id : layout_ids) {
+        WStringList all_lang_ids;
+        if (reg.getSubKeys(REGISTRY_LAYOUT_KEY, all_lang_ids)) {
+            for (const auto& id : all_lang_ids) {
                 // The base language is the last 4 hexa digits in layout id. need at least 4 chars.
-                if (id.size() >= 4 && ToLower(reg.getValue(REGISTRY_LAYOUT_KEY "\\" + id, REGISTRY_LAYOUT_FILE)) == dllname) {
-                    WString text(reg.getValue(REGISTRY_LAYOUT_KEY "\\" + id, REGISTRY_LAYOUT_DISPLAY, true));
+                if (id.size() >= 4 && ToLower(reg.getValue(REGISTRY_LAYOUT_KEY "\\" + id, REGISTRY_LAYOUT_FILE, L"", true)) == dllname) {
+                    WString text(reg.getValue(REGISTRY_LAYOUT_KEY "\\" + id, REGISTRY_LAYOUT_DISPLAY, L"", true));
                     if (text.empty()) {
-                        text = reg.getValue(REGISTRY_LAYOUT_KEY "\\" + id, REGISTRY_LAYOUT_TEXT);
+                        text = reg.getValue(REGISTRY_LAYOUT_KEY "\\" + id, REGISTRY_LAYOUT_TEXT, L"", true);
                     }
                     ids.push_back(id);
                     texts.push_back(text);

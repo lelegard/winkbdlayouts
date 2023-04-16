@@ -39,6 +39,7 @@
 #define REGISTRY_USER_SUBSTS_KEY   L"HKEY_CURRENT_USER\\Keyboard Layout\\Substitutes"
 #define REGISTRY_LAYOUT_DISPLAY    L"Layout Display Name"
 #define REGISTRY_LAYOUT_FILE       L"Layout File"
+#define REGISTRY_LAYOUT_ID         L"Layout Id"
 #define REGISTRY_LAYOUT_PROVIDER   L"Layout Provider"
 #define REGISTRY_LAYOUT_TEXT       L"Layout Text"
 

@@ -30,8 +30,12 @@ WString ToUpper(const WString&);
 bool StartsWith(const WString&, const WString& prefix);
 bool EndsWith(const WString&, const WString& suffix);
 
-// Decode a string as an integer.
+// Decode a string as an integer. Return 0 on error.
 inline int ToInt(const WString& str) { return _wtoi(str.c_str()); }
+
+// Decode an hexa value with error checking.
+template <typename INT_T, typename std::enable_if<std::is_integral<INT_T>::value, int>::type = 0>
+bool FromHexa(INT_T& value, const WString& str);
 
 // Hexadecimal digit.
 char Hexa(int nibble);
@@ -108,4 +112,29 @@ WString Join(const CONTAINER& container, const WString& separator, bool noempty)
         }
     }
     return res;
+}
+
+template <typename INT_T, typename std::enable_if<std::is_integral<INT_T>::value, int>::type>
+bool FromHexa(INT_T& value, const WString& str)
+{
+    value = 0;
+    for (size_t i = 0; i < str.length(); ++i) {
+        const wchar_t c = str[i];
+        if (c >= L'0' && c <= L'9') {
+            value = (value << 4) | (c - L'0');
+        }
+        else if (c >= L'A' && c <= L'F') {
+            value = (value << 4) | (10 + c - L'A');
+        }
+        else if (c >= L'a' && c <= L'f') {
+            value = (value << 4) | (10 + c - L'a');
+        }
+        else if (i == 1 && value == 0 && (c == L'x' || c == L'X')) {
+            // Ignore optional prefix 0x or 0X
+        }
+        else {
+            return false;
+        }
+    }
+    return true;
 }

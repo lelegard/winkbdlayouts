@@ -127,25 +127,34 @@ bool Registry::openKey(HKEY root, const WString& key, REGSAM sam, HKEY& handle)
 // Get a value in a registry key as a string.
 //-----------------------------------------------------------------------------
 
-WString Registry::getValue(const WString& key, const WString& value_name, bool expand)
+WString Registry::getValuePrivate(const WString& key, const WString& value_name, const WString& default_value, bool ignore_errors, bool expand)
 {
     // Split name
     HKEY root;
     WString subkey;
-    if (!splitKey(key, root, subkey)) {
-        return WString();
+    if (ignore_errors) {
+        _err.muteErrors();
+    }
+    const bool exists = splitKey(key, root, subkey);
+    if (ignore_errors) {
+        _err.restoreErrors();
+    }
+    if (!exists) {
+        return default_value;
     }
 
     // RegGetValue flags.
     const DWORD flags = RRF_RT_ANY | (expand ? 0 : RRF_NOEXPAND);
 
-    // Query the the size in bytes of the value in the key.
+    // Query the size in bytes of the value in the key.
     DWORD type = 0;
     DWORD size = 0;
     LONG hr = RegGetValueW(root, subkey.c_str(), value_name.c_str(), flags, &type, nullptr, &size);
     if ((hr != ERROR_SUCCESS && hr != ERROR_MORE_DATA) || size <= 0) {
-        _err.error("error querying " + key + L"\\" + value_name + ": " + ErrorText(hr));
-        return WString();
+        if (!ignore_errors) {
+            _err.error("error querying " + key + L"\\" + value_name + ": " + ErrorText(hr));
+        }
+        return default_value;
     }
 
     // Allocate new buffer and actually get the value
@@ -198,6 +207,51 @@ WString Registry::getValue(const WString& key, const WString& value_name, bool e
         }
     }
 
+    return value;
+}
+
+//-----------------------------------------------------------------------------
+// Get a value in a registry key as an integer.
+//-----------------------------------------------------------------------------
+
+DWORD Registry::getIntValue(const WString& key, const WString& value_name, DWORD default_value)
+{
+    // Split the key without error reporting.
+    HKEY root;
+    WString subkey;
+    _err.muteErrors();
+    bool exists = splitKey(key, root, subkey);
+    _err.restoreErrors();
+
+    if (exists) {
+        // Query the value in the key.
+        DWORD value = 0;
+        DWORD size = DWORD(sizeof(value));
+        LONG hr = RegGetValueW(root, subkey.c_str(), value_name.c_str(), RRF_RT_REG_DWORD, nullptr, &value, &size);
+        if (hr == ERROR_SUCCESS) {
+            return value;
+        }
+    }
+    return default_value;
+}
+
+DWORD Registry::getIntValue(const WString& key, const WString& value_name)
+{
+    // Split name
+    HKEY root;
+    WString subkey;
+    if (!splitKey(key, root, subkey)) {
+        return 0;
+    }
+
+    // Query the value in the key.
+    DWORD value = 0;
+    DWORD size = DWORD(sizeof(value));
+    LONG hr = RegGetValueW(root, subkey.c_str(), value_name.c_str(), RRF_RT_REG_DWORD, nullptr, &value, &size);
+    if (hr != ERROR_SUCCESS) {
+        _err.error("error querying " + key + L"\\" + value_name + ": " + ErrorText(hr));
+        return 0;
+    }
     return value;
 }
 

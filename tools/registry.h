@@ -21,8 +21,19 @@ public:
     bool keyExists(const WString& key) { return valueExists(key, L""); }
     bool valueExists(const WString& key, const WString& value_name);
 
-    // Get a value in a registry key as a string. Can automatically expand environment variables.
-    WString getValue(const WString& key, const WString& value_name, bool expand = false);
+    // Get a value in a registry key as a string. No error is reported if a default value is provided.
+    WString getValue(const WString& key, const WString& value_name, const WString& default_value, bool expand)
+    {
+        return getValuePrivate(key, value_name, default_value, true, expand);
+    }
+    WString getValue(const WString& key, const WString& value_name, bool expand)
+    {
+        return getValuePrivate(key, value_name, WString(), false, expand);
+    }
+
+    // Get a value in a registry key as an integer. No error is reported if a default value is provided.
+    DWORD getIntValue(const WString& key, const WString& value_name, DWORD default_value);
+    DWORD getIntValue(const WString& key, const WString& value_name);
 
     // Get all value names and subkeys in a key.
     bool getSubKeys(const WString& key, WStringList& subkeys);
@@ -48,6 +59,6 @@ public:
 private:
     Error& _err;
 
-    // Open a registry key.
     bool openKey(HKEY root, const WString& key, REGSAM sam, HKEY& handle);
+    WString getValuePrivate(const WString& key, const WString& value_name, const WString& default_value, bool ignore_errors, bool expand);
 };
