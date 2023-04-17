@@ -11,6 +11,7 @@ does not provide mapping for Mac keyboards, this project is useful.
 
 **Contents:**
 
+* [Installation](#installation)
 * [Build instructions](#build-instructions)
 * [Language support and contributions](#language-support-and-contributions)
   * [Initial steps: create the new directory](#initial-steps-create-the-new-directory)
@@ -21,6 +22,15 @@ does not provide mapping for Mac keyboards, this project is useful.
   * [Apple keyboards](#apple-keyboards)
   * [Apple keyboards in Windows virtual machines](#apple-keyboards-in-windows-virtual-machines)
 * [Declaring a keyboard layout on windows](#declaring-a-keyboard-layout-on-windows)
+
+## Installation
+
+If you simply want to install the Windows Keyboards Layouts, grab the latest
+archive file in the "Release" area of this project, expand it and run the PowerShell
+script named `install.ps1`.
+
+Alternatively, you may run the `setup.exe` file in the appropriate subdirectory
+`x86`, `x64` or `arm64` for your system.
 
 ## Build instructions
 
@@ -60,7 +70,7 @@ or from the binary DLL of an installed keyboard.
 Let's assume you start from `kbdfrapple`.
 
 - Copy `kbdfrapple\kbdfrapple.c` as `kbdXXYYY\kbdXXYYY.c`.
-- Copy `kbdfrapple\strings.rc` as `kbdXXYYY\strings.rc`.
+- Copy `kbdfrapple\strings.h` as `kbdXXYYY\strings.h`.
 
 ### Option 2: reverse the content of an existing keyboard DLL
 
@@ -70,7 +80,7 @@ Let's assume you start from `kbdfrapple`.
 Example: To rebuild source files for a French keyboard (id `fr`), use these commands:
 ~~~
 kbdreverse fr -o kbdXXYYY\kbdXXYYY.c
-kbdreverse fr -r -o kbdXXYYY\strings.rc
+kbdreverse fr -r -o kbdXXYYY\strings.h
 ~~~
 
 Using the parameter `fr` means reversing the file `C:\Windows\System32\kbdfr.dll`.
@@ -80,7 +90,7 @@ To reverse a keyboard DLL from another location, specify the full path of the DL
 
 - Update the key tables in `kbdXXYYY\kbdXXYYY.c` according to your keyboard.
 
-- In the file `strings.rc`, the `WKL_LANG` string is the base language for which
+- In the file `strings.h`, the `WKL_LANG` string is the base language for which
   your keyboard is a variant. For instance, `040c` means French. If you do not
   know which id to choose, use the Registry Editor to browse through the existing
   keyboard layout ids at
@@ -99,17 +109,17 @@ The new keyboard is now part of the solution and will be built with the rest of 
 If you have difficulties to collect the scan codes for your keyboard, run the
 `scancodes` tool from this project.
 
-The image [tools\scancodes.jpg](tools\scancodes.jpg) shows the scan codes for
+The image [tools\scancodes.jpg](tools/scancodes.jpg) shows the scan codes for
 a standard 101/102-key PC American keyboard.
 
 ### Apple keyboards
 
 There are some specificities on the bottom row of Apple keyboards.
 ~~~
-+--------+--------+--------+---------------------+--------+--------+--------+
-|control | option |command |        space        |command | option |control |
-|  0x1D  | 0x38 a | 0x5B e |        0x39         | 0x5C e | 0x38 e | 0x1D e |
-+--------+--------+--------+---------------------+--------+--------+--------+
++---------+--------+---------+-------------------------+---------+--------+---------+
+| control | option | command |          space          | command | option | control |
+|  0x1D   | 0x38 a | 0x5B e  |          0x39           | 0x5C e  | 0x38 e | 0x1D e  |
++---------+--------+---------+-------------------------+---------+--------+---------+
 ~~~
 In the diagrams, the hexadecimal values are the scan codes of the keys,
 `e` means "Extended" (Ctrl or Right-Alt) and `a` means "Alt".
@@ -176,6 +186,13 @@ this project.
 To face the two situations, this project proposes two versions of each
 Apple keyboard. The version named "Apple VM" uses the swapped scan codes
 for the keys `@`/`#` and `<`/`>`.
+
+Important: This inversion has been noticed in various versions of the French
+Apple keyboards. Because it is not possible for one single person to own all
+international keyboards, the problem may be slightly different on other keyboards
+and the corresponding "Apple VM" keyboard layout may not be correct. Please
+report all discrepancies in the "Issues" area of this project or submit a
+pull request with the fix if possible.
 
 ## Declaring a keyboard layout on windows
 

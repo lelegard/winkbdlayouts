@@ -17,7 +17,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="$([System.Text.RegularExpressions.Regex]::IsMatch($(ProjectName), '^kbd.*')) and
                             Exists('$(ProjectDir)$(ProjectName).c') and
-                            Exists('$(ProjectDir)strings.rc')">
+                            Exists('$(ProjectDir)strings.h')">
     <ProjectType>KeyboardLayout</ProjectType>
   </PropertyGroup>
   <PropertyGroup Condition="$([System.Text.RegularExpressions.Regex]::IsMatch($(ProjectName), '^lib.*'))">
@@ -202,6 +202,7 @@
   <!-- File names for keyboard layouts -->
   <ItemGroup Condition="'$(ProjectType)'=='KeyboardLayout'">
     <ClCompile Include="$(ProjectName).c"/>
+    <ClInclude Include="strings.h"/>
     <ResourceCompile Include="$(ResourceDir)kbd.rc"/>
   </ItemGroup>
   <ItemDefinitionGroup Condition="'$(ProjectType)'=='KeyboardLayout'">

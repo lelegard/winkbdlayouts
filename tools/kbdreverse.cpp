@@ -1573,7 +1573,7 @@ int wmain(int argc, wchar_t* argv[])
     HMODULE dll = LoadLibraryW(opt.input.c_str());
     if (dll == nullptr) {
         const DWORD err = GetLastError();
-        opt.fatal("error opening " + opt.input + ": " + ErrorText(err));
+        opt.fatal(opt.input + ": " + ErrorText(err));
     }
 
     // Get the DLL entry point.

@@ -52,7 +52,8 @@ AdminOptions::AdminOptions(int argc, wchar_t* argv[]) :
         L"  -np : ignore -p, don't prompt\n"
         L"  -r  : remove all installed keyboard DLL's from this project\n"
         L"  -s  : search active keyboard layout DLL's in all processes\n"
-        L"  -u  : display user setup"),
+        L"  -u  : display user setup\n"
+        L"  -v  : verbose messages"),
     output(),
     dll_install(),
     remove_wkl(false),
@@ -79,6 +80,9 @@ AdminOptions::AdminOptions(int argc, wchar_t* argv[]) :
         else if (args[i] == L"-r") {
             remove_wkl = true;
         }
+        else if (args[i] == L"-v") {
+            setVerbose(true);
+        }
         else if (args[i] == L"-p") {
             setPromptOnExit(!dont_prompt);
         }
@@ -103,6 +107,7 @@ AdminOptions::AdminOptions(int argc, wchar_t* argv[]) :
         const WString exe(GetCurrentProgram());
         if (ToLower(FileName(exe)) == L"setup.exe") {
             dll_install.push_back(DirName(exe));
+            setPromptOnExit(!dont_prompt);
         }
         else {
             fatal(L"no option specified, try --help");
@@ -178,7 +183,7 @@ void DisplayUserSetup(AdminOptions& opt)
               << "-------" << std::endl;
     grid.print(opt.out());
 
-    // Enumertate user's substitutions.
+    // Enumerate user's substitutions.
     if (!reg.getValueNames(REGISTRY_USER_SUBSTS_KEY, names)) {
         return;
     }
@@ -229,7 +234,7 @@ void SearchActiveKeyboards(AdminOptions& opt)
     DWORD retsize = 0;
     if (!EnumProcesses(&pids[0], insize, &retsize)) {
         const DWORD err = GetLastError();
-        opt.fatal("EnumProcesses error: " + ErrorText(err));
+        opt.fatal("EnumProcesses: " + ErrorText(err));
     }
     pids.resize(retsize / sizeof(DWORD));
 
@@ -270,7 +275,7 @@ void SearchActiveKeyboards(AdminOptions& opt)
         }
         CloseHandle(hproc);
     }
-    opt.out() << "Found " << pids.size() << " processes, " << error_count << " cannot be accessed" << std::endl;
+    opt.verbose(Format(L"Found %d processes, %d cannot be accessed", pids.size(), error_count));
 }
 
 
@@ -284,7 +289,7 @@ void InstallOneKeyboard(AdminOptions& opt, const WString& dll_path)
     HMODULE hmod = LoadLibraryExW(dll_path.c_str(), nullptr, LOAD_LIBRARY_AS_DATAFILE);
     if (hmod == nullptr) {
         const DWORD err = GetLastError();
-        opt.error("error opening " + dll_path + ": " + ErrorText(err));
+        opt.error(dll_path + ": " + ErrorText(err));
         return;
     }
     const WString dll_text(GetResourceString(hmod, WKL_RES_TEXT));
@@ -297,13 +302,14 @@ void InstallOneKeyboard(AdminOptions& opt, const WString& dll_path)
         return;
     }
 
-    opt.out() << "==== Installing " << dll_path << " (" << dll_text << ")" << std::endl;
+    const WString file_name(ToLower(FileName(dll_path)));
+    opt.info("==== Installing " + file_name + " (" + dll_text + ")");
 
     // Adjust DLL language id to 4 hexa digits.
     if (dll_lang_id.length() != 4) {
         WString new_lang("0000" + dll_lang_id);
         new_lang = new_lang.substr(new_lang.length() - 4);
-        opt.out() << "warning: invalid base language \"" << dll_lang_id << "\", using \"" << new_lang << "\"" << std::endl;
+        opt.warning("invalid base language \"" + dll_lang_id + "\", using \"" + new_lang + "\"");
         dll_lang_id = new_lang;
     }
 
@@ -321,7 +327,6 @@ void InstallOneKeyboard(AdminOptions& opt, const WString& dll_path)
     std::set<uint16_t> all_layout_ids;
     uint16_t max_layout_id = 0;
     uint16_t final_layout_id = 0;
-    const WString file_name(ToLower(FileName(dll_path)));
 
     for (const auto& lang_id : all_lang_ids) {
         // Keep track of all layout ids. Ignore missing ids (use 0).
@@ -336,7 +341,7 @@ void InstallOneKeyboard(AdminOptions& opt, const WString& dll_path)
         if (EndsWith(ToLower(lang_id), dll_lang_id)) {
             matching_lang_ids.insert(ToLower(lang_id));
             if (final_lang_id.empty() && ToLower(reg.getValue(key, REGISTRY_LAYOUT_FILE, L"", true  )) == file_name) {
-                opt.out() << file_name << " already registered, replacing it" << std::endl;
+                opt.verbose(file_name + " already registered, replacing it");
                 final_lang_id = lang_id;
                 final_layout_id = layout_id;
             }
@@ -373,10 +378,10 @@ void InstallOneKeyboard(AdminOptions& opt, const WString& dll_path)
 
     // Copy DLL file first.
     const WString destination(GetEnv(L"SystemRoot", L"C:\\Windows") + L"\\System32\\" + file_name);
-    opt.out() << "registering " << final_lang_id << ": " << destination << " (" << dll_text << ")" << std::endl;
+    opt.verbose("registering " + final_lang_id + ": " + destination + " (" + dll_text + ")");
     if (!CopyFileW(dll_path.c_str(), destination.c_str(), false)) {
         const DWORD err = GetLastError();
-        opt.error("error creating " + destination + ": " + ErrorText(err));
+        opt.error(destination + ": " + ErrorText(err));
         return;
     }
 
@@ -446,12 +451,12 @@ void RemoveKeyboards(AdminOptions& opt)
             }
             else {
                 const DWORD err = GetLastError();
-                opt.error("error deleting " + path + ": " + ErrorText(err));
+                opt.error(path + ": " + ErrorText(err));
                 unreg = false;
             }
         }
         if (unreg) {
-            opt.out() << "Unregistering " << id << std::endl;
+            opt.verbose("Unregistering " + id);
             reg.deleteKey(key);
         }
     }
@@ -469,7 +474,7 @@ int wmain(int argc, wchar_t* argv[])
 
     // Need to be admin to install keyboards or explore all processes.
     if ((!opt.dll_install.empty() || opt.remove_wkl || opt.search_active) && !IsAdmin()) {
-        std::cout << "Restarting as admin..." << std::endl;
+        opt.info("Restarting as admin...");
         RestartAsAdmin(opt.args + L"-p", true);
         opt.exit(EXIT_SUCCESS);
     }

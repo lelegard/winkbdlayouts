@@ -19,7 +19,8 @@
 Error::Error(const WString& prefix, std::ostream* err) :
     _prefix(prefix),
     _err(err),
-    _saved(nullptr)
+    _saved(nullptr),
+    _verbose(false)
 {
 }
 
@@ -31,13 +32,55 @@ Error::Error(const WString& prefix, std::ostream* err) :
 void Error::error(const std::string& msg) const
 {
     if (_err != nullptr) {
-        *_err << _prefix << msg << std::endl;
+        *_err << _prefix << "error: " << msg << std::endl;
     }
 }
 
 void Error::error(const WString& msg) const
 {
     if (_err != nullptr) {
+        *_err << _prefix << "error: " << msg << std::endl;
+    }
+}
+
+void Error::warning(const std::string& msg) const
+{
+    if (_err != nullptr) {
+        *_err << _prefix << "warning: " << msg << std::endl;
+    }
+}
+
+void Error::warning(const WString& msg) const
+{
+    if (_err != nullptr) {
+        *_err << _prefix << "warning: " << msg << std::endl;
+    }
+}
+
+void Error::info(const std::string& msg) const
+{
+    if (_err != nullptr) {
+        *_err << _prefix << msg << std::endl;
+    }
+}
+
+void Error::info(const WString& msg) const
+{
+    if (_err != nullptr) {
+        *_err << _prefix << msg << std::endl;
+    }
+}
+
+void Error::verbose(const std::string& msg) const
+{
+    if (_err != nullptr && _verbose) {
+        *_err << _prefix << msg << std::endl;
+    }
+}
+
+void Error::verbose(const WString& msg) const
+{
+    if (_err != nullptr && _verbose) {
         *_err << _prefix << msg << std::endl;
     }
 }

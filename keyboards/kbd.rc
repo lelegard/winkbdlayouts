@@ -23,15 +23,15 @@
 #endif
 
 // Include the header file for the project.
-// All keyboard layout shall include a file named strings.rc.
-#include "strings.rc"
+// All keyboard layout shall include a file named strings.h.
+#include "strings.h"
 
-// Make sure WKL_TEXT and WKL_LANG are defined in WKL_PROJECT_NAME.rc
+// Make sure WKL_TEXT and WKL_LANG were defined in strings.h.
 #if !defined(WKL_TEXT)
-#error "WKL_TEXT not defined in strings.rc file"
+#error "WKL_TEXT not defined in strings.h file"
 #endif
 #if !defined(WKL_LANG)
-#error "WKL_LANG not defined in strings.rc file"
+#error "WKL_LANG not defined in strings.h file"
 #endif
 
 // Define resources which will be read to install the layout.
