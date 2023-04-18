@@ -10,279 +10,6 @@
 #include <dontuse.h>
 
 //---------------------------------------------------------------------------
-// Associate a virtual key with a modifier bitmask
-//---------------------------------------------------------------------------
-
-static VK_TO_BIT vk_to_bits[] = {
-    {VK_SHIFT,   KBDSHIFT},
-    {VK_CONTROL, KBDCTRL},
-    {VK_MENU,    KBDALT},
-    {0,          0}
-};
-
-//---------------------------------------------------------------------------
-// Map character modifier bits to modification number
-//---------------------------------------------------------------------------
-
-static MODIFIERS char_modifiers = {
-    .pVkToBit    = vk_to_bits,
-    .wMaxModBits = 7,
-    .ModNumber   = {
-        0,            // 000 = <none>
-        1,            // 001 = Shift
-        2,            // 010 = Control
-        SHFT_INVALID, // 011 = Shift Control
-        SHFT_INVALID, // 100 = Alt
-        SHFT_INVALID, // 101 = Shift Alt
-        3,            // 110 = Control Alt (AltGr)
-        4,            // 111 = Shift Control Alt
-    }
-};
-
-//---------------------------------------------------------------------------
-// Virtual Key to WCHAR translations for 3 shift states
-//---------------------------------------------------------------------------
-
-static VK_TO_WCHARS3 vk_to_wchar3[] = {
-    //                         Shift   Ctrl
-    //                         =====   ====
-    {VK_BACK,   0x00, {0x0008, 0x0008, 0x007F}}, // BS, BS, DEL
-    {VK_ESCAPE, 0x00, {0x001B, 0x001B, 0x001B}}, // ESC, ESC, ESC
-    {VK_RETURN, 0x00, {L'\r',  L'\r',  L'\n'}},
-    {VK_CANCEL, 0x00, {0x0003, 0x0003, 0x0003}},
-    {0,         0,    0,       0,      0}
-};
-
-//---------------------------------------------------------------------------
-// Virtual Key to WCHAR translations for 5 shift states
-//---------------------------------------------------------------------------
-
-static VK_TO_WCHARS5 vk_to_wchar5[] = {
-    //                                               Shift     Ctrl      Ctrl/Alt  Shift/Ctrl/Alt
-    //                                               =====     ====      ========  ==============
-    {'1',           CAPLOK,               {L'+',     L'1',     WCH_NONE, L'`',     0x00AC}},      // Not
-    {'2',           CAPLOK,               {0x011B,   L'2',     WCH_NONE, L'@',     0x2022}},      // e caron
-    {'3',           CAPLOK,               {0x0161,   L'3',     WCH_NONE, L'#',     0x2260}},      // s caron
-    {'4',           CAPLOK,               {0x010D,   L'4',     WCH_NONE, L'$',     0x00A3}},      // c caron, Pound
-    {'5',           CAPLOK,               {0x0159,   L'5',     WCH_NONE, L'~',     0x25CA}},      // r caron
-    {'6',           CAPLOK,               {0x017E,   L'6',     WCH_NONE, L'^',     0x2020}},      // z caron
-    {'7',           CAPLOK,               {0x00FD,   L'7',     WCH_NONE, L'&',     0x00B6}},      // y acute, Pilcrow
-    {'8',           CAPLOK,               {0x00E1,   L'8',     WCH_NONE, L'*',     0x00F7}},      // a acute, Division
-    {'9',           CAPLOK,               {0x00ED,   L'9',     WCH_NONE, L'{',     0x00AB}},      // i acute, <<
-    {'0',           CAPLOK,               {0x00E9,   L'0',     WCH_NONE, L'}',     0x00BB}},      // e acute, >>
-    {VK_OEM_PLUS,   0x00,                 {L'=',     L'%',     WCH_NONE, WCH_DEAD, WCH_DEAD}},
-    {VK__none_,     0x00,                 {WCH_NONE, WCH_NONE, WCH_NONE, 0x00B0,   L','}},        // Degree
-    {VK_OEM_2,      0x00,                 {WCH_DEAD, WCH_DEAD, WCH_NONE, WCH_DEAD, WCH_DEAD}},
-    {VK__none_,     0x00,                 {L'\'',    0x02C7,   WCH_NONE, L'^',     L'-'}},        // Caron
-    {'Q',           CAPLOK,               {L'q',     L'Q',     WCH_NONE, WCH_NONE, WCH_NONE}},
-    {'W',           CAPLOK | CAPLOKALTGR, {L'w',     L'W',     WCH_NONE, 0x0117,   0x0116}},      // e dot above, E dot above
-    {'E',           CAPLOK | CAPLOKALTGR, {L'e',     L'E',     WCH_NONE, 0x0119,   0x0118}},      // e ogonek, E ogonek
-    {'R',           CAPLOK,               {L'r',     L'R',     WCH_NONE, 0x20AC,   0x00AE}},      // Registered
-    {'T',           CAPLOK,               {L't',     L'T',     WCH_NONE, WCH_NONE, 0x2122}},
-    {'Z',           CAPLOK | CAPLOKALTGR, {L'z',     L'Z',     WCH_NONE, 0x017C,   0x017B}},      // z dot above, Z dot above
-    {'U',           CAPLOK,               {L'u',     L'U',     WCH_NONE, WCH_NONE, WCH_NONE}},
-    {'I',           CAPLOK,               {L'i',     L'I',     WCH_NONE, WCH_NONE, WCH_NONE}},
-    {'O',           CAPLOK,               {L'o',     L'O',     WCH_NONE, WCH_NONE, WCH_NONE}},
-    {'P',           CAPLOK,               {L'p',     L'P',     WCH_NONE, WCH_NONE, WCH_NONE}},
-    {VK_OEM_4,      0x00,                 {0x00FA,   L'/',     WCH_NONE, L'[',     0x2039}},      // u acute
-    {VK_OEM_6,      0x00,                 {L')',     L'(',     WCH_NONE, L']',     0x203A}},
-    {'A',           CAPLOK | CAPLOKALTGR, {L'a',     L'A',     WCH_NONE, 0x0105,   0x0104}},      // a ogonek, A ogonek
-    {'S',           CAPLOK,               {L's',     L'S',     WCH_NONE, 0x00DF,   0x2211}},      // sharp S
-    {'D',           CAPLOK,               {L'd',     L'D',     WCH_NONE, 0x2202,   0x2206}},
-    {'F',           CAPLOK,               {L'f',     L'F',     WCH_NONE, WCH_NONE, WCH_NONE}},
-    {'G',           CAPLOK,               {L'g',     L'G',     WCH_NONE, WCH_NONE, WCH_NONE}},
-    {'H',           CAPLOK,               {L'h',     L'H',     WCH_NONE, 0x2018,   0x201C}},
-    {'J',           CAPLOK,               {L'j',     L'J',     WCH_NONE, 0x2019,   0x201D}},
-    {'K',           CAPLOK,               {L'k',     L'K',     WCH_NONE, WCH_NONE, WCH_NONE}},
-    {'L',           CAPLOK | CAPLOKALTGR, {L'l',     L'L',     WCH_NONE, 0x0142,   0x0141}},      // l stroke, L stroke
-    {VK_OEM_1,      0x00,                 {0x016F,   L'"',     WCH_NONE, L';',     0x2026}},      // u ring above
-    {VK_OEM_7,      0x00,                 {0x00A7,   L'!',     WCH_NONE, L'\'',    WCH_DEAD}},    // Section
-    {VK__none_,     0x00,                 {WCH_NONE, WCH_NONE, WCH_NONE, WCH_NONE, L'~'}},
-    {VK_OEM_3,      0x00,                 {L'<',     L'>',     WCH_NONE, 0x2264,   0x2265}},
-    {VK_OEM_5,      0x00,                 {WCH_DEAD, L'`',     WCH_NONE, WCH_DEAD, WCH_DEAD}},
-    {VK__none_,     0x00,                 {0x00A8,   WCH_NONE, WCH_NONE, 0x00A8,   L'"'}},        // Diaeresis, Diaeresis
-    {'Y',           CAPLOK,               {L'y',     L'Y',     WCH_NONE, WCH_NONE, WCH_NONE}},
-    {'X',           CAPLOK,               {L'x',     L'X',     WCH_NONE, WCH_NONE, WCH_NONE}},
-    {'C',           CAPLOK,               {L'c',     L'C',     WCH_NONE, WCH_NONE, 0x00A9}},      // Copyright
-    {'V',           CAPLOK,               {L'v',     L'V',     WCH_NONE, WCH_NONE, 0x221A}},
-    {'B',           CAPLOK,               {L'b',     L'B',     WCH_NONE, WCH_NONE, WCH_NONE}},
-    {'N',           CAPLOK,               {L'n',     L'N',     WCH_NONE, L',',     0x201E}},
-    {'M',           CAPLOK,               {L'm',     L'M',     WCH_NONE, WCH_NONE, WCH_NONE}},
-    {VK_OEM_COMMA,  0x00,                 {L',',     L'?',     WCH_NONE, L'<',     0x2264}},
-    {VK_OEM_PERIOD, 0x00,                 {L'.',     L':',     WCH_NONE, L'>',     0x2265}},
-    {VK_OEM_MINUS,  0x00,                 {L'-',     L'_',     WCH_NONE, 0xFE63,   0x2014}},
-    {VK_SPACE,      0x00,                 {L' ',     L' ',     L' ',     WCH_NONE, WCH_NONE}},
-    {VK_OEM_102,    0x00,                 {L'\\',    L'|',     WCH_NONE, WCH_NONE, WCH_NONE}},
-    {VK_DECIMAL,    0x00,                 {L',',     L',',     WCH_NONE, WCH_NONE, WCH_NONE}},
-    {0,             0,                    0,         0,        0,        0,        0}
-};
-
-//---------------------------------------------------------------------------
-// Virtual Key to WCHAR translations for 2 shift states
-//---------------------------------------------------------------------------
-
-static VK_TO_WCHARS2 vk_to_wchar2[] = {
-    //                          Shift
-    //                          =====
-    {VK_TAB,      0x00, {L'\t', L'\t'}},
-    {VK_ADD,      0x00, {L'+',  L'+'}},
-    {VK_DIVIDE,   0x00, {L'/',  L'/'}},
-    {VK_MULTIPLY, 0x00, {L'*',  L'*'}},
-    {VK_SUBTRACT, 0x00, {L'-',  L'-'}},
-    {VK_CLEAR,    0x00, {L'=',  L'='}},
-    {0,           0,    0,      0}
-};
-
-//---------------------------------------------------------------------------
-// Virtual Key to WCHAR translations for 1 shift states
-//---------------------------------------------------------------------------
-
-static VK_TO_WCHARS1 vk_to_wchar1[] = {
-    {VK_NUMPAD0, 0x00, {L'0'}},
-    {VK_NUMPAD1, 0x00, {L'1'}},
-    {VK_NUMPAD2, 0x00, {L'2'}},
-    {VK_NUMPAD3, 0x00, {L'3'}},
-    {VK_NUMPAD4, 0x00, {L'4'}},
-    {VK_NUMPAD5, 0x00, {L'5'}},
-    {VK_NUMPAD6, 0x00, {L'6'}},
-    {VK_NUMPAD7, 0x00, {L'7'}},
-    {VK_NUMPAD8, 0x00, {L'8'}},
-    {VK_NUMPAD9, 0x00, {L'9'}},
-    {0,          0,    0}
-};
-
-//---------------------------------------------------------------------------
-// Virtual Key to WCHAR translations with shift states
-//---------------------------------------------------------------------------
-
-static VK_TO_WCHAR_TABLE vk_to_wchar[] = {
-    {(PVK_TO_WCHARS1)vk_to_wchar3, 3, sizeof(vk_to_wchar3[0])},
-    {(PVK_TO_WCHARS1)vk_to_wchar5, 5, sizeof(vk_to_wchar5[0])},
-    {(PVK_TO_WCHARS1)vk_to_wchar2, 2, sizeof(vk_to_wchar2[0])},
-    {(PVK_TO_WCHARS1)vk_to_wchar1, 1, sizeof(vk_to_wchar1[0])},
-    {NULL,                         0, 0}
-};
-
-//---------------------------------------------------------------------------
-// Dead keys sequences translations
-//---------------------------------------------------------------------------
-
-static DEADKEY dead_keys[] = {
-    DEADTRANS(L'a', 0x00B0, 0x00E5, 0x0000), // Degree, a ring above
-    DEADTRANS(L'u', 0x00B0, 0x016F, 0x0000), // Degree, u ring above
-    DEADTRANS(L'A', 0x00B0, 0x00C5, 0x0000), // Degree, A ring above
-    DEADTRANS(L'U', 0x00B0, 0x016E, 0x0000), // Degree, U ring above
-    DEADTRANS(L' ', 0x00B0, 0x00B0, 0x0000), // Degree, Degree
-    DEADTRANS(L'r', L',',   0x0157, 0x0000), // r cedilla
-    DEADTRANS(L'u', L',',   0x0173, 0x0000), // u ogonek
-    DEADTRANS(L'i', L',',   0x012F, 0x0000), // i ogonek
-    DEADTRANS(L'g', L',',   0x0123, 0x0000), // g cedilla
-    DEADTRANS(L'k', L',',   0x0137, 0x0000), // k cedilla
-    DEADTRANS(L'l', L',',   0x013C, 0x0000), // l cedilla
-    DEADTRANS(L'n', L',',   0x0146, 0x0000), // n cedilla
-    DEADTRANS(L'R', L',',   0x0156, 0x0000), // R cedilla
-    DEADTRANS(L'U', L',',   0x0172, 0x0000), // U ogonek
-    DEADTRANS(L'I', L',',   0x012E, 0x0000), // I ogonek
-    DEADTRANS(L'G', L',',   0x0122, 0x0000), // G cedilla
-    DEADTRANS(L'K', L',',   0x0136, 0x0000), // K cedilla
-    DEADTRANS(L'L', L',',   0x013B, 0x0000), // L cedilla
-    DEADTRANS(L'N', L',',   0x0145, 0x0000), // N cedilla
-    DEADTRANS(L' ', L',',   L',',   0x0000),
-    DEADTRANS(L'n', L'\'',  0x0144, 0x0000), // n acute
-    DEADTRANS(L'c', L'\'',  0x0107, 0x0000), // c acute
-    DEADTRANS(L'y', L'\'',  0x00FD, 0x0000), // y acute
-    DEADTRANS(L'a', L'\'',  0x00E1, 0x0000), // a acute
-    DEADTRANS(L's', L'\'',  0x015B, 0x0000), // s acute
-    DEADTRANS(L'l', L'\'',  0x013A, 0x0000), // l acute
-    DEADTRANS(L'e', L'\'',  0x00E9, 0x0000), // e acute
-    DEADTRANS(L'r', L'\'',  0x0155, 0x0000), // r acute
-    DEADTRANS(L'u', L'\'',  0x00FA, 0x0000), // u acute
-    DEADTRANS(L'i', L'\'',  0x00ED, 0x0000), // i acute
-    DEADTRANS(L'z', L'\'',  0x017A, 0x0000), // z acute
-    DEADTRANS(L'o', L'\'',  0x00F3, 0x0000), // o acute
-    DEADTRANS(L'g', L'\'',  0x0123, 0x0000), // g cedilla
-    DEADTRANS(L'N', L'\'',  0x0143, 0x0000), // N acute
-    DEADTRANS(L'C', L'\'',  0x0106, 0x0000), // C acute
-    DEADTRANS(L'Y', L'\'',  0x00DD, 0x0000), // Y acute
-    DEADTRANS(L'A', L'\'',  0x00C1, 0x0000), // A acute
-    DEADTRANS(L'S', L'\'',  0x015A, 0x0000), // S acute
-    DEADTRANS(L'L', L'\'',  0x0139, 0x0000), // L acute
-    DEADTRANS(L'E', L'\'',  0x00C9, 0x0000), // E acute
-    DEADTRANS(L'R', L'\'',  0x0154, 0x0000), // R acute
-    DEADTRANS(L'U', L'\'',  0x00DA, 0x0000), // U acute
-    DEADTRANS(L'I', L'\'',  0x00CD, 0x0000), // I acute
-    DEADTRANS(L'Z', L'\'',  0x0179, 0x0000), // Z acute
-    DEADTRANS(L'O', L'\'',  0x00D3, 0x0000), // O acute
-    DEADTRANS(L'G', L'\'',  0x0122, 0x0000), // G cedilla
-    DEADTRANS(L' ', L'\'',  L'\'',  0x0000),
-    DEADTRANS(L'u', 0x02C7, 0x016F, 0x0000), // Caron, u ring above
-    DEADTRANS(L'o', 0x02C7, 0x00F4, 0x0000), // Caron, o circumflex
-    DEADTRANS(L'n', 0x02C7, 0x0148, 0x0000), // Caron, n caron
-    DEADTRANS(L'c', 0x02C7, 0x010D, 0x0000), // Caron, c caron
-    DEADTRANS(L'd', 0x02C7, 0x010F, 0x0000), // Caron, d caron
-    DEADTRANS(L's', 0x02C7, 0x0161, 0x0000), // Caron, s caron
-    DEADTRANS(L'l', 0x02C7, 0x013E, 0x0000), // Caron, l caron
-    DEADTRANS(L'e', 0x02C7, 0x011B, 0x0000), // Caron, e caron
-    DEADTRANS(L'r', 0x02C7, 0x0159, 0x0000), // Caron, r caron
-    DEADTRANS(L't', 0x02C7, 0x0165, 0x0000), // Caron, t caron
-    DEADTRANS(L'z', 0x02C7, 0x017E, 0x0000), // Caron, z caron
-    DEADTRANS(L'N', 0x02C7, 0x0147, 0x0000), // Caron, N caron
-    DEADTRANS(L'C', 0x02C7, 0x010C, 0x0000), // Caron, C caron
-    DEADTRANS(L'D', 0x02C7, 0x010E, 0x0000), // Caron, D caron
-    DEADTRANS(L'S', 0x02C7, 0x0160, 0x0000), // Caron, S caron
-    DEADTRANS(L'L', 0x02C7, 0x013D, 0x0000), // Caron, L caron
-    DEADTRANS(L'E', 0x02C7, 0x011A, 0x0000), // Caron, E caron
-    DEADTRANS(L'R', 0x02C7, 0x0158, 0x0000), // Caron, R caron
-    DEADTRANS(L'T', 0x02C7, 0x0164, 0x0000), // Caron, T caron
-    DEADTRANS(L'Z', 0x02C7, 0x017D, 0x0000), // Caron, Z caron
-    DEADTRANS(L' ', 0x02C7, 0x02C7, 0x0000), // Caron, Caron
-    DEADTRANS(L'a', L'^',   0x00E2, 0x0000), // a circumflex
-    DEADTRANS(L'e', L'^',   0x00EA, 0x0000), // e circumflex
-    DEADTRANS(L'u', L'^',   0x00FB, 0x0000), // u circumflex
-    DEADTRANS(L'i', L'^',   0x00EE, 0x0000), // i circumflex
-    DEADTRANS(L'o', L'^',   0x00F4, 0x0000), // o circumflex
-    DEADTRANS(L'A', L'^',   0x00C2, 0x0000), // A circumflex
-    DEADTRANS(L'E', L'^',   0x00CA, 0x0000), // E circumflex
-    DEADTRANS(L'U', L'^',   0x00DB, 0x0000), // U circumflex
-    DEADTRANS(L'I', L'^',   0x00CE, 0x0000), // I circumflex
-    DEADTRANS(L'O', L'^',   0x00D4, 0x0000), // O circumflex
-    DEADTRANS(L' ', L'^',   L'^',   0x0000),
-    DEADTRANS(L'e', L'-',   0x0113, 0x0000), // e macron
-    DEADTRANS(L'u', L'-',   0x016B, 0x0000), // u macron
-    DEADTRANS(L'i', L'-',   0x012B, 0x0000), // i macron
-    DEADTRANS(L'o', L'-',   0x014D, 0x0000), // o macron
-    DEADTRANS(L'a', L'-',   0x0101, 0x0000), // a macron
-    DEADTRANS(L'E', L'-',   0x0112, 0x0000), // E macron
-    DEADTRANS(L'U', L'-',   0x016A, 0x0000), // U macron
-    DEADTRANS(L'I', L'-',   0x012A, 0x0000), // I macron
-    DEADTRANS(L'O', L'-',   0x014C, 0x0000), // O macron
-    DEADTRANS(L'A', L'-',   0x0100, 0x0000), // A macron
-    DEADTRANS(L' ', L'-',   L'-',   0x0000),
-    DEADTRANS(L'o', L'~',   0x00F5, 0x0000), // o tilde
-    DEADTRANS(L'O', L'~',   0x00D5, 0x0000), // O tilde
-    DEADTRANS(L' ', L'~',   L'~',   0x0000),
-    DEADTRANS(L'y', 0x00A8, 0x00FF, 0x0000), // Diaeresis, y diaeresis
-    DEADTRANS(L'a', 0x00A8, 0x00E4, 0x0000), // Diaeresis, a diaeresis
-    DEADTRANS(L'e', 0x00A8, 0x00EB, 0x0000), // Diaeresis, e diaeresis
-    DEADTRANS(L'u', 0x00A8, 0x00FC, 0x0000), // Diaeresis, u diaeresis
-    DEADTRANS(L'i', 0x00A8, 0x00EF, 0x0000), // Diaeresis, i diaeresis
-    DEADTRANS(L'o', 0x00A8, 0x00F6, 0x0000), // Diaeresis, o diaeresis
-    DEADTRANS(L'Y', 0x00A8, 0x0178, 0x0000), // Diaeresis, Y diaeresis
-    DEADTRANS(L'A', 0x00A8, 0x00C4, 0x0000), // Diaeresis, A diaeresis
-    DEADTRANS(L'E', 0x00A8, 0x00CB, 0x0000), // Diaeresis, E diaeresis
-    DEADTRANS(L'U', 0x00A8, 0x00DC, 0x0000), // Diaeresis, U diaeresis
-    DEADTRANS(L'I', 0x00A8, 0x00CF, 0x0000), // Diaeresis, I diaeresis
-    DEADTRANS(L'O', 0x00A8, 0x00D6, 0x0000), // Diaeresis, O diaeresis
-    DEADTRANS(L' ', 0x00A8, 0x00A8, 0x0000), // Diaeresis, Diaeresis
-    DEADTRANS(L'u', L'"',   0x0171, 0x0000), // u double acute
-    DEADTRANS(L'o', L'"',   0x0151, 0x0000), // o double acute
-    DEADTRANS(L'U', L'"',   0x0150, 0x0000), // O double acute
-    DEADTRANS(L'O', L'"',   0x0170, 0x0000), // U double acute
-    DEADTRANS(L' ', L'"',   L'"',   0x0000),
-    {0, 0, 0}
-};
-
-//---------------------------------------------------------------------------
 // Scan codes to key names
 //---------------------------------------------------------------------------
 
@@ -576,6 +303,281 @@ static VSC_VK scancode_to_vk_e0[] = {
 static VSC_VK scancode_to_vk_e1[] = {
     {0x1D, VK_PAUSE},
     {0x00, 0x0000}
+};
+
+//---------------------------------------------------------------------------
+// Associate a virtual key with a modifier bitmask
+//---------------------------------------------------------------------------
+
+static VK_TO_BIT vk_to_bits[] = {
+    {VK_SHIFT,   KBDSHIFT},
+    {VK_CONTROL, KBDCTRL},
+    {VK_MENU,    KBDALT},
+    {0,          0}
+};
+
+//---------------------------------------------------------------------------
+// Map character modifier bits to modification number
+//---------------------------------------------------------------------------
+
+static MODIFIERS char_modifiers = {
+    .pVkToBit    = vk_to_bits,
+    .wMaxModBits = 7,
+    .ModNumber   = {
+        0,            // 000 = <none>
+        1,            // 001 = Shift
+        2,            // 010 = Control
+        SHFT_INVALID, // 011 = Shift Control
+        SHFT_INVALID, // 100 = Alt
+        SHFT_INVALID, // 101 = Shift Alt
+        3,            // 110 = Control Alt (AltGr)
+        4,            // 111 = Shift Control Alt
+    }
+};
+
+//---------------------------------------------------------------------------
+// Virtual Key to WCHAR translations for 3 shift states
+//---------------------------------------------------------------------------
+
+static VK_TO_WCHARS3 vk_to_wchar3[] = {
+    //                         Shift   Ctrl
+    //                         -----   ----
+    {VK_BACK,   0x00, {0x0008, 0x0008, 0x007F}}, // BS, BS, DEL
+    {VK_ESCAPE, 0x00, {0x001B, 0x001B, 0x001B}}, // ESC, ESC, ESC
+    {VK_RETURN, 0x00, {L'\r',  L'\r',  L'\n'}},
+    {VK_CANCEL, 0x00, {0x0003, 0x0003, 0x0003}}, // ETX, ETX, ETX
+    {0,         0,    0,       0,      0}
+};
+
+//---------------------------------------------------------------------------
+// Virtual Key to WCHAR translations for 5 shift states
+//---------------------------------------------------------------------------
+
+static VK_TO_WCHARS5 vk_to_wchar5[] = {
+    //                                               Shift     Ctrl      Ctrl/Alt  Shift/Ctrl/Alt
+    //                                               -----     ----      --------  --------------
+    {'1',           CAPLOK,               {L'+',     L'1',     WCH_NONE, L'`',     0x00AC}},      // Not
+    {'2',           CAPLOK,               {0x011B,   L'2',     WCH_NONE, L'@',     0x2022}},      // e caron, Bullet
+    {'3',           CAPLOK,               {0x0161,   L'3',     WCH_NONE, L'#',     0x2260}},      // s caron, Not equal to
+    {'4',           CAPLOK,               {0x010D,   L'4',     WCH_NONE, L'$',     0x00A3}},      // c caron, Pound
+    {'5',           CAPLOK,               {0x0159,   L'5',     WCH_NONE, L'~',     0x25CA}},      // r caron, Lozenge
+    {'6',           CAPLOK,               {0x017E,   L'6',     WCH_NONE, L'^',     0x2020}},      // z caron, Dagger
+    {'7',           CAPLOK,               {0x00FD,   L'7',     WCH_NONE, L'&',     0x00B6}},      // y acute, Pilcrow
+    {'8',           CAPLOK,               {0x00E1,   L'8',     WCH_NONE, L'*',     0x00F7}},      // a acute, Division
+    {'9',           CAPLOK,               {0x00ED,   L'9',     WCH_NONE, L'{',     0x00AB}},      // i acute, <<
+    {'0',           CAPLOK,               {0x00E9,   L'0',     WCH_NONE, L'}',     0x00BB}},      // e acute, >>
+    {VK_OEM_PLUS,   0x00,                 {L'=',     L'%',     WCH_NONE, WCH_DEAD, WCH_DEAD}},
+    {VK__none_,     0x00,                 {WCH_NONE, WCH_NONE, WCH_NONE, 0x00B0,   L','}},        // Degree
+    {VK_OEM_2,      0x00,                 {WCH_DEAD, WCH_DEAD, WCH_NONE, WCH_DEAD, WCH_DEAD}},
+    {VK__none_,     0x00,                 {L'\'',    0x02C7,   WCH_NONE, L'^',     L'-'}},        // Caron
+    {'Q',           CAPLOK,               {L'q',     L'Q',     WCH_NONE, WCH_NONE, WCH_NONE}},
+    {'W',           CAPLOK | CAPLOKALTGR, {L'w',     L'W',     WCH_NONE, 0x0117,   0x0116}},      // e dot above, E dot above
+    {'E',           CAPLOK | CAPLOKALTGR, {L'e',     L'E',     WCH_NONE, 0x0119,   0x0118}},      // e ogonek, E ogonek
+    {'R',           CAPLOK,               {L'r',     L'R',     WCH_NONE, 0x20AC,   0x00AE}},      // Registered
+    {'T',           CAPLOK,               {L't',     L'T',     WCH_NONE, WCH_NONE, 0x2122}},
+    {'Z',           CAPLOK | CAPLOKALTGR, {L'z',     L'Z',     WCH_NONE, 0x017C,   0x017B}},      // z dot above, Z dot above
+    {'U',           CAPLOK,               {L'u',     L'U',     WCH_NONE, WCH_NONE, WCH_NONE}},
+    {'I',           CAPLOK,               {L'i',     L'I',     WCH_NONE, WCH_NONE, WCH_NONE}},
+    {'O',           CAPLOK,               {L'o',     L'O',     WCH_NONE, WCH_NONE, WCH_NONE}},
+    {'P',           CAPLOK,               {L'p',     L'P',     WCH_NONE, WCH_NONE, WCH_NONE}},
+    {VK_OEM_4,      0x00,                 {0x00FA,   L'/',     WCH_NONE, L'[',     0x2039}},      // u acute, Single left-pointing angle quotation
+    {VK_OEM_6,      0x00,                 {L')',     L'(',     WCH_NONE, L']',     0x203A}},      // Single right-pointing angle quotation
+    {'A',           CAPLOK | CAPLOKALTGR, {L'a',     L'A',     WCH_NONE, 0x0105,   0x0104}},      // a ogonek, A ogonek
+    {'S',           CAPLOK,               {L's',     L'S',     WCH_NONE, 0x00DF,   0x2211}},      // sharp S, N-ary summation
+    {'D',           CAPLOK,               {L'd',     L'D',     WCH_NONE, 0x2202,   0x2206}},      // Partial differential, Increment
+    {'F',           CAPLOK,               {L'f',     L'F',     WCH_NONE, WCH_NONE, WCH_NONE}},
+    {'G',           CAPLOK,               {L'g',     L'G',     WCH_NONE, WCH_NONE, WCH_NONE}},
+    {'H',           CAPLOK,               {L'h',     L'H',     WCH_NONE, 0x2018,   0x201C}},      // Left single quotation, Left double quotation
+    {'J',           CAPLOK,               {L'j',     L'J',     WCH_NONE, 0x2019,   0x201D}},      // Right single quotation, Right double quotation
+    {'K',           CAPLOK,               {L'k',     L'K',     WCH_NONE, WCH_NONE, WCH_NONE}},
+    {'L',           CAPLOK | CAPLOKALTGR, {L'l',     L'L',     WCH_NONE, 0x0142,   0x0141}},      // l stroke, L stroke
+    {VK_OEM_1,      0x00,                 {0x016F,   L'"',     WCH_NONE, L';',     0x2026}},      // u ring above, Horizontal ellipsis
+    {VK_OEM_7,      0x00,                 {0x00A7,   L'!',     WCH_NONE, L'\'',    WCH_DEAD}},    // Section
+    {VK__none_,     0x00,                 {WCH_NONE, WCH_NONE, WCH_NONE, WCH_NONE, L'~'}},
+    {VK_OEM_3,      0x00,                 {L'<',     L'>',     WCH_NONE, 0x2264,   0x2265}},      // Less-than or equal to, Greater-than or equal to
+    {VK_OEM_5,      0x00,                 {WCH_DEAD, L'`',     WCH_NONE, WCH_DEAD, WCH_DEAD}},
+    {VK__none_,     0x00,                 {0x00A8,   WCH_NONE, WCH_NONE, 0x00A8,   L'"'}},        // Diaeresis, Diaeresis
+    {'Y',           CAPLOK,               {L'y',     L'Y',     WCH_NONE, WCH_NONE, WCH_NONE}},
+    {'X',           CAPLOK,               {L'x',     L'X',     WCH_NONE, WCH_NONE, WCH_NONE}},
+    {'C',           CAPLOK,               {L'c',     L'C',     WCH_NONE, WCH_NONE, 0x00A9}},      // Copyright
+    {'V',           CAPLOK,               {L'v',     L'V',     WCH_NONE, WCH_NONE, 0x221A}},      // Square root
+    {'B',           CAPLOK,               {L'b',     L'B',     WCH_NONE, WCH_NONE, WCH_NONE}},
+    {'N',           CAPLOK,               {L'n',     L'N',     WCH_NONE, L',',     0x201E}},      // Double low-9 quotation
+    {'M',           CAPLOK,               {L'm',     L'M',     WCH_NONE, WCH_NONE, WCH_NONE}},
+    {VK_OEM_COMMA,  0x00,                 {L',',     L'?',     WCH_NONE, L'<',     0x2264}},      // Less-than or equal to
+    {VK_OEM_PERIOD, 0x00,                 {L'.',     L':',     WCH_NONE, L'>',     0x2265}},      // Greater-than or equal to
+    {VK_OEM_MINUS,  0x00,                 {L'-',     L'_',     WCH_NONE, 0xFE63,   0x2014}},      // Em dash
+    {VK_SPACE,      0x00,                 {L' ',     L' ',     L' ',     WCH_NONE, WCH_NONE}},
+    {VK_OEM_102,    0x00,                 {L'\\',    L'|',     WCH_NONE, WCH_NONE, WCH_NONE}},
+    {VK_DECIMAL,    0x00,                 {L',',     L',',     WCH_NONE, WCH_NONE, WCH_NONE}},
+    {0,             0,                    0,         0,        0,        0,        0}
+};
+
+//---------------------------------------------------------------------------
+// Virtual Key to WCHAR translations for 2 shift states
+//---------------------------------------------------------------------------
+
+static VK_TO_WCHARS2 vk_to_wchar2[] = {
+    //                          Shift
+    //                          -----
+    {VK_TAB,      0x00, {L'\t', L'\t'}},
+    {VK_ADD,      0x00, {L'+',  L'+'}},
+    {VK_DIVIDE,   0x00, {L'/',  L'/'}},
+    {VK_MULTIPLY, 0x00, {L'*',  L'*'}},
+    {VK_SUBTRACT, 0x00, {L'-',  L'-'}},
+    {VK_CLEAR,    0x00, {L'=',  L'='}},
+    {0,           0,    0,      0}
+};
+
+//---------------------------------------------------------------------------
+// Virtual Key to WCHAR translations for 1 shift states
+//---------------------------------------------------------------------------
+
+static VK_TO_WCHARS1 vk_to_wchar1[] = {
+    {VK_NUMPAD0, 0x00, {L'0'}},
+    {VK_NUMPAD1, 0x00, {L'1'}},
+    {VK_NUMPAD2, 0x00, {L'2'}},
+    {VK_NUMPAD3, 0x00, {L'3'}},
+    {VK_NUMPAD4, 0x00, {L'4'}},
+    {VK_NUMPAD5, 0x00, {L'5'}},
+    {VK_NUMPAD6, 0x00, {L'6'}},
+    {VK_NUMPAD7, 0x00, {L'7'}},
+    {VK_NUMPAD8, 0x00, {L'8'}},
+    {VK_NUMPAD9, 0x00, {L'9'}},
+    {0,          0,    0}
+};
+
+//---------------------------------------------------------------------------
+// Virtual Key to WCHAR translations with shift states
+//---------------------------------------------------------------------------
+
+static VK_TO_WCHAR_TABLE vk_to_wchar[] = {
+    {(PVK_TO_WCHARS1)vk_to_wchar3, 3, sizeof(vk_to_wchar3[0])},
+    {(PVK_TO_WCHARS1)vk_to_wchar5, 5, sizeof(vk_to_wchar5[0])},
+    {(PVK_TO_WCHARS1)vk_to_wchar2, 2, sizeof(vk_to_wchar2[0])},
+    {(PVK_TO_WCHARS1)vk_to_wchar1, 1, sizeof(vk_to_wchar1[0])},
+    {NULL,                         0, 0}
+};
+
+//---------------------------------------------------------------------------
+// Dead keys sequences translations
+//---------------------------------------------------------------------------
+
+static DEADKEY dead_keys[] = {
+    //              Accent  Composed Flags
+    //              ------  -------- -----
+    DEADTRANS(L'a', 0x00B0, 0x00E5,  0x0000), // Degree, a ring above
+    DEADTRANS(L'u', 0x00B0, 0x016F,  0x0000), // Degree, u ring above
+    DEADTRANS(L'A', 0x00B0, 0x00C5,  0x0000), // Degree, A ring above
+    DEADTRANS(L'U', 0x00B0, 0x016E,  0x0000), // Degree, U ring above
+    DEADTRANS(L' ', 0x00B0, 0x00B0,  0x0000), // Degree, Degree
+    DEADTRANS(L'r', L',',   0x0157,  0x0000), // r cedilla
+    DEADTRANS(L'u', L',',   0x0173,  0x0000), // u ogonek
+    DEADTRANS(L'i', L',',   0x012F,  0x0000), // i ogonek
+    DEADTRANS(L'g', L',',   0x0123,  0x0000), // g cedilla
+    DEADTRANS(L'k', L',',   0x0137,  0x0000), // k cedilla
+    DEADTRANS(L'l', L',',   0x013C,  0x0000), // l cedilla
+    DEADTRANS(L'n', L',',   0x0146,  0x0000), // n cedilla
+    DEADTRANS(L'R', L',',   0x0156,  0x0000), // R cedilla
+    DEADTRANS(L'U', L',',   0x0172,  0x0000), // U ogonek
+    DEADTRANS(L'I', L',',   0x012E,  0x0000), // I ogonek
+    DEADTRANS(L'G', L',',   0x0122,  0x0000), // G cedilla
+    DEADTRANS(L'K', L',',   0x0136,  0x0000), // K cedilla
+    DEADTRANS(L'L', L',',   0x013B,  0x0000), // L cedilla
+    DEADTRANS(L'N', L',',   0x0145,  0x0000), // N cedilla
+    DEADTRANS(L' ', L',',   L',',    0x0000),
+    DEADTRANS(L'n', L'\'',  0x0144,  0x0000), // n acute
+    DEADTRANS(L'c', L'\'',  0x0107,  0x0000), // c acute
+    DEADTRANS(L'y', L'\'',  0x00FD,  0x0000), // y acute
+    DEADTRANS(L'a', L'\'',  0x00E1,  0x0000), // a acute
+    DEADTRANS(L's', L'\'',  0x015B,  0x0000), // s acute
+    DEADTRANS(L'l', L'\'',  0x013A,  0x0000), // l acute
+    DEADTRANS(L'e', L'\'',  0x00E9,  0x0000), // e acute
+    DEADTRANS(L'r', L'\'',  0x0155,  0x0000), // r acute
+    DEADTRANS(L'u', L'\'',  0x00FA,  0x0000), // u acute
+    DEADTRANS(L'i', L'\'',  0x00ED,  0x0000), // i acute
+    DEADTRANS(L'z', L'\'',  0x017A,  0x0000), // z acute
+    DEADTRANS(L'o', L'\'',  0x00F3,  0x0000), // o acute
+    DEADTRANS(L'g', L'\'',  0x0123,  0x0000), // g cedilla
+    DEADTRANS(L'N', L'\'',  0x0143,  0x0000), // N acute
+    DEADTRANS(L'C', L'\'',  0x0106,  0x0000), // C acute
+    DEADTRANS(L'Y', L'\'',  0x00DD,  0x0000), // Y acute
+    DEADTRANS(L'A', L'\'',  0x00C1,  0x0000), // A acute
+    DEADTRANS(L'S', L'\'',  0x015A,  0x0000), // S acute
+    DEADTRANS(L'L', L'\'',  0x0139,  0x0000), // L acute
+    DEADTRANS(L'E', L'\'',  0x00C9,  0x0000), // E acute
+    DEADTRANS(L'R', L'\'',  0x0154,  0x0000), // R acute
+    DEADTRANS(L'U', L'\'',  0x00DA,  0x0000), // U acute
+    DEADTRANS(L'I', L'\'',  0x00CD,  0x0000), // I acute
+    DEADTRANS(L'Z', L'\'',  0x0179,  0x0000), // Z acute
+    DEADTRANS(L'O', L'\'',  0x00D3,  0x0000), // O acute
+    DEADTRANS(L'G', L'\'',  0x0122,  0x0000), // G cedilla
+    DEADTRANS(L' ', L'\'',  L'\'',   0x0000),
+    DEADTRANS(L'u', 0x02C7, 0x016F,  0x0000), // Caron, u ring above
+    DEADTRANS(L'o', 0x02C7, 0x00F4,  0x0000), // Caron, o circumflex
+    DEADTRANS(L'n', 0x02C7, 0x0148,  0x0000), // Caron, n caron
+    DEADTRANS(L'c', 0x02C7, 0x010D,  0x0000), // Caron, c caron
+    DEADTRANS(L'd', 0x02C7, 0x010F,  0x0000), // Caron, d caron
+    DEADTRANS(L's', 0x02C7, 0x0161,  0x0000), // Caron, s caron
+    DEADTRANS(L'l', 0x02C7, 0x013E,  0x0000), // Caron, l caron
+    DEADTRANS(L'e', 0x02C7, 0x011B,  0x0000), // Caron, e caron
+    DEADTRANS(L'r', 0x02C7, 0x0159,  0x0000), // Caron, r caron
+    DEADTRANS(L't', 0x02C7, 0x0165,  0x0000), // Caron, t caron
+    DEADTRANS(L'z', 0x02C7, 0x017E,  0x0000), // Caron, z caron
+    DEADTRANS(L'N', 0x02C7, 0x0147,  0x0000), // Caron, N caron
+    DEADTRANS(L'C', 0x02C7, 0x010C,  0x0000), // Caron, C caron
+    DEADTRANS(L'D', 0x02C7, 0x010E,  0x0000), // Caron, D caron
+    DEADTRANS(L'S', 0x02C7, 0x0160,  0x0000), // Caron, S caron
+    DEADTRANS(L'L', 0x02C7, 0x013D,  0x0000), // Caron, L caron
+    DEADTRANS(L'E', 0x02C7, 0x011A,  0x0000), // Caron, E caron
+    DEADTRANS(L'R', 0x02C7, 0x0158,  0x0000), // Caron, R caron
+    DEADTRANS(L'T', 0x02C7, 0x0164,  0x0000), // Caron, T caron
+    DEADTRANS(L'Z', 0x02C7, 0x017D,  0x0000), // Caron, Z caron
+    DEADTRANS(L' ', 0x02C7, 0x02C7,  0x0000), // Caron, Caron
+    DEADTRANS(L'a', L'^',   0x00E2,  0x0000), // a circumflex
+    DEADTRANS(L'e', L'^',   0x00EA,  0x0000), // e circumflex
+    DEADTRANS(L'u', L'^',   0x00FB,  0x0000), // u circumflex
+    DEADTRANS(L'i', L'^',   0x00EE,  0x0000), // i circumflex
+    DEADTRANS(L'o', L'^',   0x00F4,  0x0000), // o circumflex
+    DEADTRANS(L'A', L'^',   0x00C2,  0x0000), // A circumflex
+    DEADTRANS(L'E', L'^',   0x00CA,  0x0000), // E circumflex
+    DEADTRANS(L'U', L'^',   0x00DB,  0x0000), // U circumflex
+    DEADTRANS(L'I', L'^',   0x00CE,  0x0000), // I circumflex
+    DEADTRANS(L'O', L'^',   0x00D4,  0x0000), // O circumflex
+    DEADTRANS(L' ', L'^',   L'^',    0x0000),
+    DEADTRANS(L'e', L'-',   0x0113,  0x0000), // e macron
+    DEADTRANS(L'u', L'-',   0x016B,  0x0000), // u macron
+    DEADTRANS(L'i', L'-',   0x012B,  0x0000), // i macron
+    DEADTRANS(L'o', L'-',   0x014D,  0x0000), // o macron
+    DEADTRANS(L'a', L'-',   0x0101,  0x0000), // a macron
+    DEADTRANS(L'E', L'-',   0x0112,  0x0000), // E macron
+    DEADTRANS(L'U', L'-',   0x016A,  0x0000), // U macron
+    DEADTRANS(L'I', L'-',   0x012A,  0x0000), // I macron
+    DEADTRANS(L'O', L'-',   0x014C,  0x0000), // O macron
+    DEADTRANS(L'A', L'-',   0x0100,  0x0000), // A macron
+    DEADTRANS(L' ', L'-',   L'-',    0x0000),
+    DEADTRANS(L'o', L'~',   0x00F5,  0x0000), // o tilde
+    DEADTRANS(L'O', L'~',   0x00D5,  0x0000), // O tilde
+    DEADTRANS(L' ', L'~',   L'~',    0x0000),
+    DEADTRANS(L'y', 0x00A8, 0x00FF,  0x0000), // Diaeresis, y diaeresis
+    DEADTRANS(L'a', 0x00A8, 0x00E4,  0x0000), // Diaeresis, a diaeresis
+    DEADTRANS(L'e', 0x00A8, 0x00EB,  0x0000), // Diaeresis, e diaeresis
+    DEADTRANS(L'u', 0x00A8, 0x00FC,  0x0000), // Diaeresis, u diaeresis
+    DEADTRANS(L'i', 0x00A8, 0x00EF,  0x0000), // Diaeresis, i diaeresis
+    DEADTRANS(L'o', 0x00A8, 0x00F6,  0x0000), // Diaeresis, o diaeresis
+    DEADTRANS(L'Y', 0x00A8, 0x0178,  0x0000), // Diaeresis, Y diaeresis
+    DEADTRANS(L'A', 0x00A8, 0x00C4,  0x0000), // Diaeresis, A diaeresis
+    DEADTRANS(L'E', 0x00A8, 0x00CB,  0x0000), // Diaeresis, E diaeresis
+    DEADTRANS(L'U', 0x00A8, 0x00DC,  0x0000), // Diaeresis, U diaeresis
+    DEADTRANS(L'I', 0x00A8, 0x00CF,  0x0000), // Diaeresis, I diaeresis
+    DEADTRANS(L'O', 0x00A8, 0x00D6,  0x0000), // Diaeresis, O diaeresis
+    DEADTRANS(L' ', 0x00A8, 0x00A8,  0x0000), // Diaeresis, Diaeresis
+    DEADTRANS(L'u', L'"',   0x0171,  0x0000), // u double acute
+    DEADTRANS(L'o', L'"',   0x0151,  0x0000), // o double acute
+    DEADTRANS(L'U', L'"',   0x0150,  0x0000), // O double acute
+    DEADTRANS(L'O', L'"',   0x0170,  0x0000), // U double acute
+    DEADTRANS(L' ', L'"',   L'"',    0x0000),
+    {0, 0, 0}
 };
 
 //---------------------------------------------------------------------------

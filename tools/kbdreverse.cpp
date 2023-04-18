@@ -24,6 +24,14 @@ typedef std::map<Value, WString> SymbolTable;
 // Configure the terminal console on init, restore on exit.
 ConsoleState state;
 
+// So-called "ligatures" can generate up to 16 characters.
+// In "kbd.h", typedef's are predefined up to 5 characters.
+// Longer typedef's must be explicitly defined.
+#define LIG_MAX_PREDEFINED 5
+#define LIG_MAX            16
+TYPEDEF_LIGATURE(16)
+typedef LIGATURE16 LIGATURE_MAX;
+
 
 //----------------------------------------------------------------------------
 // Command line options.
@@ -420,238 +428,7 @@ const SymbolTable wchar_literals {
 
 // Names of some usual non-ASCII WCHAR, for insertion in comments.
 const SymbolTable wchar_descriptions {
-    {0x0008, L"BS"},
-    {0x0009, L"TAB"},
-    {0x000A, L"LF"},
-    {0x000B, L"VT"},
-    {0x000C, L"FF"},
-    {0x000D, L"CR"},
-    {0x001B, L"ESC"},
-    {0x007F, L"DEL"},
-    {0x00A0, L"Nbrk space"},
-    {0x00A1, L"Inv !"},
-    {0x00A2, L"Cent"},
-    {0x00A3, L"Pound"},
-    {0x00A4, L"Currency"},
-    {0x00A5, L"Yen"},
-    {0x00A6, L"Broken bar"},
-    {0x00A7, L"Section"},
-    {0x00A8, L"Diaeresis"},
-    {0x00A9, L"Copyright"},
-    {0x00AA, L"Fem ord"},
-    {0x00AB, L"<<"},
-    {0x00AC, L"Not"},
-    {0x00AD, L"Soft hyphen"},
-    {0x00AE, L"Registered"},
-    {0x00AF, L"Macron"},
-    {0x00B0, L"Degree"},
-    {0x00B1, L"+/-"},
-    {0x00B2, L"Superscr two"},
-    {0x00B3, L"Superscr three"},
-    {0x00B4, L"Acute"},
-    {0x00B5, L"Micro"},
-    {0x00B6, L"Pilcrow"},
-    {0x00B7, L"Middle dot"},
-    {0x00B8, L"Cedilla"},
-    {0x00B9, L"Superscr one"},
-    {0x00BA, L"Masc ord"},
-    {0x00BB, L">>"},
-    {0x00BC, L"1/4"},
-    {0x00BD, L"1/2"},
-    {0x00BE, L"3/4"},
-    {0x00BF, L"Inv ?"},
-    {0x00C0, L"A grave"},
-    {0x00C1, L"A acute"},
-    {0x00C2, L"A circumflex"},
-    {0x00C3, L"A tilde"},
-    {0x00C4, L"A diaeresis"},
-    {0x00C5, L"A ring above"},
-    {0x00C6, L"AE"},
-    {0x00C7, L"C cedilla"},
-    {0x00C8, L"E grave"},
-    {0x00C9, L"E acute"},
-    {0x00CA, L"E circumflex"},
-    {0x00CB, L"E diaeresis"},
-    {0x00CC, L"I grave"},
-    {0x00CD, L"I acute"},
-    {0x00CE, L"I circumflex"},
-    {0x00CF, L"I diaeresis"},
-    {0x00D0, L"ETH"},
-    {0x00D1, L"N tilde"},
-    {0x00D2, L"O grave"},
-    {0x00D3, L"O acute"},
-    {0x00D4, L"O circumflex"},
-    {0x00D5, L"O tilde"},
-    {0x00D6, L"O diaeresis"},
-    {0x00D7, L"Multiplication"},
-    {0x00D8, L"O stroke"},
-    {0x00D9, L"U grave"},
-    {0x00DA, L"U acute"},
-    {0x00DB, L"U circumflex"},
-    {0x00DC, L"U diaeresis"},
-    {0x00DD, L"Y acute"},
-    {0x00DE, L"THORN"},
-    {0x00DF, L"sharp S"},
-    {0x00E0, L"a grave"},
-    {0x00E1, L"a acute"},
-    {0x00E2, L"a circumflex"},
-    {0x00E3, L"a tilde"},
-    {0x00E4, L"a diaeresis"},
-    {0x00E5, L"a ring above"},
-    {0x00E6, L"ae"},
-    {0x00E7, L"c cedilla"},
-    {0x00E8, L"e grave"},
-    {0x00E9, L"e acute"},
-    {0x00EA, L"e circumflex"},
-    {0x00EB, L"e diaeresis"},
-    {0x00EC, L"i grave"},
-    {0x00ED, L"i acute"},
-    {0x00EE, L"i circumflex"},
-    {0x00EF, L"i diaeresis"},
-    {0x00F0, L"eth"},
-    {0x00F1, L"n tilde"},
-    {0x00F2, L"o grave"},
-    {0x00F3, L"o acute"},
-    {0x00F4, L"o circumflex"},
-    {0x00F5, L"o tilde"},
-    {0x00F6, L"o diaeresis"},
-    {0x00F7, L"Division"},
-    {0x00F8, L"o stroke"},
-    {0x00F9, L"u grave"},
-    {0x00FA, L"u acute"},
-    {0x00FB, L"u circumflex"},
-    {0x00FC, L"u diaeresis"},
-    {0x00FD, L"y acute"},
-    {0x00FE, L"thorn"},
-    {0x00FF, L"y diaeresis"},
-    {0x0100, L"A macron"},
-    {0x0101, L"a macron"},
-    {0x0102, L"A breve"},
-    {0x0103, L"a breve"},
-    {0x0104, L"A ogonek"},
-    {0x0105, L"a ogonek"},
-    {0x0106, L"C acute"},
-    {0x0107, L"c acute"},
-    {0x0108, L"C circumflex"},
-    {0x0109, L"c circumflex"},
-    {0x010A, L"C dot above"},
-    {0x010B, L"c dot above"},
-    {0x010C, L"C caron"},
-    {0x010D, L"c caron"},
-    {0x010E, L"D caron"},
-    {0x010F, L"d caron"},
-    {0x0110, L"D stroke"},
-    {0x0111, L"d stroke"},
-    {0x0112, L"E macron"},
-    {0x0113, L"e macron"},
-    {0x0116, L"E dot above"},
-    {0x0117, L"e dot above"},
-    {0x0118, L"E ogonek"},
-    {0x0119, L"e ogonek"},
-    {0x011A, L"E caron"},
-    {0x011B, L"e caron"},
-    {0x011C, L"G circumflex"},
-    {0x011D, L"g circumflex"},
-    {0x011E, L"G breve"},
-    {0x011F, L"g breve"},
-    {0x0120, L"G dot above"},
-    {0x0121, L"g dot above"},
-    {0x0122, L"G cedilla"},
-    {0x0123, L"g cedilla"},
-    {0x0124, L"H circumflex"},
-    {0x0125, L"h circumflex"},
-    {0x0126, L"H stroke"},
-    {0x0127, L"h stroke"},
-    {0x0128, L"I tilde"},
-    {0x0129, L"i tilde"},
-    {0x012A, L"I macron"},
-    {0x012B, L"i macron"},
-    {0x012E, L"I ogonek"},
-    {0x012F, L"i ogonek"},
-    {0x0130, L"I dot above"},
-    {0x0131, L"Dotless I"},
-    {0x0134, L"J circumflex"},
-    {0x0135, L"j circumflex"},
-    {0x0136, L"K cedilla"},
-    {0x0137, L"k cedilla"},
-    {0x0138, L"kra"},
-    {0x0139, L"L acute"},
-    {0x013A, L"l acute"},
-    {0x013B, L"L cedilla"},
-    {0x013C, L"l cedilla"},
-    {0x013D, L"L caron"},
-    {0x013E, L"l caron"},
-    {0x0141, L"L stroke"},
-    {0x0142, L"l stroke"},
-    {0x0143, L"N acute"},
-    {0x0144, L"n acute"},
-    {0x0145, L"N cedilla"},
-    {0x0146, L"n cedilla"},
-    {0x0147, L"N caron"},
-    {0x0148, L"n caron"},
-    {0x014A, L"ENG"},
-    {0x014B, L"eng"},
-    {0x014C, L"O macron"},
-    {0x014D, L"o macron"},
-    {0x0150, L"O double acute"},
-    {0x0151, L"o double acute"},
-    {0x0152, L"OE"},
-    {0x0153, L"oe"},
-    {0x0154, L"R acute"},
-    {0x0155, L"r acute"},
-    {0x0156, L"R cedilla"},
-    {0x0157, L"r cedilla"},
-    {0x0158, L"R caron"},
-    {0x0159, L"r caron"},
-    {0x015A, L"S acute"},
-    {0x015B, L"s acute"},
-    {0x015C, L"S circumflex"},
-    {0x015D, L"s circumflex"},
-    {0x015E, L"S cedilla"},
-    {0x015F, L"s cedilla"},
-    {0x0160, L"S caron"},
-    {0x0161, L"s caron"},
-    {0x0162, L"T cedilla"},
-    {0x0163, L"t cedilla"},
-    {0x0164, L"T caron"},
-    {0x0165, L"t caron"},
-    {0x0166, L"T stroke"},
-    {0x0167, L"t stroke"},
-    {0x0168, L"U tilde"},
-    {0x0169, L"u tilde"},
-    {0x016A, L"U macron"},
-    {0x016B, L"u macron"},
-    {0x016C, L"U breve"},
-    {0x016D, L"u breve"},
-    {0x016E, L"U ring above"},
-    {0x016F, L"u ring above"},
-    {0x0170, L"U double acute"},
-    {0x0171, L"u double acute"},
-    {0x0172, L"U ogonek"},
-    {0x0173, L"u ogonek"},
-    {0x0174, L"W circumflex"},
-    {0x0175, L"w circumflex"},
-    {0x0176, L"Y circumflex"},
-    {0x0177, L"y circumflex"},
-    {0x0178, L"Y diaeresis"},
-    {0x0179, L"Z acute"},
-    {0x017A, L"z acute"},
-    {0x017B, L"Z dot above"},
-    {0x017C, L"z dot above"},
-    {0x017D, L"Z caron"},
-    {0x017E, L"z caron"},
-    {0x0192, L"f HOOK"},
-    {0x0218, L"S comma below"},
-    {0x0219, L"s comma below"},
-    {0x021A, L"T comma below"},
-    {0x021B, L"t comma below"},
-    {0x02C6, L"Circumflex"},
-    {0x02C7, L"Caron"},
-    {0x02D8, L"Breve"},
-    {0x02D9, L"Dot above"},
-    {0x02DB, L"Ogonek"},
-    {0x02DC, L"Small tilde"},
-    {0x02DD, L"Double acute"},
+    #include "unicode.h"
 };
 
 
@@ -746,9 +523,9 @@ private:
     // Generate the various data structures.
     void genVkToBits(const VK_TO_BIT*, const WString& name);
     void genCharModifiers(const MODIFIERS&, const WString& name);
-    void genSubVkToWchar(const VK_TO_WCHARS10*, size_t count, size_t size, const WString& name, const MODIFIERS&);
-    void genVkToWchar(const VK_TO_WCHAR_TABLE*, const WString& name, const::MODIFIERS& mods);
-    void genLgToWchar(const LIGATURE1*, size_t count, size_t size, const WString& name);
+    void genSubVkToWchar(const VK_TO_WCHARS10*, size_t count, size_t size, const WString& name, const MODIFIERS*);
+    void genVkToWchar(const VK_TO_WCHAR_TABLE*, const WString& name, const::MODIFIERS*);
+    void genLgToWchar(const LIGATURE1*, size_t count, size_t size, const WString& name, const MODIFIERS*);
     void genDeadKeys(const DEADKEY*, const WString& name);
     void genVscToString(const VSC_LPWSTR*, const WString& name, const WString& comment = L"");
     void genKeyNames(const DEADKEY_LPWSTR*, const WString& name);
@@ -1012,26 +789,27 @@ void SourceGenerator::genCharModifiers(const MODIFIERS& mods, const WString& nam
 
 //---------------------------------------------------------------------------
 
-void SourceGenerator::genSubVkToWchar(const VK_TO_WCHARS10* vtwc, size_t count, size_t size, const WString& name, const MODIFIERS& mods)
+void SourceGenerator::genSubVkToWchar(const VK_TO_WCHARS10* vtwc, size_t count, size_t size, const WString& name, const MODIFIERS* mods)
 {
     DataStructure ds(name, vtwc);
+    Grid grid;
 
     // Add header lines of comments to indicate the type of modifier on top of each column.
-    Grid::Line headers(2 + count);
-    headers[0] = L"//";
-    bool not_empty = false;
-    for (size_t i = 0; i <= mods.wMaxModBits && i < modifiers_headers.size(); ++i) {
-        const size_t index = mods.ModNumber[i];
-        if (2 + index < headers.size()) {
-            headers[2 + index] = modifiers_headers[i];
-            not_empty = not_empty || !modifiers_headers[i].empty();
+    if (mods != nullptr && !_opt.num_only) {
+        Grid::Line headers(2 + count);
+        headers[0] = L"//";
+        bool not_empty = false;
+        for (size_t i = 0; i <= mods->wMaxModBits && i < modifiers_headers.size(); ++i) {
+            const size_t index = mods->ModNumber[i];
+            if (2 + index < headers.size()) {
+                headers[2 + index] = modifiers_headers[i];
+                not_empty = not_empty || !modifiers_headers[i].empty();
+            }
         }
-    }
-
-    Grid grid;
-    if (not_empty && !_opt.num_only) {
-        grid.addLine(headers);
-        grid.addUnderlines({L"//"});
+        if (not_empty) {
+            grid.addLine(headers);
+            grid.addUnderlines({ L"//" });
+        }
     }
 
     while (vtwc->VirtualKey != 0) {
@@ -1078,7 +856,7 @@ void SourceGenerator::genSubVkToWchar(const VK_TO_WCHARS10* vtwc, size_t count, 
 
 //---------------------------------------------------------------------------
 
-void SourceGenerator::genVkToWchar(const VK_TO_WCHAR_TABLE* vtwc, const WString& name, const::MODIFIERS& mods)
+void SourceGenerator::genVkToWchar(const VK_TO_WCHAR_TABLE* vtwc, const WString& name, const::MODIFIERS* mods)
 {
     DataStructure ds(name, vtwc);
 
@@ -1110,18 +888,29 @@ void SourceGenerator::genVkToWchar(const VK_TO_WCHAR_TABLE* vtwc, const WString&
 
 //---------------------------------------------------------------------------
 
-void SourceGenerator::genLgToWchar(const LIGATURE1* ligatures, size_t count, size_t size, const WString& name)
+void SourceGenerator::genLgToWchar(const LIGATURE1* ligatures, size_t count, size_t size, const WString& name, const MODIFIERS* mods)
 {
     DataStructure ds(name, ligatures);
-    const LIGATURE5* lg = reinterpret_cast<const LIGATURE5*>(ligatures);
+    const LIGATURE_MAX* lg = reinterpret_cast<const LIGATURE_MAX*>(ligatures);
 
     Grid grid;
     while (lg->VirtualKey != 0) {
+        WStringList comments;
+        // Start of entry: virtual key and modification number.
         grid.addLine({
             L"{" + symbol(vk_symbols, lg->VirtualKey, 2) + L",",
             Format(L"%d,", lg->ModificationNumber)
         });
-        WStringList comments;
+        // Search a description for the modification number.
+        if (mods != nullptr && !_opt.num_only) {
+            for (size_t i = 0; i <= mods->wMaxModBits && i < modifiers_headers.size(); ++i) {
+                if (lg->ModificationNumber == mods->ModNumber[i] && !modifiers_headers[i].empty()) {
+                    comments.push_back(modifiers_headers[i]);
+                    break;
+                }
+            }
+        }
+        // List of generated characters for that ligature.
         for (size_t i = 0; i < count; ++i) {
             WString str(wchar(lg->wch[i], comments));
             if (i == 0) {
@@ -1130,12 +919,12 @@ void SourceGenerator::genLgToWchar(const LIGATURE1* ligatures, size_t count, siz
             str.append(i == count - 1 ? L"}}," : L",");
             grid.addColumn(str);
         }
+        // Add any interesting comment.
         if (!comments.empty()) {
             grid.addColumn(L"// " + Join(comments, L", "));
         }
-
         // Move to next structure (variable size).
-        lg = reinterpret_cast<const LIGATURE5*>(reinterpret_cast<const char*>(lg) + size);
+        lg = reinterpret_cast<const LIGATURE_MAX*>(reinterpret_cast<const char*>(lg) + size);
     }
 
     // Last null element.
@@ -1143,7 +932,7 @@ void SourceGenerator::genLgToWchar(const LIGATURE1* ligatures, size_t count, siz
     line.resize(count, L"0,");
     line.push_back(L"0}");
     grid.addLine(line);
-    lg = reinterpret_cast<const LIGATURE5*>(reinterpret_cast<const char*>(lg) + size);
+    lg = reinterpret_cast<const LIGATURE_MAX*>(reinterpret_cast<const char*>(lg) + size);
 
     ds.setEnd(lg);
     _alldata.push_back(ds);
@@ -1151,8 +940,12 @@ void SourceGenerator::genLgToWchar(const LIGATURE1* ligatures, size_t count, siz
     _ou << "//" << _opt.dashed << std::endl
         << "// Ligatures to WCHAR translations" << std::endl
         << "//" << _opt.dashed << std::endl
-        << std::endl
-        << "static LIGATURE" << count << " " << name << "[] = {" << std::endl;
+        << std::endl;
+    if (count > LIG_MAX_PREDEFINED) {
+        _ou << "TYPEDEF_LIGATURE(" << count << ")" << std::endl
+            << std::endl;
+    }
+    _ou << "static LIGATURE" << count << " " << name << "[] = {" << std::endl;
     grid.setMargin(4);
     grid.print(_ou);
     _ou << "};" << std::endl << std::endl;
@@ -1165,13 +958,15 @@ void SourceGenerator::genDeadKeys(const DEADKEY* dk, const WString& name)
     DataStructure ds(name, dk);
 
     Grid grid;
+    grid.addLine({L"//", L"Accent", L"Composed", L"Flags"});
+    grid.addUnderlines({L"//"});
     for (; dk->dwBoth != 0; dk++) {
         WStringList comments;
         grid.addLine({
             L"DEADTRANS(" + wchar(LOWORD(dk->dwBoth), comments) + ",",
             wchar(HIWORD(dk->dwBoth), comments) + ",",
             wchar(dk->wchComposed, comments) + ",",
-            bitMask({ SYM(DKF_DEAD) }, dk->uFlags, 4) + "),"
+            bitMask({SYM(DKF_DEAD)}, dk->uFlags, 4) + "),"
         });
         if (!comments.empty()) {
             grid.addColumn("// " + Join(comments, L", "));
@@ -1323,21 +1118,6 @@ void SourceGenerator::generate(const KBDTABLES& tables)
         << "#include <dontuse.h>" << std::endl
         << std::endl;
 
-    const WString char_modifiers_name(L"char_modifiers");
-    if (tables.pCharModifiers != nullptr) {
-        genCharModifiers(*tables.pCharModifiers, char_modifiers_name);
-    }
-
-    const WString vk_to_wchar_name(L"vk_to_wchar");
-    if (tables.pVkToWcharTable != nullptr) {
-        genVkToWchar(tables.pVkToWcharTable, vk_to_wchar_name, *tables.pCharModifiers);
-    }
-
-    const WString dead_keys_name(L"dead_keys");
-    if (tables.pDeadKey != nullptr) {
-        genDeadKeys(tables.pDeadKey, dead_keys_name);
-    }
-
     const WString key_names_name(L"key_names");
     if (tables.pKeyNames != nullptr) {
         genVscToString(tables.pKeyNames, key_names_name);
@@ -1368,9 +1148,24 @@ void SourceGenerator::generate(const KBDTABLES& tables)
         genVscToVk(tables.pVSCtoVK_E1, scancode_to_vk_e1_name, L" (scancodes with E1 prefix)");
     }
 
+    const WString char_modifiers_name(L"char_modifiers");
+    if (tables.pCharModifiers != nullptr) {
+        genCharModifiers(*tables.pCharModifiers, char_modifiers_name);
+    }
+
+    const WString vk_to_wchar_name(L"vk_to_wchar");
+    if (tables.pVkToWcharTable != nullptr) {
+        genVkToWchar(tables.pVkToWcharTable, vk_to_wchar_name, tables.pCharModifiers);
+    }
+
+    const WString dead_keys_name(L"dead_keys");
+    if (tables.pDeadKey != nullptr) {
+        genDeadKeys(tables.pDeadKey, dead_keys_name);
+    }
+
     const WString ligatures_name(L"ligatures");
     if (tables.pLigature != nullptr) {
-        genLgToWchar(tables.pLigature, tables.nLgMax, tables.cbLgEntry, ligatures_name);
+        genLgToWchar(tables.pLigature, tables.nLgMax, tables.cbLgEntry, ligatures_name, tables.pCharModifiers);
     }
 
     // Generate main table.
@@ -1487,15 +1282,17 @@ void GenerateResourceFile(ReverseOptions& opt, HMODULE hmod)
         const WString dllname(ToLower(FileName(opt.input)));
 
         // Enumerate keyboard layouts in registry to find an entry matching the DLL name.
-        // Count the number matching entries, some DLL's are registered several times.
+        // Some DLL's are registered several times, scan all entries.
         Registry reg(opt);
         WStringList all_lang_ids;
         if (reg.getSubKeys(REGISTRY_LAYOUT_KEY, all_lang_ids)) {
             for (const auto& id : all_lang_ids) {
                 // The base language is the last 4 hexa digits in layout id. need at least 4 chars.
                 if (id.size() >= 4 && ToLower(reg.getValue(REGISTRY_LAYOUT_KEY "\\" + id, REGISTRY_LAYOUT_FILE, L"", true)) == dllname) {
+                    // This entry matches the DLL we search.
+                    // Search text in values "Layout Display Name" and "Layout Text".
                     WString text(reg.getValue(REGISTRY_LAYOUT_KEY "\\" + id, REGISTRY_LAYOUT_DISPLAY, L"", true));
-                    if (text.empty()) {
+                    if (text.empty() || text[0] == L'@') {
                         text = reg.getValue(REGISTRY_LAYOUT_KEY "\\" + id, REGISTRY_LAYOUT_TEXT, L"", true);
                     }
                     ids.push_back(id);
@@ -1509,7 +1306,7 @@ void GenerateResourceFile(ReverseOptions& opt, HMODULE hmod)
 
         if (wkl_lang.empty()) {
             // The language is not known, keep the entry with the shortest (non empty) description.
-            // When there are multiple entry, the shortest description is the base one, usually.
+            // When there are multiple entries, the shortest description is usually the base one.
             // What would be the right strategy?
             size_t index = 0;
             size_t desc_length = WString::npos;
@@ -1526,12 +1323,10 @@ void GenerateResourceFile(ReverseOptions& opt, HMODULE hmod)
             }
         }
         else {
-            // If the base language is already known, find a matching description.
-            if (!wkl_lang.empty()) {
-                for (size_t i = 0; wkl_text.empty() && i < ids.size(); i++) {
-                    if (EndsWith(ToLower(wkl_lang), ToLower(ids[i]))) {
-                        wkl_text = texts[i];
-                    }
+            // The base language is already known, find a matching description.
+            for (size_t i = 0; wkl_text.empty() && i < ids.size(); i++) {
+                if (EndsWith(ToLower(wkl_lang), ToLower(ids[i]))) {
+                    wkl_text = texts[i];
                 }
             }
         }
