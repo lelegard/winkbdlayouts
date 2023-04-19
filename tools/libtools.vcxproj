@@ -13,12 +13,14 @@
     <ClCompile Include="strutils.cpp"/>
     <ClInclude Include="winutils.h"/>
     <ClCompile Include="winutils.cpp"/>
+    <ClInclude Include="grid.h"/>
+    <ClCompile Include="grid.cpp"/>
     <ClInclude Include="registry.h"/>
     <ClCompile Include="registry.cpp"/>
     <ClInclude Include="fileversion.h"/>
     <ClCompile Include="fileversion.cpp"/>
-    <ClInclude Include="grid.h"/>
-    <ClCompile Include="grid.cpp"/>
+    <ClInclude Include="kbdinstall.h"/>
+    <ClCompile Include="kbdinstall.cpp"/>
   </ItemGroup>
   <ImportGroup Label="PropertySheets">
     <Import Project="$(SolutionDir)msbuild.props"/>

@@ -109,7 +109,7 @@ The new keyboard is now part of the solution and will be built with the rest of 
 If you have difficulties to collect the scan codes for your keyboard, run the
 `scancodes` tool from this project.
 
-The image [tools\scancodes.jpg](tools/scancodes.jpg) shows the scan codes for
+The image [images\scancodes.jpg](images/scancodes.jpg) shows the scan codes for
 a standard 101/102-key PC American keyboard.
 
 ### Apple keyboards
@@ -249,3 +249,7 @@ Let's start from a minimum example:
    and allocate a new unique value.
 
 In this project, all these steps are handled by the utility `kbdadmin -i`.
+
+Developers who want to install their own keyboard layouts, independently of
+this project, may use the `libtools` library. See the functions `InstallKeyboardLayout()`
+and `UninstallKeyboardLayout()` in `kbdinstall.h`.

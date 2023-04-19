@@ -9,6 +9,7 @@
 //---------------------------------------------------------------------------
 
 #include "options.h"
+#include "kbdinstall.h"
 #include "registry.h"
 #include "strutils.h"
 #include "winutils.h"
@@ -292,109 +293,30 @@ void InstallOneKeyboard(AdminOptions& opt, const WString& dll_path)
         opt.error(dll_path + ": " + ErrorText(err));
         return;
     }
+    const WString dll_name(ToLower(FileName(dll_path)));
     const WString dll_text(GetResourceString(hmod, WKL_RES_TEXT));
     const WString dll_provider(GetResourceString(hmod, WKL_RES_PROVIDER));
     WString dll_lang_id(ToLower(GetResourceString(hmod, WKL_RES_LANG)));
+    int base_language = 0;
+    FromHexa(base_language, dll_lang_id);
     FreeLibrary(hmod);
 
-    // A WKL DLL is expected to have "WKL" as provider resource string.
-    if (dll_provider != L"WKL") {
+    // A WKL DLL is expected to have resource strings: "WKL" as provider and non-null language id.
+    if (dll_provider != L"WKL" || base_language == 0) {
         return;
     }
 
-    const WString file_name(ToLower(FileName(dll_path)));
-    opt.info("==== Installing " + file_name + " (" + dll_text + ")");
+    // Install the keyboard layout DLL.
+    opt.info("==== Installing " + dll_name + " (" + dll_text + ")");
+    const uint32_t lang_id = InstallKeyboardLayout(opt, dll_path, base_language, dll_text);
 
-    // Adjust DLL language id to 4 hexa digits.
-    if (dll_lang_id.length() != 4) {
-        WString new_lang("0000" + dll_lang_id);
-        new_lang = new_lang.substr(new_lang.length() - 4);
-        opt.warning("invalid base language \"" + dll_lang_id + "\", using \"" + new_lang + "\"");
-        dll_lang_id = new_lang;
+    // Add specific WKL entries in the registry.
+    if (lang_id != 0) {
+        Registry reg(opt);
+        const WString key(REGISTRY_LAYOUT_KEY L"\\" + Format(L"%08x", lang_id));
+        reg.setValue(key, REGISTRY_LAYOUT_PROVIDER, dll_provider);
+        reg.setValue(key, REGISTRY_LAYOUT_DISPLAY, L"@%SystemRoot%\\system32\\" + dll_name + Format(L",-%d", WKL_RES_TEXT), true);
     }
-
-    // Enumerate keyboard layouts in registry.
-    Registry reg(opt);
-    WStringList all_lang_ids;
-    if (!reg.getSubKeys(REGISTRY_LAYOUT_KEY, all_lang_ids)) {
-        return;
-    }
-
-    // Build a list of language ids with matching base language (last 4 digits).
-    // Build a list of layout ids (registry value "Layout Id"), 16-bit integers.
-    WStringSet matching_lang_ids;
-    WString final_lang_id;
-    std::set<uint16_t> all_layout_ids;
-    uint16_t max_layout_id = 0;
-    uint16_t final_layout_id = 0;
-
-    for (const auto& lang_id : all_lang_ids) {
-        // Keep track of all layout ids. Ignore missing ids (use 0).
-        const WString key(REGISTRY_LAYOUT_KEY "\\" + lang_id);
-        const WString layout_id_str(reg.getValue(key, REGISTRY_LAYOUT_ID, L"", false));
-        uint16_t layout_id = 0;
-        FromHexa(layout_id, layout_id_str);
-        all_layout_ids.insert(layout_id);
-        max_layout_id = std::max(max_layout_id, layout_id);
-
-        // Check if the lang id matches the base language of the new keyboard.
-        if (EndsWith(ToLower(lang_id), dll_lang_id)) {
-            matching_lang_ids.insert(ToLower(lang_id));
-            if (final_lang_id.empty() && ToLower(reg.getValue(key, REGISTRY_LAYOUT_FILE, L"", true  )) == file_name) {
-                opt.verbose(file_name + " already registered, replacing it");
-                final_lang_id = lang_id;
-                final_layout_id = layout_id;
-            }
-        }
-    }
-
-    // Allocate a layout id if not already registered.
-    if (final_layout_id == 0) {
-        if (max_layout_id < 0xFFFF) {
-            final_layout_id = max_layout_id + 1;
-        }
-        else if (all_layout_ids.size() == 0x10000) {
-            opt.error("too many keyboard layouts already registered, ignoring " + dll_path);
-            return;
-        }
-        else {
-            while (all_layout_ids.find(final_layout_id) != all_layout_ids.end()) {
-                final_layout_id++;
-            }
-        }
-    }
-
-    // Allocate a lang id if not already registered.
-    if (final_lang_id.empty()) {
-        // Find an unused id with base language. Depends on the size of the base language.
-        // Example: if lang = "040c", try "a001040c", "a003040c", "a003040c", 
-        for (int up = 0xA000; up < 0xB000; ++up) {
-            final_lang_id = Format(L"%04x%s", up, dll_lang_id.c_str());
-            if (matching_lang_ids.find(final_lang_id) == matching_lang_ids.end()) {
-                break; // unused id
-            }
-        }
-    }
-
-    // Copy DLL file first.
-    const WString destination(GetEnv(L"SystemRoot", L"C:\\Windows") + L"\\System32\\" + file_name);
-    opt.verbose("registering " + final_lang_id + ": " + destination + " (" + dll_text + ")");
-    if (!CopyFileW(dll_path.c_str(), destination.c_str(), false)) {
-        const DWORD err = GetLastError();
-        opt.error(destination + ": " + ErrorText(err));
-        return;
-    }
-
-    // Then register it in the registry.
-    const WString key(REGISTRY_LAYOUT_KEY "\\" + final_lang_id);
-    if (!reg.keyExists(key) && !reg.createKey(key)) {
-        return;
-    }
-    reg.setValue(key, REGISTRY_LAYOUT_FILE, file_name);
-    reg.setValue(key, REGISTRY_LAYOUT_TEXT, dll_text);
-    reg.setValue(key, REGISTRY_LAYOUT_ID, Format(L"%04x", int(final_layout_id)));
-    reg.setValue(key, REGISTRY_LAYOUT_PROVIDER, dll_provider);
-    reg.setValue(key, REGISTRY_LAYOUT_DISPLAY, Format(L"@%%SystemRoot%%\\system32\\%s,-%d", file_name.c_str(), WKL_RES_TEXT), true);
 }
 
 
@@ -425,39 +347,17 @@ void InstallKeyboards(AdminOptions& opt)
 
 void RemoveKeyboards(AdminOptions& opt)
 {
-    // Enumerate keyboard layouts in registry.
-    Registry reg(opt);
-    WStringList layout_ids;
-    if (!reg.getSubKeys(REGISTRY_LAYOUT_KEY, layout_ids)) {
-        return;
-    }
-
-    // Keep track of removed files.
-    WStringSet removed_files;
     const WString sysdir(GetEnv(L"SystemRoot", L"C:\\Windows") + L"\\System32\\");
 
-    // Remove all WKL keyboads.
-    for (const auto& id : layout_ids) {
-        const WString key(REGISTRY_LAYOUT_KEY "\\" + id);
-        const WString file(reg.getValue(key, REGISTRY_LAYOUT_FILE, true));
-        const WString path(sysdir + file);
-        const WString lowfile(ToLower(file));
-        bool unreg = removed_files.find(lowfile) != removed_files.end();
-        if (!unreg && GetResourceString(path, WKL_RES_PROVIDER) == L"WKL") {
-            opt.out() << "Removing " << path << " (" << id << ")" << std::endl;
-            if (DeleteFileW(path.c_str())) {
-                removed_files.insert(lowfile);
-                unreg = true;
+    // Enumerate keyboard layouts in registry and remove all WKL keyboads.
+    Registry reg(opt);
+    WStringList all_lang_ids;
+    if (reg.getSubKeys(REGISTRY_LAYOUT_KEY, all_lang_ids)) {
+        for (const auto& lang_id : all_lang_ids) {
+            const WString file(reg.getValue(REGISTRY_LAYOUT_KEY L"\\" + lang_id, REGISTRY_LAYOUT_FILE, L"", true));
+            if (!file.empty() && GetResourceString(sysdir + file, WKL_RES_PROVIDER) == L"WKL") {
+                UninstallKeyboardLayout(opt, file);
             }
-            else {
-                const DWORD err = GetLastError();
-                opt.error(path + ": " + ErrorText(err));
-                unreg = false;
-            }
-        }
-        if (unreg) {
-            opt.verbose("Unregistering " + id);
-            reg.deleteKey(key);
         }
     }
 }
