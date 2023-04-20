@@ -7,15 +7,27 @@ or no longer, included by default in Windows distributions.
 
 * [Installation](#installation)
 * [Build instructions](#build-instructions)
-* [Language support and contributions](#language-support-and-contributions)
+* [New keyboard support and contributions](#new-keyboard-support-and-contributions)
   * [Initial steps: create the new directory](#initial-steps-create-the-new-directory)
   * [Option 1: duplicate a source file from this project](#option-1-duplicate-a-source-file-from-this-project)
   * [Option 2: reverse the content of an existing keyboard DLL](#option-2-reverse-the-content-of-an-existing-keyboard-dll)
   * [Final steps: add the project into the solution](#final-steps-add-the-project-into-the-solution)
-* [Scan codes](#scan-codes)
-  * [Apple keyboards](#apple-keyboards)
-  * [Apple keyboards in Windows virtual machines](#apple-keyboards-in-windows-virtual-machines)
+* [Keyboard layout definition guidelines](#keyboard-layout-definition-guidelines)
+  * [Keyboard concepts](#keyboard-concepts)
+  * [Scan codes](#scan-codes)
+  * [Keyboard layout source file overview](#keyboard-layout-source-file-overview)
+  * [Key names](#key-names)
+  * [Mapping scan codes to virtual keys](#mapping-scan-codes-to-virtual-keys)
+  * [Definition of modifiers](#definition-of-modifiers)
+  * [Character generation](#character-generation)
+  * [Dead keys character generation](#dead-keys-character-generation)
+  * [Ligatures](#ligatures)
 * [Declaring a keyboard layout on windows](#declaring-a-keyboard-layout-on-windows)
+* [Notes on Apple keyboards](#notes-on-apple-keyboards)
+  * [Apple keyboards bottom row](#apple-keyboards-bottom-row)
+  * [Apple keyboards numerical pad](#apple-keyboards-numerical-pad)
+  * [Apple keyboards in Windows virtual machines](#apple-keyboards-in-windows-virtual-machines)
+* [List of available keyboards](#list-of-available-keyboards)
 
 ## Installation
 
@@ -39,7 +51,7 @@ Available PowerShell scripts:
 - `install.ps1` : Install the keyboards on the current system after rebuild.
 - `clean.ps1` : Cleanup all generated files.
 
-## Language support and contributions
+## New keyboard support and contributions
 
 New layouts are welcome as contributions. Please post a pull request with your
 implementation of new layouts.
@@ -102,7 +114,7 @@ To reverse a keyboard DLL from another location, specify the full path of the DL
 
 The new keyboard is now part of the solution and will be built with the rest of it.
 
-## Keyboard layout guidelines
+## Keyboard layout definition guidelines
 
 Once you have a `kbdXXYYY.c` source file, either copied from another source
 file or reversed from a keyboard DLL, it shall be modified according to your
@@ -119,11 +131,11 @@ First, we need to introduce a few concepts:
 
 - **Virtual keys**: A virtual key is a Windows concept. This is a 16-bit value
   with a more-or-less defined logical function. A language layout typically
-  associates a _scan code_ with a _virtual key_. A virtual key logically represents
+  associates a _scan code_ with a _virtual key code_. A virtual key logically represents
   a key, without considering modifiers such as Shift or Control. Shift and Control
   are considered as separate keys, with their own scan codes and virtual keys.
 
-- **Modifiers**: There are three predefined modifiers: Shift, Control and Alt.
+- **Modifiers**: There are three main predefined modifiers: Shift, Control and Alt.
   Using any combination of modifiers (including no modifier), each virtual key
   may have up to 8 different interpretations. When a keyboard has an "AltGr" key,
   it is not a additional modifier, it is equivalent to a Control+Alt combination.
@@ -133,9 +145,9 @@ First, we need to introduce a few concepts:
   This is a convenience for languages which use accentuated characters. For instance,
   '^' is defined as a dead key for languages using characters with circumflex
   accents. Hitting the '^' key initially gives nothing. When you type the next key,
-  an accentuated character is produced if there is one ('^' followed by 'e'
-  gives 'ê', '^' followed by 'o' gives 'ô'). To generate the accent allow,
-  simply hit space after it ('^' followed by ' ' gives '^').
+  an accentuated character is produced if there is one (`^` followed by `e`
+  gives `ê`, `^` followed by `o` gives `ô`). To generate the accent alone,
+  simply hit space after it (`^` followed by ` ` gives `^`).
 
 ### Scan codes
 
@@ -158,7 +170,8 @@ scan codes and modifiers are displayed on the console.
 All keyboard-related data structures are declared in the standard header file named
 `kbd.h`. It is typically found in a path similar to
 `C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um`
-(adapt the Windows kit version).
+(adapt the Windows kit version). This header is included in all keyboard layout
+source files.
 
 Starting from the end of the source file, the function `KbdLayerDescriptor()` is a
 predefined name for all keyboard layout DLL's. It is called by the system and only
@@ -186,7 +199,8 @@ structure.
 The first three arrays give names to keys. This is informational only.
 
 - `key_names` : Associate a scan code with a name. Use this for function keys only.
-- `key_names_ext` : This is the same thingk for the "extended keypad".
+  Alphanumerical keys do not need a name, they are self-explanatory.
+- `key_names_ext` : This is the same thing for the "extended keypad".
 - `key_names_dead` : This is a list of names for dead keys. Each entry is only one
   string. It is usually presented as two consecutive literals (for instance `L"~" L"TILDE"`)
   but this is just a C syntax trick (this is equivalent to `L"~TILDE"`).
@@ -202,6 +216,7 @@ explicitely computed in the `KBDTABLES` dispatch table.
 You may increase or decrease the size of the array `scancode_to_vk` but
 keep all consecutive entries. Also keep the hexadecimal index values in comments.
 Each one is the index in the array and consequently the scan code value.
+These comments are useful to edit the table.
 
 The value of each entry is the 16-bit virtual key code. When a scan code
 is non-existent on the keyboard and has no virtual key, use the symbol `VK__none_`.
@@ -300,7 +315,7 @@ AltGr, when available, is equivalent to Control+Alt.
 The structure `char_modifiers` defines how modifiers are handled in this keyboard layout.
 
 First, the structure `vk_to_bits` defines how virtual key codes are mapped to bits in
-modifier masks. For western keyboards, the structure is always:
+modifier masks. For western keyboards, the structure is always the following:
 ~~~
 static VK_TO_BIT vk_to_bits[] = {
     {VK_SHIFT,   KBDSHIFT},  // KBDSHIFT = 0b001
@@ -311,9 +326,9 @@ static VK_TO_BIT vk_to_bits[] = {
 ~~~
 
 Second, the structure `char_modifiers` defines which combinations of modifiers are
-valid for this keyboards. These combinations are listed in the `ModNumber` array field.
+valid for this keyboard. These combinations are listed in the `ModNumber` array field.
 The index of the last value is in the `wMaxModBits` field. Note that this is an index,
-not the size of the the `ModNumber` array. It must be the size minus 1.
+not the size of the `ModNumber` array. It must be the size minus 1.
 
 The indexes in the `ModNumber` array are a combination of the `KBDxxx` modifier masks.
 The values in the `ModNumber` array are "modification numbers" which will be used later.
@@ -336,19 +351,19 @@ static MODIFIERS char_modifiers = {
 ~~~
 Notes on the example:
 - There are 7 entries in `ModNumber` and `wMaxModBits` is consequently 6 (last index = size - 1).
-- The index in `ModNumber` is a bit mask of modifiers.
-- Some combinations of modifiers may not be used in a keyboard. Index 7 = 0x111 = `KBDSHIFT | KBDCTRL | KBDALT`
-  is out of range and not used. Indexes 0x100 and 0b101 are within range but the "modification number"
+- The index in `ModNumber` is a bit mask of modifiers, here from 0b000 (0) to 0b110 (6).
+- Some combinations of modifiers may not be used in a keyboard. Index 7 = 0b111 = `KBDSHIFT | KBDCTRL | KBDALT`
+  is out of range and not used. Indexes 0b100 and 0b101 are within range but the "modification number"
   is the special value `SHFT_INVALID` which means that this combination is not used.
 - Other entries have valid "modification numbers". All modification numbers must be globally
   contiguous (here 0, 1, 2, 3, 4) but not necessarily in increasing order.
-- As an example, the modification number 3 is at index 6 = 0x110. This means that modification
-  number 3 means Control+Alt (which is the equivalent of AltGr on keyboards with an AltGr key).
+- As an example, the modification number 3 is at index 6 = 0b110. Modification number 3
+  consequently means Control+Alt (which is the equivalent of AltGr on keyboards with an AltGr key).
 
 ### Character generation
 
 The next tables define which characters are generated for a virtual key code
-and a combination of modifiers.
+and all its combinations of modifiers.
 
 One virtual key may generate one character only (numerical keypad for instance).
 Or two if using Shift produces a distinct character (letter keys for instance).
@@ -380,7 +395,7 @@ This is were it becomes even more complicated.
 
 To optimize space, there is not one single character generation table. There are several of
 them. The idea is that the "modification numbers" which are the less used for that keyboard
-are at the end (number in the example). We create a table of all characters with modification
+are at the end (number 4 in the example). We create a table of all characters with modification
 number 0 to 4, another one (with shorter entries) with modification numbers 0 to 3, etc.
 
 The tables with trimmed entries have types `VK_TO_WCHARS1`, `VK_TO_WCHARS2`, `VK_TO_WCHARS3`,
@@ -389,7 +404,7 @@ key of this entry.
 
 Since all entries do not have the same type, they are grouped in distinct tables,
 one per entry size. The data structure `vk_to_wchar` is the master character
-generation structures. It contains a list of pointers the various character
+generation structures. It contains a list of pointers to the various character
 generation tables. For each table, the number of characters in each entry
 and the size in bytes of an entry are specified.
 
@@ -412,12 +427,12 @@ number 2 uses Control and number 3 uses Control+ Alt. This is reminded in the
 comments on top of the columns.
 
 On a French keyboard, the key '2' generates an "e acute" (unicode 0x00E9). Shift+'2'
-generates a "2". Control+'2' does nothing and the symbol `WCH_NONE` us used. AltGr+'2'
-(or Control+Alt+'2') generates a tilde '~'. However, tilde is a dead key. This is indicated
-by the symbol `WCH_DEAD` instead of '~'. So, how do you indicate that the corresponding
-dead key s a tilde and not some other accent? We add a dummy entry immediately following
+generates a "2". Control+'2' does nothing and the symbol `WCH_NONE` is used. AltGr+'2'
+(or Control+Alt+'2') generates a tilde '\~'. However, tilde is a dead key. This is indicated
+by the symbol `WCH_DEAD` instead of '\~'. So, how do you indicate that the corresponding
+dead key is a tilde and not some other accent? We add a dummy entry immediately following
 any entry with a `WCH_DEAD`. This entry has virtual key `VK__none_` and all characters
-with a `WCH_DEAD` on the preceding line are replaced with the actual dead key, here a '~'.
+with a `WCH_DEAD` on the preceding line are replaced with the actual dead key, here a '\~'.
 Any other character in this dummy line is ignored and set to `WCH_NONE`.
 
 Pretty weird, isn't it?
@@ -426,12 +441,12 @@ Pretty weird, isn't it?
 
 Now that we have defined some dead keys (such as '~' in the previous example),
 how do we specify which accentuated characters can be generated following each
-dead keys?
+dead key?
 
 This is done in table `dead_keys`. Each entry defines the combination of a letter
-('n' for instance), an accent (the dead key, '~' in the example) and the actual
-character which is produced when hitting the dead key followd by the letter
- ('ñ' in that case).
+(`n` for instance), an accent (the dead key, `~` in the example) and the actual
+character which is produced when hitting the dead key followed by the letter
+(`ñ` in that case).
  
 The last field of each entry in `dead_keys` is a mask of flags. The only defined
 flag is `DKF_DEAD`, unused in all standard keyboards, with unclear usage.
@@ -443,7 +458,7 @@ which are sent from one key.
 
 In this project, the keyboard layout `kbdfrnodead` (French keyboard without dead keys)
 contains an example of this: The combination AltGr-'T' generates "test", a string of
-four letters.
+four letters. This is useless, just an example of ligature for reference.
 
 ## Declaring a keyboard layout on windows
 
@@ -515,7 +530,7 @@ and `UninstallKeyboardLayout()` in `kbdinstall.h`.
 
 The Apple keyboards as found on Mac systems are notoriously different from
 PC keyboards. When running a Windows virtual machine on a Mac, the default
-Windows keyboard layout are not appropriate.
+Windows keyboard layouts are not appropriate.
 
 On Windows 11, the Apple keyboards are not available by default and need custom
 mappings. The hypervisor hosting the Windows virtual machine may provide specific
