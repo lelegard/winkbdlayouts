@@ -286,7 +286,7 @@ static void print_key(const wchar_t* name, WPARAM wParam, LPARAM lParam)
     const int scancode = int((lParam >> 16) & 0xFF);
     const int ext = int((lParam >> 24) & 0x01);
     const int alt = int((lParam >> 29) & 0x01);
-    std::cout << Format(L"%-10s  Scan code: 0x%02X, Ext (Ctrl, Right-Alt): %d, Alt: %d, VK: 0x%04X", name, scancode, ext, alt, vk);
+    std::cout << Format(L"%-10s  Scan code: 0x%02X, Ext: %d, Alt: %d, VK: 0x%04X", name, scancode, ext, alt, vk);
     if (vk < 256 && vk_names[vk] != nullptr) {
         std::cout << " (" << vk_names[vk] << ")";
     }

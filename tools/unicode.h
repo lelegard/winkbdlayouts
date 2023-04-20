@@ -350,6 +350,7 @@
     {0x206D, L"Activate arabic form shaping"},
     {0x206E, L"National digit shapes"},
     {0x206F, L"Nominal digit shapes"},
+    {0x20AC, L"Euro"},
     {0x2200, L"For all"},
     {0x2201, L"Complement"},
     {0x2202, L"Partial differential"},

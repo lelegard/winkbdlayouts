@@ -928,9 +928,19 @@ void SourceGenerator::genLgToWchar(const LIGATURE1* ligatures, size_t count, siz
     }
 
     // Last null element.
-    Grid::Line line({L"{0,"});
-    line.resize(count, L"0,");
-    line.push_back(L"0}");
+    Grid::Line line({L"{0,", L"0,"});
+    switch (count) {
+        case 0:
+            line.push_back(L"}");
+            break;
+        case 1:
+            line.push_back(L"{0}}");
+            break;
+        default:
+            line.push_back(L"{0, ");
+            line.resize(count + 1, L"0,");
+            line.push_back(L"0}}");
+    }
     grid.addLine(line);
     lg = reinterpret_cast<const LIGATURE_MAX*>(reinterpret_cast<const char*>(lg) + size);
 
