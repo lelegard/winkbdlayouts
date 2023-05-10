@@ -11,6 +11,7 @@
 #include <windows.h>
 #include <kbd.h>
 #include <dontuse.h>
+#include "unicode.h"
 
 //---------------------------------------------------------------------------
 // Scan codes to key names
@@ -308,7 +309,118 @@ static MODIFIERS char_modifiers = {
 };
 
 //---------------------------------------------------------------------------
-// Virtual Key to WCHAR translations for 1 shift state (no modifier)
+// Virtual Key to WCHAR translations for 3 shift states
+//---------------------------------------------------------------------------
+
+static VK_TO_WCHARS3 vk_to_wchar3[] = {
+    //                            Shift         Ctrl
+    //                            -----         ----
+    {VK_OEM_6,   CAPLOK, {L'^',   UC_DIAERESIS, UC_ESC}},
+    {VK_OEM_5,   CAPLOK, {L'*',   UC_MICRO,     UC_FS}},
+    {VK_OEM_102, 0x00,   {L'<',   L'>',         UC_FS}},
+    {VK_BACK,    0x00,   {UC_BS,  UC_BS,        UC_DEL}},
+    {VK_ESCAPE,  0x00,   {UC_ESC, UC_ESC,       UC_ESC}},
+    {VK_RETURN,  0x00,   {L'\r',  L'\r',        L'\n'}},
+    {VK_SPACE,   0x00,   {L' ',   L' ',         L' '}},
+    {VK_CANCEL,  0x00,   {UC_ETX, UC_ETX,       UC_ETX}},
+    {0,          0,      0,       0,            0}
+};
+
+//---------------------------------------------------------------------------
+// Virtual Key to WCHAR translations for 4 shift states
+//---------------------------------------------------------------------------
+
+static VK_TO_WCHARS4 vk_to_wchar4[] = {
+    //                                       Shift      Ctrl      AltGr
+    //                                       -----      ----      -----
+    {'3',         CAPLOK, {L'"',             L'3',      WCH_NONE, L'#'}},
+    {'4',         CAPLOK, {L'\'',            L'4',      WCH_NONE, L'{'}},
+    {'7',         CAPLOK, {UC_LOWER_E_GRAVE, L'7',      WCH_NONE, L'`'}},
+    {'0',         CAPLOK, {UC_LOWER_A_GRAVE, L'0',      0x0000,   L'@'}},
+    {VK_OEM_4,    CAPLOK, {L')',             UC_DEGREE, WCH_NONE, L']'}},
+    {VK_OEM_PLUS, CAPLOK, {L'=',             L'+',      WCH_NONE, L'}'}},
+    {'E',         CAPLOK, {L'e',             L'E',      WCH_NONE, UC_EURO}},
+    {'T',         CAPLOK, {L't',             L'T',      WCH_NONE, WCH_LGTR}},
+    {VK_OEM_1,    CAPLOK, {L'$',             UC_POUND,  UC_GS,    UC_CURRENCY}},
+    {0,           0,      0,                 0,         0,        0}
+};
+
+//---------------------------------------------------------------------------
+// Virtual Key to WCHAR translations for 5 shift states
+//---------------------------------------------------------------------------
+
+static VK_TO_WCHARS5 vk_to_wchar5[] = {
+    //                   Shift Ctrl      AltGr  Shift/Ctrl
+    //                   ----- ----      -----  ----------
+    {'5', CAPLOK, {L'(', L'5', WCH_NONE, L'[',  UC_ESC}},
+    {'6', CAPLOK, {L'-', L'6', WCH_NONE, L'|',  UC_US}},
+    {'8', CAPLOK, {L'_', L'8', WCH_NONE, L'\\', UC_FS}},
+    {0,   0,      0,     0,    0,        0,     0}
+};
+
+//---------------------------------------------------------------------------
+// Virtual Key to WCHAR translations for 6 shift states
+//---------------------------------------------------------------------------
+
+static VK_TO_WCHARS6 vk_to_wchar6[] = {
+    //                                      Shift Ctrl      AltGr                  Shift/Ctrl Shift/AltGr
+    //                                      ----- ----      -----                  ---------- -----------
+    {'2',      CAPLOK, {UC_LOWER_E_ACUTE,   L'2', WCH_NONE, L'~',                  WCH_NONE,  UC_UPPER_E_ACUTE}},
+    {'7',      CAPLOK, {UC_LOWER_E_GRAVE,   L'7', WCH_NONE, L'`',                  WCH_NONE,  UC_UPPER_E_GRAVE}},
+    {'9',      CAPLOK, {UC_LOWER_C_CEDILLA, L'9', WCH_NONE, L'^',                  UC_RS,     UC_UPPER_C_CEDILLA}},
+    {'A',      CAPLOK, {L'a',               L'A', WCH_NONE, UC_LOWER_A_CIRCUMFLEX, WCH_NONE,  UC_UPPER_A_CIRCUMFLEX}},
+    {'Z',      CAPLOK, {L'z',               L'Z', WCH_NONE, UC_LOWER_A_GRAVE,      WCH_NONE,  UC_UPPER_A_GRAVE}},
+    {'E',      CAPLOK, {L'e',               L'E', WCH_NONE, UC_EURO,               WCH_NONE,  WCH_NONE}},
+    {'R',      CAPLOK, {L'r',               L'R', WCH_NONE, UC_LOWER_E_CIRCUMFLEX, WCH_NONE,  UC_UPPER_E_CIRCUMFLEX}},
+    {'D',      CAPLOK, {L'd',               L'D', WCH_NONE, UC_LOWER_E_DIAERESIS,  WCH_NONE,  UC_UPPER_E_DIAERESIS}},
+    {'N',      CAPLOK, {L'n',               L'N', WCH_NONE, UC_LOWER_N_TILDE,      WCH_NONE,  UC_UPPER_N_TILDE}},
+    {'I',      CAPLOK, {L'i',               L'I', WCH_NONE, UC_LOWER_I_CIRCUMFLEX, WCH_NONE,  UC_UPPER_I_CIRCUMFLEX}},
+    {'O',      CAPLOK, {L'o',               L'O', WCH_NONE, UC_LOWER_O_CIRCUMFLEX, WCH_NONE,  UC_UPPER_O_CIRCUMFLEX}},
+    {'U',      CAPLOK, {L'u',               L'U', WCH_NONE, UC_LOWER_U_CIRCUMFLEX, WCH_NONE,  UC_UPPER_U_CIRCUMFLEX}},
+    {VK_OEM_3, CAPLOK, {UC_LOWER_U_GRAVE,   L'%', WCH_NONE, WCH_NONE,              WCH_NONE,  UC_UPPER_U_GRAVE}},
+    {0,        0,      0,                   0,    0,        0,                     0,         0}
+};
+
+//---------------------------------------------------------------------------
+// Virtual Key to WCHAR translations for 2 shift states
+//---------------------------------------------------------------------------
+
+static VK_TO_WCHARS2 vk_to_wchar2[] = {
+    //                                         Shift
+    //                                         -----
+    {VK_OEM_7,      0x00,   {UC_SUP2,          WCH_NONE}},
+    {'1',           CAPLOK, {L'&',             L'1'}},
+    {'Y',           CAPLOK, {L'y',             L'Y'}},
+    {'P',           CAPLOK, {L'p',             L'P'}},
+    {'Q',           CAPLOK, {L'q',             L'Q'}},
+    {'S',           CAPLOK, {L's',             L'S'}},
+    {'F',           CAPLOK, {L'f',             L'F'}},
+    {'G',           CAPLOK, {L'g',             L'G'}},
+    {'H',           CAPLOK, {L'h',             L'H'}},
+    {'J',           CAPLOK, {L'j',             L'J'}},
+    {'K',           CAPLOK, {L'k',             L'K'}},
+    {'L',           CAPLOK, {L'l',             L'L'}},
+    {'M',           CAPLOK, {L'm',             L'M'}},
+    {'W',           CAPLOK, {L'w',             L'W'}},
+    {'X',           CAPLOK, {L'x',             L'X'}},
+    {'C',           CAPLOK, {L'c',             L'C'}},
+    {'V',           CAPLOK, {L'v',             L'V'}},
+    {'B',           CAPLOK, {L'b',             L'B'}},
+    {VK_OEM_COMMA,  CAPLOK, {L',',             L'?'}},
+    {VK_OEM_PERIOD, CAPLOK, {L';',             L'.'}},
+    {VK_OEM_2,      CAPLOK, {L':',             L'/'}},
+    {VK_OEM_8,      CAPLOK, {L'!',             UC_SECTION}},
+    {VK_DECIMAL,    0x00,   {L'.',             L'.'}},
+    {VK_TAB,        0x00,   {L'\t',            L'\t'}},
+    {VK_ADD,        0x00,   {L'+',             L'+'}},
+    {VK_DIVIDE,     0x00,   {L'/',             L'/'}},
+    {VK_MULTIPLY,   0x00,   {L'*',             L'*'}},
+    {VK_SUBTRACT,   0x00,   {L'-',             L'-'}},
+    {0,             0,      0,                 0}
+};
+
+//---------------------------------------------------------------------------
+// Virtual Key to WCHAR translations for 1 shift states
 //---------------------------------------------------------------------------
 
 static VK_TO_WCHARS1 vk_to_wchar1[] = {
@@ -323,117 +435,6 @@ static VK_TO_WCHARS1 vk_to_wchar1[] = {
     {VK_NUMPAD8, 0x00, {L'8'}},
     {VK_NUMPAD9, 0x00, {L'9'}},
     {0,          0,    0}
-};
-
-//---------------------------------------------------------------------------
-// Virtual Key to WCHAR translations for 2 shift states
-//---------------------------------------------------------------------------
-
-static VK_TO_WCHARS2 vk_to_wchar2[] = {
-    //                               Shift
-    //                               -----
-    {VK_OEM_7,      0x00,   {0x00B2, WCH_NONE}}, // Superscr two
-    {'1',           CAPLOK, {L'&',   L'1'}},
-    {'Z',           CAPLOK, {L'z',   L'Z'}},
-    {'Y',           CAPLOK, {L'y',   L'Y'}},
-    {'P',           CAPLOK, {L'p',   L'P'}},
-    {'Q',           CAPLOK, {L'q',   L'Q'}},
-    {'S',           CAPLOK, {L's',   L'S'}},
-    {'D',           CAPLOK, {L'd',   L'D'}},
-    {'F',           CAPLOK, {L'f',   L'F'}},
-    {'G',           CAPLOK, {L'g',   L'G'}},
-    {'H',           CAPLOK, {L'h',   L'H'}},
-    {'J',           CAPLOK, {L'j',   L'J'}},
-    {'K',           CAPLOK, {L'k',   L'K'}},
-    {'L',           CAPLOK, {L'l',   L'L'}},
-    {'M',           CAPLOK, {L'm',   L'M'}},
-    {VK_OEM_3,      CAPLOK, {0x00F9, L'%'}},     // u grave
-    {'W',           CAPLOK, {L'w',   L'W'}},
-    {'X',           CAPLOK, {L'x',   L'X'}},
-    {'C',           CAPLOK, {L'c',   L'C'}},
-    {'V',           CAPLOK, {L'v',   L'V'}},
-    {'B',           CAPLOK, {L'b',   L'B'}},
-    {'N',           CAPLOK, {L'n',   L'N'}},
-    {VK_OEM_COMMA,  CAPLOK, {L',',   L'?'}},
-    {VK_OEM_PERIOD, CAPLOK, {L';',   L'.'}},
-    {VK_OEM_2,      CAPLOK, {L':',   L'/'}},
-    {VK_OEM_8,      CAPLOK, {L'!',   0x00A7}},   // Section
-    {VK_DECIMAL,    0x00,   {L'.',   L'.'}},
-    {VK_TAB,        0x00,   {L'\t',  L'\t'}},
-    {VK_ADD,        0x00,   {L'+',   L'+'}},
-    {VK_DIVIDE,     0x00,   {L'/',   L'/'}},
-    {VK_MULTIPLY,   0x00,   {L'*',   L'*'}},
-    {VK_SUBTRACT,   0x00,   {L'-',   L'-'}},
-    {0,             0,      0,       0}
-};
-
-//---------------------------------------------------------------------------
-// Virtual Key to WCHAR translations for 3 shift states
-//---------------------------------------------------------------------------
-
-static VK_TO_WCHARS3 vk_to_wchar3[] = {
-    //                              Shift     Ctrl
-    //                              -----     ----
-    {VK_OEM_6,   CAPLOK, {L'^',     0x00A8,   0x001B}},   // Diaeresis, ESC
-    {VK_OEM_5,   CAPLOK, {L'*',     0x00B5,   0x001C}},   // Micro
-    {VK_OEM_102, 0x00,   {L'<',     L'>',     0x001C}},
-    {VK_BACK,    0x00,   {0x0008,   0x0008,   0x007F}},   // BS, BS, DEL
-    {VK_ESCAPE,  0x00,   {0x001B,   0x001B,   0x001B}},   // ESC, ESC, ESC
-    {VK_RETURN,  0x00,   {L'\r',    L'\r',    L'\n'}},
-    {VK_SPACE,   0x00,   {L' ',     L' ',     L' '}},
-    {VK_CANCEL,  0x00,   {0x0003,   0x0003,   0x0003}},   // ETX, ETX, ETX
-    {0,          0,      0,         0,        0}
-};
-
-//---------------------------------------------------------------------------
-// Virtual Key to WCHAR translations for 4 shift states
-//---------------------------------------------------------------------------
-
-static VK_TO_WCHARS4 vk_to_wchar4[] = {
-    //                               Shift     Ctrl      AltGr
-    //                               -----     ----      -----
-    {'2',         CAPLOK, {0x00E9,   L'2',     WCH_NONE, L'~'}},     // e acute
-    {'3',         CAPLOK, {L'"',     L'3',     WCH_NONE, L'#'}},
-    {'4',         CAPLOK, {L'\'',    L'4',     WCH_NONE, L'{'}},
-    {'7',         CAPLOK, {0x00E8,   L'7',     WCH_NONE, L'`'}},     // e grave
-    {'0',         CAPLOK, {0x00E0,   L'0',     0x0000,   L'@'}},     // a grave
-    {VK_OEM_4,    CAPLOK, {L')',     0x00B0,   WCH_NONE, L']'}},     // Degree
-    {VK_OEM_PLUS, CAPLOK, {L'=',     L'+',     WCH_NONE, L'}'}},
-    {'E',         CAPLOK, {L'e',     L'E',     WCH_NONE, 0x20AC}},
-    {'T',         CAPLOK, {L't',     L'T',     WCH_NONE, WCH_LGTR}}, // Ligature test on AltGr-T
-    {VK_OEM_1,    CAPLOK, {L'$',     0x00A3,   0x001D,   0x00A4}},   // Pound, Currency
-    {0,           0,      0,         0,        0,        0}
-};
-
-//---------------------------------------------------------------------------
-// Virtual Key to WCHAR translations for 5 shift states
-//---------------------------------------------------------------------------
-
-static VK_TO_WCHARS5 vk_to_wchar5[] = {
-    //                     Shift Ctrl      AltGr    Shift/Ctrl
-    //                     ----- ----      -----    ----------
-    {'5', CAPLOK, {L'(',   L'5', WCH_NONE, L'[',    0x001B}},  // ESC
-    {'6', CAPLOK, {L'-',   L'6', WCH_NONE, L'|',    0x001F}},
-    {'8', CAPLOK, {L'_',   L'8', WCH_NONE, L'\\',   0x001C}},
-    {'9', CAPLOK, {0x00E7, L'9', WCH_NONE, L'^',    0x001E}},  // c cedilla
-    {0,   0,      0,       0,    0,        0,       0}
-};
-
-//---------------------------------------------------------------------------
-// Virtual Key to WCHAR translations for 6 shift states
-// Added to include accentuated characters instead of dead keys
-//---------------------------------------------------------------------------
-
-static VK_TO_WCHARS6 vk_to_wchar6[] = {
-    //                   Shift Ctrl      AltGr   Shift/Ctrl Shift/AltGr
-    //                   ----- ----      -----   ---------- -----------
-    {'A', CAPLOK, {L'a', L'A', WCH_NONE, 0x00E2, WCH_NONE,  0x00C2}},  // a circumflex, A circumflex
-    {'E', CAPLOK, {L'e', L'E', WCH_NONE, 0x20AC, WCH_NONE,  0x00EA}},  // Euro, e circumflex
-    {'R', CAPLOK, {L'r', L'R', WCH_NONE, 0x00EA, WCH_NONE,  0x00CA}},  // e circumflex, E circumflex
-    {'I', CAPLOK, {L'i', L'I', WCH_NONE, 0x00EE, WCH_NONE,  0x00CE}},  // i circumflex, I circumflex
-    {'O', CAPLOK, {L'o', L'O', WCH_NONE, 0x00F4, WCH_NONE,  0x00D4}},  // o circumflex, O circumflex
-    {'U', CAPLOK, {L'u', L'U', WCH_NONE, 0x00FB, WCH_NONE,  0x00DB}},  // u circumflex, U circumflex
-    {0,   0,      0,     0,    0,        0,      0,         0}
 };
 
 //---------------------------------------------------------------------------
@@ -452,11 +453,10 @@ static VK_TO_WCHAR_TABLE vk_to_wchar[] = {
 
 //---------------------------------------------------------------------------
 // Ligatures to WCHAR translations
-// Here, this is just an example of ligature: AltGr-'T' generates "test".
 //---------------------------------------------------------------------------
 
 static LIGATURE4 ligatures[] = {
-    {'T', 3, {L't', L'e', L's', L't'}}, // Ctrl/Alt (AltGr)
+    {'T', 3, {L't', L'e', L's', L't'}}, // AltGr
     {0,   0, {0,    0,    0,    0}}
 };
 

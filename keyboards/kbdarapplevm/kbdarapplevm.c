@@ -8,6 +8,7 @@
 #include <windows.h>
 #include <kbd.h>
 #include <dontuse.h>
+#include "unicode.h"
 
 //---------------------------------------------------------------------------
 // Scan codes to key names
@@ -189,7 +190,7 @@ static USHORT scancode_to_vk[] = {
     /* 53 */ VK_DELETE | KBDSPECIAL | KBDNUMPAD,
     /* 54 */ VK_SNAPSHOT,
     /* 55 */ VK__none_,
-    /* 56 */ VK_OEM_7, // "Apple VM" keyboard
+    /* 56 */ VK_OEM_7,
     /* 57 */ VK_F11,
     /* 58 */ VK_F12,
     /* 59 */ VK_CLEAR,
@@ -313,7 +314,7 @@ static MODIFIERS char_modifiers = {
         SHFT_INVALID, // 100 = Alt
         SHFT_INVALID, // 101 = Shift Alt
         3,            // 110 = Control Alt (AltGr)
-        4,            // 111 = Shift Control Alt
+        4,            // 111 = Shift Control Alt (Shift AltGr)
     }
 };
 
@@ -324,10 +325,10 @@ static MODIFIERS char_modifiers = {
 static VK_TO_WCHARS3 vk_to_wchar3[] = {
     //                         Shift   Ctrl
     //                         -----   ----
-    {VK_BACK,   0x00, {0x0008, 0x0008, 0x007F}}, // BS, BS, DEL
-    {VK_ESCAPE, 0x00, {0x001B, 0x001B, 0x001B}}, // ESC, ESC, ESC
+    {VK_BACK,   0x00, {UC_BS,  UC_BS,  UC_DEL}},
+    {VK_ESCAPE, 0x00, {UC_ESC, UC_ESC, UC_ESC}},
     {VK_RETURN, 0x00, {L'\r',  L'\r',  L'\n'}},
-    {VK_CANCEL, 0x00, {0x0003, 0x0003, 0x0003}}, // ETX, ETX, ETX
+    {VK_CANCEL, 0x00, {UC_ETX, UC_ETX, UC_ETX}},
     {0,         0,    0,       0,      0}
 };
 
@@ -336,72 +337,72 @@ static VK_TO_WCHARS3 vk_to_wchar3[] = {
 //---------------------------------------------------------------------------
 
 static VK_TO_WCHARS5 vk_to_wchar5[] = {
-    //                               Shift     Ctrl      Ctrl/Alt  Shift/Ctrl/Alt
-    //                               -----     ----      --------  --------------
-    {'1',           SGCAPS, {0x0661, L'!',     0x0661,   0x0638,   0x0638}},
-    {'1',           0x00,   {L'1',   0x0000,   0x0000,   0x0000,   0x0000}},
-    {'2',           SGCAPS, {0x0662, L'@',     0x0662,   0x0637,   0x274A}},
-    {'2',           0x00,   {L'2',   0x0000,   0x0000,   0x0000,   0x0000}},
-    {'3',           SGCAPS, {0x0663, L'#',     0x0663,   0x0630,   0x00A3}},      // Pound
-    {'3',           0x00,   {L'3',   0x0000,   0x0000,   0x0000,   0x0000}},
-    {'4',           SGCAPS, {0x0664, L'$',     0x0664,   0x062F,   0x20AC}},
-    {'4',           0x00,   {L'4',   0x0000,   0x0000,   0x0000,   0x0000}},
-    {'5',           SGCAPS, {0x0665, 0x066A,   0x0665,   0x221E,   WCH_NONE}},    // Infinity
-    {'5',           0x00,   {L'5',   0x0000,   0x0000,   0x0000,   0x0000}},
-    {'6',           SGCAPS, {0x0666, L'^',     0x0666,   0x0671,   WCH_NONE}},
-    {'6',           0x00,   {L'6',   0x0000,   0x0000,   0x0000,   0x0000}},
-    {'7',           SGCAPS, {0x0667, L'&',     0x0667,   WCH_NONE, WCH_NONE}},
-    {'7',           0x00,   {L'7',   0x0000,   0x0000,   0x0000,   0x0000}},
-    {'8',           SGCAPS, {0x0668, L'*',     0x0668,   WCH_NONE, WCH_NONE}},
-    {'8',           0x00,   {L'8',   0x0000,   0x0000,   0x0000,   0x0000}},
-    {'9',           SGCAPS, {0x0669, L')',     0x0669,   WCH_NONE, WCH_NONE}},
-    {'9',           0x00,   {L'9',   0x0000,   0x0000,   0x0000,   0x0000}},
-    {'0',           SGCAPS, {0x0660, L'(',     0x0660,   0x00B0,   WCH_NONE}},    // Degree
-    {'0',           0x00,   {L'0',   0x0000,   0x0000,   0x0000,   0x0000}},
-    {VK_OEM_MINUS,  SGCAPS, {L'-',   0x0640,   WCH_NONE, L'_',     L'_'}},
-    {VK_OEM_MINUS,  0x00,   {L'-',   0x0000,   0x0000,   0x0000,   0x0000}},
-    {VK_OEM_PLUS,   SGCAPS, {L'=',   L'+',     L'=',     WCH_NONE, WCH_NONE}},
-    {VK_OEM_PLUS,   0x00,   {L'=',   0x0000,   0x0000,   0x0000,   0x0000}},
-    {'Q',           0x00,   {0x0636, 0x064E,   WCH_NONE, 0x2018,   WCH_NONE}},    // Left single quotation
-    {'W',           0x00,   {0x0635, 0x064B,   WCH_NONE, 0x2018,   WCH_NONE}},    // Left single quotation
-    {'E',           0x00,   {0x062B, 0x0650,   WCH_NONE, 0x201C,   WCH_NONE}},    // Left double quotation
-    {'R',           0x00,   {0x0642, 0x064D,   WCH_NONE, 0x201C,   0x0609}},      // Left double quotation
-    {'T',           0x00,   {0x0641, 0x064F,   WCH_NONE, 0x06A4,   0x06A4}},
-    {'Y',           0x00,   {0x063A, 0x064C,   WCH_NONE, WCH_NONE, WCH_NONE}},
-    {'U',           0x00,   {0x0639, 0x0652,   WCH_NONE, 0x06D5,   0x06D5}},
-    {'I',           0x00,   {0x0647, 0x0651,   WCH_NONE, WCH_NONE, WCH_NONE}},
-    {'O',           0x00,   {0x062E, L']',     WCH_NONE, WCH_NONE, WCH_NONE}},
-    {'P',           0x00,   {0x062D, L'[',     WCH_NONE, WCH_NONE, WCH_NONE}},
-    {VK_OEM_4,      0x00,   {0x062C, L'}',     0x001B,   0x0686,   0x0686}},      // ESC
-    {VK_OEM_6,      0x00,   {0x0629, L'{',     0x001D,   WCH_NONE, WCH_NONE}},
-    {'A',           0x00,   {0x0634, 0x00AB,   WCH_NONE, WCH_NONE, WCH_NONE}},    // <<
-    {'S',           0x00,   {0x0633, 0x00BB,   WCH_NONE, 0x06D2,   0x06D2}},      // >>
-    {'D',           0x00,   {0x064A, 0x0649,   WCH_NONE, 0x06CC,   0x06CC}},
-    {'F',           0x00,   {0x0628, WCH_NONE, WCH_NONE, 0x067E,   0x067E}},
-    {'G',           0x00,   {0x0644, WCH_NONE, WCH_NONE, 0x0653,   WCH_NONE}},
-    {'H',           0x00,   {0x0627, 0x0622,   WCH_NONE, 0x0670,   WCH_NONE}},
-    {'J',           0x00,   {0x062A, WCH_NONE, WCH_NONE, 0x0679,   0x0679}},
-    {'K',           0x00,   {0x0646, 0x066B,   WCH_NONE, 0x06BA,   0x06BA}},
-    {'L',           0x00,   {0x0645, 0x066C,   WCH_NONE, WCH_NONE, WCH_NONE}},
-    {VK_OEM_1,      0x00,   {0x0643, L':',     L';',     0x06AF,   0x06A9}},
-    {VK_OEM_7,      0x00,   {0x061B, L'"',     L'\'',    0x2026,   0x2026}},      // Horizontal ellipsis, Horizontal ellipsis
-    {VK_OEM_3,      SGCAPS, {0x00A7, 0x00B1,   L'0',     0x0003,   0x0003}},      // Section, +/-, ETX, ETX
-    {VK_OEM_3,      0x00,   {0x0003, 0x0000,   0x0000,   0x0000,   0x0000}},      // ETX
-    {VK_OEM_5,      0x00,   {L'\\',  L'|',     0x001C,   WCH_NONE, WCH_NONE}},
-    {'Z',           0x00,   {0x0638, L'\'',    WCH_NONE, WCH_NONE, WCH_NONE}},
-    {'X',           0x00,   {0x0637, WCH_NONE, WCH_NONE, WCH_NONE, WCH_NONE}},
-    {'C',           0x00,   {0x0630, 0x0626,   WCH_NONE, 0x0688,   0x0688}},
-    {'V',           0x00,   {0x062F, 0x0621,   WCH_NONE, 0x0691,   0x0691}},
-    {'B',           0x00,   {0x0632, 0x0623,   WCH_NONE, 0x0698,   0x0698}},
-    {'N',           0x00,   {0x0631, 0x0625,   WCH_NONE, WCH_NONE, WCH_NONE}},
-    {'M',           0x00,   {0x0648, 0x0624,   WCH_NONE, WCH_NONE, WCH_NONE}},
-    {VK_OEM_COMMA,  0x00,   {0x060C, L'>',     L',',     L',',     L','}},
-    {VK_OEM_PERIOD, 0x00,   {L'.',   L'<',     L'.',     WCH_NONE, WCH_NONE}},
-    {VK_OEM_2,      0x00,   {L'/',   0x061F,   L'/',     0x00F7,   0x00F7}},      // Division, Division
-    {VK_SPACE,      0x00,   {L' ',   L' ',     WCH_NONE, 0x00A0,   0x00A0}},      // Nbrk space, Nbrk space
-    {VK_OEM_102,    0x00,   {0x0640, WCH_NONE, L'`',     WCH_NONE, WCH_NONE}},
-    {VK_DECIMAL,    0x00,   {L'.',   L'.',     WCH_NONE, WCH_NONE, WCH_NONE}},
-    {0,             0,      0,       0,        0,        0,        0}
+    //                                   Shift             Ctrl      AltGr           Shift/AltGr
+    //                                   -----             ----      -----           -----------
+    {'1',           SGCAPS, {0x0661,     L'!',             0x0661,   0x0638,         0x0638}},
+    {'1',           0x00,   {L'1',       0x0000,           0x0000,   0x0000,         0x0000}},
+    {'2',           SGCAPS, {0x0662,     L'@',             0x0662,   0x0637,         0x274A}},
+    {'2',           0x00,   {L'2',       0x0000,           0x0000,   0x0000,         0x0000}},
+    {'3',           SGCAPS, {0x0663,     L'#',             0x0663,   0x0630,         UC_POUND}},
+    {'3',           0x00,   {L'3',       0x0000,           0x0000,   0x0000,         0x0000}},
+    {'4',           SGCAPS, {0x0664,     L'$',             0x0664,   0x062F,         UC_EURO}},
+    {'4',           0x00,   {L'4',       0x0000,           0x0000,   0x0000,         0x0000}},
+    {'5',           SGCAPS, {0x0665,     0x066A,           0x0665,   UC_INFINITY,    WCH_NONE}},
+    {'5',           0x00,   {L'5',       0x0000,           0x0000,   0x0000,         0x0000}},
+    {'6',           SGCAPS, {0x0666,     L'^',             0x0666,   0x0671,         WCH_NONE}},
+    {'6',           0x00,   {L'6',       0x0000,           0x0000,   0x0000,         0x0000}},
+    {'7',           SGCAPS, {0x0667,     L'&',             0x0667,   WCH_NONE,       WCH_NONE}},
+    {'7',           0x00,   {L'7',       0x0000,           0x0000,   0x0000,         0x0000}},
+    {'8',           SGCAPS, {0x0668,     L'*',             0x0668,   WCH_NONE,       WCH_NONE}},
+    {'8',           0x00,   {L'8',       0x0000,           0x0000,   0x0000,         0x0000}},
+    {'9',           SGCAPS, {0x0669,     L')',             0x0669,   WCH_NONE,       WCH_NONE}},
+    {'9',           0x00,   {L'9',       0x0000,           0x0000,   0x0000,         0x0000}},
+    {'0',           SGCAPS, {0x0660,     L'(',             0x0660,   UC_DEGREE,      WCH_NONE}},
+    {'0',           0x00,   {L'0',       0x0000,           0x0000,   0x0000,         0x0000}},
+    {VK_OEM_MINUS,  SGCAPS, {L'-',       0x0640,           WCH_NONE, L'_',           L'_'}},
+    {VK_OEM_MINUS,  0x00,   {L'-',       0x0000,           0x0000,   0x0000,         0x0000}},
+    {VK_OEM_PLUS,   SGCAPS, {L'=',       L'+',             L'=',     WCH_NONE,       WCH_NONE}},
+    {VK_OEM_PLUS,   0x00,   {L'=',       0x0000,           0x0000,   0x0000,         0x0000}},
+    {'Q',           0x00,   {0x0636,     0x064E,           WCH_NONE, UC_S_LEFT_QUOT, WCH_NONE}},
+    {'W',           0x00,   {0x0635,     0x064B,           WCH_NONE, UC_S_LEFT_QUOT, WCH_NONE}},
+    {'E',           0x00,   {0x062B,     0x0650,           WCH_NONE, UC_D_LEFT_QUOT, WCH_NONE}},
+    {'R',           0x00,   {0x0642,     0x064D,           WCH_NONE, UC_D_LEFT_QUOT, 0x0609}},
+    {'T',           0x00,   {0x0641,     0x064F,           WCH_NONE, 0x06A4,         0x06A4}},
+    {'Y',           0x00,   {0x063A,     0x064C,           WCH_NONE, WCH_NONE,       WCH_NONE}},
+    {'U',           0x00,   {0x0639,     0x0652,           WCH_NONE, 0x06D5,         0x06D5}},
+    {'I',           0x00,   {0x0647,     0x0651,           WCH_NONE, WCH_NONE,       WCH_NONE}},
+    {'O',           0x00,   {0x062E,     L']',             WCH_NONE, WCH_NONE,       WCH_NONE}},
+    {'P',           0x00,   {0x062D,     L'[',             WCH_NONE, WCH_NONE,       WCH_NONE}},
+    {VK_OEM_4,      0x00,   {0x062C,     L'}',             UC_ESC,   0x0686,         0x0686}},
+    {VK_OEM_6,      0x00,   {0x0629,     L'{',             UC_GS,    WCH_NONE,       WCH_NONE}},
+    {'A',           0x00,   {0x0634,     UC_DA_LEFT_QUOT,  WCH_NONE, WCH_NONE,       WCH_NONE}},
+    {'S',           0x00,   {0x0633,     UC_DA_RIGHT_QUOT, WCH_NONE, 0x06D2,         0x06D2}},
+    {'D',           0x00,   {0x064A,     0x0649,           WCH_NONE, 0x06CC,         0x06CC}},
+    {'F',           0x00,   {0x0628,     WCH_NONE,         WCH_NONE, 0x067E,         0x067E}},
+    {'G',           0x00,   {0x0644,     WCH_NONE,         WCH_NONE, 0x0653,         WCH_NONE}},
+    {'H',           0x00,   {0x0627,     0x0622,           WCH_NONE, 0x0670,         WCH_NONE}},
+    {'J',           0x00,   {0x062A,     WCH_NONE,         WCH_NONE, 0x0679,         0x0679}},
+    {'K',           0x00,   {0x0646,     0x066B,           WCH_NONE, 0x06BA,         0x06BA}},
+    {'L',           0x00,   {0x0645,     0x066C,           WCH_NONE, WCH_NONE,       WCH_NONE}},
+    {VK_OEM_1,      0x00,   {0x0643,     L':',             L';',     0x06AF,         0x06A9}},
+    {VK_OEM_7,      0x00,   {0x061B,     L'"',             L'\'',    UC_ELLIPSIS,    UC_ELLIPSIS}},
+    {VK_OEM_3,      SGCAPS, {UC_SECTION, UC_PLUS_MINUS,    L'0',     UC_ETX,         UC_ETX}},
+    {VK_OEM_3,      0x00,   {UC_ETX,     0x0000,           0x0000,   0x0000,         0x0000}},
+    {VK_OEM_5,      0x00,   {L'\\',      L'|',             UC_FS,    WCH_NONE,       WCH_NONE}},
+    {'Z',           0x00,   {0x0638,     L'\'',            WCH_NONE, WCH_NONE,       WCH_NONE}},
+    {'X',           0x00,   {0x0637,     WCH_NONE,         WCH_NONE, WCH_NONE,       WCH_NONE}},
+    {'C',           0x00,   {0x0630,     0x0626,           WCH_NONE, 0x0688,         0x0688}},
+    {'V',           0x00,   {0x062F,     0x0621,           WCH_NONE, 0x0691,         0x0691}},
+    {'B',           0x00,   {0x0632,     0x0623,           WCH_NONE, 0x0698,         0x0698}},
+    {'N',           0x00,   {0x0631,     0x0625,           WCH_NONE, WCH_NONE,       WCH_NONE}},
+    {'M',           0x00,   {0x0648,     0x0624,           WCH_NONE, WCH_NONE,       WCH_NONE}},
+    {VK_OEM_COMMA,  0x00,   {0x060C,     L'>',             L',',     L',',           L','}},
+    {VK_OEM_PERIOD, 0x00,   {L'.',       L'<',             L'.',     WCH_NONE,       WCH_NONE}},
+    {VK_OEM_2,      0x00,   {L'/',       0x061F,           L'/',     UC_DIVISION,    UC_DIVISION}},
+    {VK_SPACE,      0x00,   {L' ',       L' ',             WCH_NONE, UC_NBSP,        UC_NBSP}},
+    {VK_OEM_102,    0x00,   {0x0640,     WCH_NONE,         L'`',     WCH_NONE,       WCH_NONE}},
+    {VK_DECIMAL,    0x00,   {L'.',       L'.',             WCH_NONE, WCH_NONE,       WCH_NONE}},
+    {0,             0,      0,           0,                0,        0,              0}
 };
 
 //---------------------------------------------------------------------------

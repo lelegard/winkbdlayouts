@@ -80,17 +80,17 @@
     <Platform Condition="'$(Platform)' == ''">arm64</Platform>
   </PropertyGroup>
 
-  <!-- Output directories -->
+  <!-- Input and output directories -->
+  <PropertyGroup Condition="'$(RootDir)'==''">
+    <RootDir>$(SolutionDir)</RootDir>
+  </PropertyGroup>
   <PropertyGroup Label="Configuration">
     <PlatformDir Condition="'$(Platform)'!='Win32'">$(Platform)</PlatformDir>
     <PlatformDir Condition="'$(Platform)'=='Win32'">x86</PlatformDir>
     <OutDir>$(SolutionDir)$(PlatformDir)\$(Configuration)\</OutDir>
     <IntDir>$(OutDir)$(ProjectName)\</IntDir>
-  </PropertyGroup>
-
-  <!-- Where the top level resource files are -->
-  <PropertyGroup Condition="'$(ResourceDir)'==''">
-    <ResourceDir>$(SolutionDir)keyboards\</ResourceDir>
+    <ResourceDir>$(RootDir)keyboards\</ResourceDir>
+    <ToolsDir>$(RootDir)tools\</ToolsDir>
   </PropertyGroup>
 
   <!-- Build options -->
@@ -119,10 +119,11 @@
   <ItemDefinitionGroup>
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(ResourceDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ResourceDir);$(OutDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
@@ -199,7 +200,7 @@
     </Link>
   </ItemDefinitionGroup>
 
-  <!-- File names for keyboard layouts -->
+  <!-- Source files for keyboard layouts -->
   <ItemGroup Condition="'$(ProjectType)'=='KeyboardLayout'">
     <ClCompile Include="$(ProjectName).c"/>
     <ClInclude Include="strings.h"/>
@@ -216,6 +217,16 @@
   <ItemGroup Condition="'$(ProjectType)'=='ConsoleTool'">
     <ClCompile Include="$(ProjectName).cpp"/>
   </ItemGroup>
+
+  <!-- A target to build unicode_syms.h -->
+  <Target Name="BuildUnicodeSyms" Inputs="$(ResourceDir)unicode.h" Outputs="$(OutDir)include\unicode_syms.h">
+    <Message Text="Building $(OutDir)include\unicode_syms.h" Importance="high"/>
+    <MakeDir Directories="$(OutDir)include" Condition="!Exists('$(OutDir)include')"/>
+    <Exec ConsoleToMSBuild='true'
+          Command='python "$(ToolsDir)build-unicode-header.py" "$(ResourceDir)unicode.h" "$(OutDir)include\unicode_syms.h"'>
+      <Output TaskParameter="ConsoleOutput" PropertyName="OutputOfExec"/>
+    </Exec>
+  </Target>
 
   <!-- Standard targets -->
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets"/>

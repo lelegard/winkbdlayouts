@@ -2,9 +2,9 @@
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup Label="Globals">
     <ProjectGuid>{b9b80495-01ba-4afd-99fe-f87822fb8300}</ProjectGuid>
-    <ResourceDir>$(SolutionDir)..\..\keyboards\</ResourceDir>
+    <RootDir>$(SolutionDir)..\..\</RootDir>
   </PropertyGroup>
   <ImportGroup Label="PropertySheets">
-    <Import Project="$(SolutionDir)..\..\msbuild.props"/>
+    <Import Project="$(RootDir)msbuild.props"/>
   </ImportGroup>
 </Project>

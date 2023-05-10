@@ -33,6 +33,7 @@ public:
     // Command line options.
     WString       output;
     WStringVector dll_install;
+    WString       activate;
     bool          remove_wkl;
     bool          list_keyboards;
     bool          show_user;
@@ -45,6 +46,7 @@ AdminOptions::AdminOptions(int argc, wchar_t* argv[]) :
         L"\n"
         L"Options:\n"
         L"\n"
+        L"  -a name : activate the specified keyboard DLL\n"
         L"  -i dll-or-directory : install specified keyboard DLL\n"
         L"  -o file : output file name, default is standard output\n"
         L"  -h  : display this help text\n"
@@ -57,6 +59,7 @@ AdminOptions::AdminOptions(int argc, wchar_t* argv[]) :
         L"  -v  : verbose messages"),
     output(),
     dll_install(),
+    activate(),
     remove_wkl(false),
     list_keyboards(false),
     show_user(false),
@@ -91,6 +94,9 @@ AdminOptions::AdminOptions(int argc, wchar_t* argv[]) :
             dont_prompt = true;
             setPromptOnExit(false);
         }
+        else if (args[i] == L"-a" && i + 1 < args.size()) {
+            activate = args[++i];
+        }
         else if (args[i] == L"-o" && i + 1 < args.size()) {
             output = args[++i];
         }
@@ -103,7 +109,7 @@ AdminOptions::AdminOptions(int argc, wchar_t* argv[]) :
     }
 
     // Default action if nothing is specified.
-    if (!list_keyboards && !show_user && !search_active && !remove_wkl && dll_install.empty()) {
+    if (!list_keyboards && !show_user && !search_active && !remove_wkl && dll_install.empty() && activate.empty()) {
         // If the exe is named "setup.exe", default to "-i same-directory-as-exe".
         const WString exe(GetCurrentProgram());
         if (ToLower(FileName(exe)) == L"setup.exe") {
@@ -260,7 +266,6 @@ void SearchActiveKeyboards(AdminOptions& opt)
         insize = DWORD(mods.size() * sizeof(HMODULE));
         retsize = 0;
         if (!EnumProcessModules(hproc, &mods[0], insize, &retsize)) {
-            const DWORD err = GetLastError();
             error_count++;
             CloseHandle(hproc);
             continue;
@@ -277,6 +282,48 @@ void SearchActiveKeyboards(AdminOptions& opt)
         CloseHandle(hproc);
     }
     opt.verbose(Format(L"Found %d processes, %d cannot be accessed", pids.size(), error_count));
+}
+
+
+//---------------------------------------------------------------------------
+// Activate a keyboard DLL.
+//---------------------------------------------------------------------------
+
+void ActivateKeyboard(AdminOptions& opt)
+{
+    // Get DLL file name, lower case.
+    WString dllname(ToLower(FileName(opt.activate)));
+    if (!StartsWith(dllname, L"kbd")) {
+        dllname.insert(0, L"kbd");
+    }
+    if (!EndsWith(dllname, L".dll")) {
+        dllname.append(L".dll");
+    }
+
+    // Search which keyboard layout has this DLL name.
+    Registry reg(opt);
+    WStringList all_lang_ids;
+    if (reg.getSubKeys(REGISTRY_LAYOUT_KEY, all_lang_ids)) {
+        for (const auto& lang_id : all_lang_ids) {
+            const WString key(REGISTRY_LAYOUT_KEY "\\" + lang_id);
+            const WString file(reg.getValue(key, REGISTRY_LAYOUT_FILE, true));
+            if (ToLower(file) == dllname) {
+                // Found the right language.
+                opt.info(L"Activating language " + lang_id + " (" + dllname + ")");
+                HKL hkl = LoadKeyboardLayoutW(lang_id.c_str(), KLF_ACTIVATE);
+                if (hkl == NULL) {
+                    const DWORD err = GetLastError();
+                    opt.fatal("LoadKeyboardLayout: " + ErrorText(err));
+                }
+                if (!SystemParametersInfoW(SPI_SETDEFAULTINPUTLANG, 0, &hkl, SPIF_SENDCHANGE)) {
+                    const DWORD err = GetLastError();
+                    opt.fatal("SystemParametersInfo: " + ErrorText(err));
+                }                
+                return;
+            }
+        }
+        opt.error(L"cannot find a language id for " + dllname);
+    }
 }
 
 
@@ -392,6 +439,9 @@ int wmain(int argc, wchar_t* argv[])
     }
     if (opt.show_user) {
         DisplayUserSetup(opt);
+    }
+    if (!opt.activate.empty()) {
+        ActivateKeyboard(opt);
     }
     if (opt.search_active) {
         SearchActiveKeyboards(opt);

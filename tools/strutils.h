@@ -30,6 +30,10 @@ WString ToUpper(const WString&);
 bool StartsWith(const WString&, const WString& prefix);
 bool EndsWith(const WString&, const WString& suffix);
 
+// Format a WString literal, as used in a C/C++ source file.
+WString WStringLiteral(const wchar_t*);
+inline WString WStringLiteral(const WString& s) { return WStringLiteral(s.c_str()); }
+
 // Decode a string as an integer. Return 0 on error.
 inline int ToInt(const WString& str) { return _wtoi(str.c_str()); }
 
@@ -49,6 +53,9 @@ inline void Zero(void* base, size_t size) { memset(base, 0, size); }
 // Check if a memory area is not empty and full of zeroes.
 bool IsZero(const void* base, size_t size);
 bool IsZero(const void* base, const void* end);
+
+// The UTF-8 Byte Order Mark
+#define UTF8_BOM "\xEF\xBB\xBF"
 
 // UTF-8 / UTF-16 conversions.
 WString ToUTF16(const std::string&);

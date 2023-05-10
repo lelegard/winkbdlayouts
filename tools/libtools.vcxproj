@@ -13,6 +13,8 @@
     <ClCompile Include="strutils.cpp"/>
     <ClInclude Include="winutils.h"/>
     <ClCompile Include="winutils.cpp"/>
+    <ClInclude Include="winkeymap.h"/>
+    <ClCompile Include="winkeymap.cpp"/>
     <ClInclude Include="grid.h"/>
     <ClCompile Include="grid.cpp"/>
     <ClInclude Include="registry.h"/>

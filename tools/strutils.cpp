@@ -11,7 +11,6 @@
 #include "strutils.h"
 #include <cstdarg>
 #include <algorithm>
-#include <codecvt>
 
 
 //---------------------------------------------------------------------------
@@ -98,19 +97,75 @@ bool EndsWith(const WString& s, const WString& suffix)
 
 
 //---------------------------------------------------------------------------
+// Format a WString literal, as used in a C/C++ source file.
+//---------------------------------------------------------------------------
+
+namespace {
+    // WCHAR representation when inserted in strings literals.
+    const std::map<wchar_t, const wchar_t*> wchar_literals {
+        {L'\t', L"\\t"},
+        {L'\n', L"\\n"},
+        {L'\r', L"\\r"},
+        {L'"',  L"\\\""},
+        {L'\\', L"\\\\"},
+    };
+}
+
+WString WStringLiteral(const wchar_t* value)
+{
+    if (value == nullptr) {
+        return L"NULL";
+    }
+    else {
+        WString str(L"L\"");
+        for (; *value != 0; ++value) {
+            const auto it = wchar_literals.find(*value);
+            if (it != wchar_literals.end()) {
+                str.append(it->second);
+            }
+            else if (*value >= L' ' && *value < 0x007F) {
+                str.push_back(*value);
+            }
+            else {
+                str.append(Format(L"\\x%04x", *value));
+            }
+        }
+        str.push_back(L'"');
+        return str;
+    }
+}
+
+
+//---------------------------------------------------------------------------
 // UTF-8 / UTF-16 conversions.
 //---------------------------------------------------------------------------
 
 WString ToUTF16(const std::string& str)
 {
-    std::wstring_convert<std::codecvt_utf8<wchar_t>> myconv;
-    return myconv.from_bytes(str);
+    if (str.empty()) {
+        return WString();
+    }
+    else {
+        // The UTF-16 string cannot have more characters than the UTF-8 one.
+        WString out(str.size(), 0);
+        const size_t size = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), int(str.size()), &out[0], int(out.size()));
+        out.resize(std::min(size, out.size()));
+        return out;
+    }
 }
 
 std::string ToUTF8(const WString& str)
 {
-    std::wstring_convert<std::codecvt_utf8<wchar_t>> myconv;
-    return myconv.to_bytes(str);
+    if (str.empty()) {
+        return std::string();
+    }
+    else {
+        // There is at most 4 bytes per Unicode character.
+        std::string out(4 * str.size(), 0);
+        const size_t size = WideCharToMultiByte(CP_UTF8, 0, str.c_str(), int(str.size()), &out[0], int(out.size()), nullptr, nullptr);
+        out.resize(std::min(size, out.size()));
+        return out;
+    }
 }
 
 

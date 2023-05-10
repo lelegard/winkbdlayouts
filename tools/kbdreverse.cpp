@@ -15,6 +15,8 @@
 #include "registry.h"
 #include "grid.h"
 #include "fileversion.h"
+#include "winkeymap.h"
+#include "unicode.h"
 
 // Tables of values => symbols
 typedef __int64 Value;
@@ -44,14 +46,16 @@ public:
     ReverseOptions(int argc, wchar_t* argv[]);
 
     // Command line options.
-    WString dashed;
-    WString input;
-    WString output;
-    WString comment;
-    int     kbd_type;
-    bool    num_only;
-    bool    hexa_dump;
-    bool    gen_resources;
+    WString     dashed;
+    WString     input;
+    WString     output;
+    WString     comment;
+    WStringList headers;
+    int         kbd_type;
+    bool        num_only;
+    bool        hexa_dump;
+    bool        gen_resources;
+    bool        gen_list;
 };
 
 ReverseOptions::ReverseOptions(int argc, wchar_t* argv[]) :
@@ -66,19 +70,25 @@ ReverseOptions::ReverseOptions(int argc, wchar_t* argv[]) :
         L"  -c \"string\" : comment string in the header\n"
         L"  -d : add hexa dump in final comments\n"
         L"  -h : display this help text\n"
+        L"  -l : generate a list of characters instead of a C source file\n"
         L"  -n : numerical output only, do not attempt to translate to source macros\n"
         L"  -o file : output file name, default is standard output\n"
         L"  -r : generate a resource file instead of a C source file\n"
-        L"  -t value : keyboard type, defaults to dwType in kbd table or 4 if unspecified"),
+        L"  -t value : keyboard type, defaults to dwType in kbd table or 4 if unspecified\n"
+        L"  -u file : same as -o but update output, keeping leading comments"),
     dashed(75, L'-'),
     input(),
     output(),
     comment(L"Windows Keyboards Layouts (WKL)"),
+    headers(),
     kbd_type(0),
     num_only(false),
     hexa_dump(false),
-    gen_resources(false)
+    gen_resources(false),
+    gen_list(false)
 {
+    bool get_headers = false;
+
     // Parse arguments.
     for (size_t i = 0; i < args.size(); ++i) {
         if (args[i] == L"--help" || args[i] == L"-h") {
@@ -93,8 +103,15 @@ ReverseOptions::ReverseOptions(int argc, wchar_t* argv[]) :
         else if (args[i] == L"-r") {
             gen_resources = true;
         }
+        else if (args[i] == L"-l") {
+            gen_list = true;
+        }
         else if (args[i] == L"-o" && i + 1 < args.size()) {
             output = args[++i];
+        }
+        else if (args[i] == L"-u" && i + 1 < args.size()) {
+            output = args[++i];
+            get_headers = true;
         }
         else if (args[i] == L"-c" && i + 1 < args.size()) {
             comment = args[++i];
@@ -112,6 +129,26 @@ ReverseOptions::ReverseOptions(int argc, wchar_t* argv[]) :
     if (input.empty()) {
         fatal(L"no keyboard layout specified, try --help");
     }
+    if (get_headers) {
+        // -u is used, load existing headers from previous output file, if it exists.
+        std::string line;
+        std::ifstream prev(output);
+        while (std::getline(prev, line)) {
+            // Remove leading (optional BOM) and trailing control characters.
+            while (!line.empty() && line.back() < 0x20) {
+                line.pop_back();
+            }
+            while (!line.empty() && line[0] > 0xB0) {
+                line.erase(0, 1);
+            }
+            if (line.length() >= 2 && line[0] == '/' && line[1] == '/') {
+                headers.push_back(ToUTF16(line));
+            }
+            else {
+                break;
+            }
+        }
+    }
 }
 
 
@@ -128,19 +165,19 @@ static const WStringVector modifiers_comments {
     L"100 = Alt",
     L"101 = Shift Alt",
     L"110 = Control Alt (AltGr)",
-    L"111 = Shift Control Alt"
+    L"111 = Shift Control Alt (Shift AltGr)"
 };
 
 // Top of columns of VK_TO_WCHARSx structures.
 static const WStringVector modifiers_headers {
-    L"",
+    L"Base",
     L"Shift",
     L"Ctrl",
     L"Shift/Ctrl",
     L"Alt",
     L"Shift/Alt",
-    L"Ctrl/Alt",
-    L"Shift/Ctrl/Alt"
+    L"AltGr",       // AltGr = Ctrl/Alt
+    L"Shift/AltGr"  // Shift/Ctrl/Alt
 };
 
 const SymbolTable shift_state_symbols {
@@ -414,16 +451,9 @@ const SymbolTable wchar_symbols {
     {'\\', L"L'\\\\'"},
     SYM(WCH_NONE),
     SYM(WCH_DEAD),
-    SYM(WCH_LGTR)
-};
-
-// WCHAR representation when inserted in strings literals.
-const SymbolTable wchar_literals {
-    {'\t', L"\\t"},
-    {'\n', L"\\n"},
-    {'\r', L"\\r"},
-    {'"',  L"\\\""},
-    {'\\', L"\\\\"},
+    SYM(WCH_LGTR),
+    // Automatically generated file (using a Python script)
+    #include "unicode_syms.h"
 };
 
 // Names of some usual non-ASCII WCHAR, for insertion in comments.
@@ -512,10 +542,7 @@ private:
     WString pointer(const void* value, const WString& name);
 
     // Format a WCHAR. Add description in descs if one exists.
-    WString wchar(wchar_t value, WStringList& descs);
-
-    // Format a string of WCHAR
-    WString wstring(const wchar_t*);
+    WString wchar(wchar_t value);
 
     // Sort and merge adjacent data structures with same names (typically "Strings in ...").
     void sortDataStructures();
@@ -633,7 +660,7 @@ WString SourceGenerator::pointer(const void* value, const WString& name)
 
 //---------------------------------------------------------------------------
 
-WString SourceGenerator::wchar(wchar_t value, WStringList& descs)
+WString SourceGenerator::wchar(wchar_t value)
 {
     // Format a WCHAR. Add description in descs if one exists.
     if (!_opt.num_only) {
@@ -653,40 +680,8 @@ WString SourceGenerator::wchar(wchar_t value, WStringList& descs)
         return res;
     }
     else {
-        // No symbol found, add a comment 
-        if (!_opt.num_only) {
-            const auto dsc = wchar_descriptions.find(value);
-            if (dsc != wchar_descriptions.end()) {
-                descs.push_back(dsc->second);
-            }
-        }
         return Format(L"0x%04X", value);
     }
-}
-
-//---------------------------------------------------------------------------
-
-WString SourceGenerator::wstring(const wchar_t* value)
-{
-    // Format a string of WCHAR
-    if (value == nullptr) {
-        return L"NULL";
-    }
-    WString str(L"L\"");
-    for (; *value != 0; ++value) {
-        const auto it = wchar_literals.find(*value);
-        if (it != wchar_literals.end()) {
-            str.append(it->second);
-        }
-        else if (*value >= L' ' && *value < 0x007F) {
-            str.push_back(char(*value));
-        }
-        else {
-            str.append(Format(L"\\x%04x", *value));
-        }
-    }
-    str.push_back(L'"');
-    return str;
 }
 
 //---------------------------------------------------------------------------
@@ -817,17 +812,13 @@ void SourceGenerator::genSubVkToWchar(const VK_TO_WCHARS10* vtwc, size_t count, 
             "{" + symbol(vk_symbols, vtwc->VirtualKey, 2) + ",",
             bitMask(vk_attr_symbols, vtwc->Attributes, 2) + ","
         });
-        WStringList comments;
         for (size_t i = 0; i < count; ++i) {
-            WString str(wchar(vtwc->wch[i], comments));
+            WString str(wchar(vtwc->wch[i]));
             if (i == 0) {
                 str.insert(0, 1, L'{');
             }
             str.append(i == count - 1 ? L"}}," : L",");
             grid.addColumn(str);
-        }
-        if (!comments.empty()) {
-            grid.addColumn(L"// " + Join(comments, L", "));
         }
 
         // Move to next structure (variable size).
@@ -912,7 +903,7 @@ void SourceGenerator::genLgToWchar(const LIGATURE1* ligatures, size_t count, siz
         }
         // List of generated characters for that ligature.
         for (size_t i = 0; i < count; ++i) {
-            WString str(wchar(lg->wch[i], comments));
+            WString str(wchar(lg->wch[i]));
             if (i == 0) {
                 str.insert(0, 1, '{');
             }
@@ -971,16 +962,12 @@ void SourceGenerator::genDeadKeys(const DEADKEY* dk, const WString& name)
     grid.addLine({L"//", L"Accent", L"Composed", L"Flags"});
     grid.addUnderlines({L"//"});
     for (; dk->dwBoth != 0; dk++) {
-        WStringList comments;
         grid.addLine({
-            L"DEADTRANS(" + wchar(LOWORD(dk->dwBoth), comments) + ",",
-            wchar(HIWORD(dk->dwBoth), comments) + ",",
-            wchar(dk->wchComposed, comments) + ",",
+            L"DEADTRANS(" + wchar(LOWORD(dk->dwBoth)) + ",",
+            wchar(HIWORD(dk->dwBoth)) + ",",
+            wchar(dk->wchComposed) + ",",
             bitMask({SYM(DKF_DEAD)}, dk->uFlags, 4) + "),"
         });
-        if (!comments.empty()) {
-            grid.addColumn("// " + Join(comments, L", "));
-        }
     }
     dk++; // last null element
 
@@ -1009,7 +996,7 @@ void SourceGenerator::genVscToString(const VSC_LPWSTR* vts, const WString& name,
     for (; vts->vsc != 0; vts++) {
         grid.addLine({
             L"{" + Format(L"0x%02X", vts->vsc) + L",",
-            wstring(vts->pwsz) + L"},"
+            WStringLiteral(vts->pwsz) + L"},"
         });
         _alldata.push_back(DataStructure("Strings in " + name, vts->pwsz, StringSize(vts->pwsz)));
     }
@@ -1039,7 +1026,7 @@ void SourceGenerator::genKeyNames(const DEADKEY_LPWSTR* names, const WString& na
     for (; *names != nullptr; ++names) {
         if (**names != 0) {
             WCHAR prefix[2]{ **names, L'\0' };
-            grid.addLine({wstring(prefix), wstring(*names + 1) + ","});
+            grid.addLine({WStringLiteral(prefix), WStringLiteral(*names + 1) + ","});
             _alldata.push_back(DataStructure("Strings in " + name, *names, StringSize(*names)));
         }
     }
@@ -1116,17 +1103,28 @@ void SourceGenerator::generate(const KBDTABLES& tables)
     // The last default keyord type is 4 (classical 101/102-key keyboard).
     const int kbd_type = _opt.kbd_type > 0 ? _opt.kbd_type : (tables.dwType > 0 && tables.dwType < 48 ? tables.dwType : 4);
 
-    _ou << "//" << _opt.dashed << std::endl
-        << "// " << _opt.comment << std::endl
-        << "// Automatically generated from " << FileName(_opt.input) << std::endl
-        << "//" << _opt.dashed << std::endl
-        << std::endl
+    // File header.
+    if (_opt.headers.empty()) {
+        _ou << "//" << _opt.dashed << std::endl
+            << "// " << _opt.comment << std::endl
+            << "// Automatically generated from " << FileName(_opt.input) << std::endl
+            << "//" << _opt.dashed << std::endl;
+    }
+    else {
+        for (const auto& line : _opt.headers) {
+            _ou << line << std::endl;
+        }
+    }
+    _ou << std::endl
         << "#define KBD_TYPE " << kbd_type << std::endl
         << std::endl
         << "#include <windows.h>" << std::endl
         << "#include <kbd.h>" << std::endl
-        << "#include <dontuse.h>" << std::endl
-        << std::endl;
+        << "#include <dontuse.h>" << std::endl;
+    if (!_opt.num_only) {
+        _ou << "#include \"unicode.h\"" << std::endl;
+    }
+    _ou << std::endl;
 
     const WString key_names_name(L"key_names");
     if (tables.pKeyNames != nullptr) {
@@ -1360,6 +1358,50 @@ void GenerateResourceFile(ReverseOptions& opt, HMODULE hmod)
 
 
 //---------------------------------------------------------------------------
+// Generate a character table for the keyboard DLL.
+//---------------------------------------------------------------------------
+
+void GenerateCharacterTableLine(Grid& grid, uint16_t sc, const VirtualKey& vk, bool extended)
+{
+    if (sc != 0 && vk.vk != 0) {
+        const auto it = vk_symbols.find(vk.vk);
+        grid.addLine({
+            Format(L"%02X%s", sc, extended ? L" (ext)" : L""),
+            it != vk_symbols.end() ? it->second : Format(L"%02X", vk.vk)
+        });
+        for (wchar_t c : vk.wc) {
+            grid.addColumn(c < L' ' || c == UC_DEL ? L"" : WString(1, c));
+        }
+    }
+}
+
+void GenerateCharacterTable(ReverseOptions& opt, const KBDTABLES* tables)
+{
+    // Header lines.
+    Grid grid;
+    Grid::Line header{L"Scan code", L"Virtual key"};
+    header.insert(header.end(), modifiers_headers.begin(), modifiers_headers.end());
+    grid.addLine(header);
+    grid.addUnderlines();
+
+    // List of characters.
+    WinKeyMap kmap(tables);
+    WinKeyVector keys;
+    kmap.buildKeyMap(keys);
+
+    for (const auto& wk : keys) {
+        GenerateCharacterTableLine(grid, wk.sc, wk.vk, false);
+        GenerateCharacterTableLine(grid, wk.sc, wk.evk, true);
+    }
+        
+    // Print the grid.
+    grid.setSpacing(2);
+    opt.out() << UTF8_BOM;
+    grid.print(opt.out());
+}
+
+
+//---------------------------------------------------------------------------
 // Application entry point.
 //---------------------------------------------------------------------------
 
@@ -1401,6 +1443,9 @@ int wmain(int argc, wchar_t* argv[])
     // Generate the source file.
     if (opt.gen_resources) {
         GenerateResourceFile(opt, dll);
+    }
+    else if (opt.gen_list) {
+        GenerateCharacterTable(opt, tables);
     }
     else {
         SourceGenerator gen(opt);

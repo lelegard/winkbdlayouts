@@ -3,10 +3,10 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{38202AFE-E69D-4994-8943-8F39164776D1}</ProjectGuid>
   </PropertyGroup>
-  <ItemGroup>
-    <ClInclude Include="unicode.h"/>
-  </ItemGroup>
   <ImportGroup Label="PropertySheets">
     <Import Project="$(SolutionDir)msbuild.props"/>
   </ImportGroup>
+  <Target Name='RequireUnicodeSyms' BeforeTargets='PrepareForBuild'>
+    <CallTarget Targets='BuildUnicodeSyms'/>
+  </Target>
 </Project>
