@@ -32,6 +32,10 @@ public:
     // Add underlines under previous line.
     void addUnderlines(const Line& first_colums = Line(), wchar_t underline = L'-');
 
+    // Remove empty lines or columns. Exclude some non-significant initial columns or lines.
+    void removeEmptyLines(size_t header_columns_count = 0, bool trim = false);
+    void removeEmptyColumns(size_t header_lines_count = 0, bool trim = false);
+
     // Set attributes.
     void setMargin(const WString& margin) { _margin = margin; }
     void setMargin(size_t width) { _margin = WString(width, L' '); }
@@ -43,6 +47,6 @@ public:
 
 private:
     std::list<Line> _lines;
-    WString    _margin;
-    WString    _spacing;
+    WString         _margin;
+    WString         _spacing;
 };

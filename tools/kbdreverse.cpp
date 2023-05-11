@@ -1393,7 +1393,11 @@ void GenerateCharacterTable(ReverseOptions& opt, const KBDTABLES* tables)
         GenerateCharacterTableLine(grid, wk.sc, wk.vk, false);
         GenerateCharacterTableLine(grid, wk.sc, wk.evk, true);
     }
-        
+
+    // Remove unused spaces.
+    grid.removeEmptyColumns(2, true);
+    grid.removeEmptyLines(2, true);
+
     // Print the grid.
     grid.setSpacing(2);
     opt.out() << UTF8_BOM;

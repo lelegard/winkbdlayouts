@@ -55,6 +55,71 @@ void Grid::addUnderlines(const Line& first_colums, wchar_t underline)
 
 
 //----------------------------------------------------------------------------
+// Remove empty lines or columns. Exclude some non-significant initial columns or lines.
+//----------------------------------------------------------------------------
+
+void Grid::removeEmptyLines(size_t header_columns_count, bool trim)
+{
+    for (auto it = _lines.begin(); it != _lines.end(); ) {
+        if (trim) {
+            for (WString& cell : *it) {
+                Trim(cell);
+            }
+        }
+        bool remove = true;
+        for (size_t i = header_columns_count; remove && i < it->size(); ++i) {
+            remove = (*it)[i].empty();
+        }
+        if (remove) {
+            it = _lines.erase(it);
+        }
+        else {
+            ++it;
+        }
+    }
+}
+
+void Grid::removeEmptyColumns(size_t header_lines_count, bool trim)
+{
+    size_t col = 0;
+    bool more_col = true;
+
+    // Loop on columns;
+    while (more_col) {
+
+        // First pass: check if the column shall be kept or removed.
+        more_col = false;
+        bool remove = true;
+        size_t line_index = 0;
+        for (auto& line : _lines) {
+            for (WString& cell : line) {
+                Trim(cell);
+            }
+            if (line_index++ >= header_lines_count && col < line.size() && remove) {
+                more_col = true;
+                remove = line[col].empty();
+            }
+        }
+
+        // Second pass: remove the column if necessary.
+        if (remove) {
+            for (auto& line : _lines) {
+                if (col < line.size()) {
+                    // line.erase(line.begin() + col) does not compile with VS 17.5.5 ????
+                    Line::iterator it(line.begin());
+                    std::advance(it, col);
+                    line.erase(it);
+                }
+            }
+        }
+        else {
+            ++col;
+        }
+    }
+}
+
+
+//----------------------------------------------------------------------------
 // Print the grid. All columns are aligned on their maximum width.
 //----------------------------------------------------------------------------
 

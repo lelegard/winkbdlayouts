@@ -82,6 +82,36 @@ WString ToUpper(const WString& s)
 
 
 //---------------------------------------------------------------------------
+// Remove leading and trailing spaces in a string.
+//---------------------------------------------------------------------------
+
+void Trim(WString& str, bool begin, bool end)
+{
+    if (end) {
+        while (!str.empty() && std::isspace(str.back())) {
+            str.pop_back();
+        }
+    }
+    if (begin) {
+        size_t spaces = 0;
+        while (spaces < str.size() && std::isspace(str[spaces])) {
+            ++spaces;
+        }
+        if (spaces > 0) {
+            str.erase(0, spaces);
+        }
+    }
+}
+
+WString Trimmed(const WString& str, bool begin, bool end)
+{
+    WString res(str);
+    Trim(res, begin, end);
+    return res;
+}
+
+
+//---------------------------------------------------------------------------
 // Check if a string starts or end with a string.
 //---------------------------------------------------------------------------
 

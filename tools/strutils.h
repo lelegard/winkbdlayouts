@@ -26,6 +26,10 @@ size_t StringSize(const wchar_t*);
 WString ToLower(const WString&);
 WString ToUpper(const WString&);
 
+// Remove leading and trailing spaces in a string.
+void Trim(WString& str, bool begin = true, bool end = true);
+WString Trimmed(const WString& str, bool begin = true, bool end = true);
+
 // Check if a string starts or end with a string.
 bool StartsWith(const WString&, const WString& prefix);
 bool EndsWith(const WString&, const WString& suffix);
