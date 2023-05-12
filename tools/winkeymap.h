@@ -43,10 +43,7 @@ public:
     // Convert a "modifier number" (index in wch[] of VK_TO_WCHARS)
     // into a bitmak of KBDSHIFT, KBDCTRL, KBDALT (0 to 7).
     // Return SHFT_INVALID (>7) if the nodifier number is invalid.
-    size_t modNumberToModMask(size_t modnum)
-    {
-        return modnum < _mods.size() ? _mods[modnum] : SHFT_INVALID;
-    }
+    size_t modNumberToModMask(size_t modnum);
 
     // Get a map of all scan codes in a keymap.
     void buildKeyMap(WinKeyVector&);

@@ -50,6 +50,7 @@ public:
     WString     input;
     WString     output;
     WString     comment;
+    WString     map_template;
     WStringList headers;
     int         kbd_type;
     bool        num_only;
@@ -71,15 +72,17 @@ ReverseOptions::ReverseOptions(int argc, wchar_t* argv[]) :
         L"  -d : add hexa dump in final comments\n"
         L"  -h : display this help text\n"
         L"  -l : generate a list of characters instead of a C source file\n"
+        L"  -m infile : generate a keybard map based on the specified template\n"
         L"  -n : numerical output only, do not attempt to translate to source macros\n"
-        L"  -o file : output file name, default is standard output\n"
+        L"  -o outfile : output file name, default is standard output\n"
         L"  -r : generate a resource file instead of a C source file\n"
         L"  -t value : keyboard type, defaults to dwType in kbd table or 4 if unspecified\n"
-        L"  -u file : same as -o but update output, keeping leading comments"),
+        L"  -u outfile : same as -o but update output, keeping leading comments"),
     dashed(75, L'-'),
     input(),
     output(),
     comment(L"Windows Keyboards Layouts (WKL)"),
+    map_template(),
     headers(),
     kbd_type(0),
     num_only(false),
@@ -112,6 +115,9 @@ ReverseOptions::ReverseOptions(int argc, wchar_t* argv[]) :
         else if (args[i] == L"-u" && i + 1 < args.size()) {
             output = args[++i];
             get_headers = true;
+        }
+        else if (args[i] == L"-m" && i + 1 < args.size()) {
+            map_template = args[++i];
         }
         else if (args[i] == L"-c" && i + 1 < args.size()) {
             comment = args[++i];
@@ -454,11 +460,6 @@ const SymbolTable wchar_symbols {
     SYM(WCH_LGTR),
     // Automatically generated file (using a Python script)
     #include "unicode_syms.h"
-};
-
-// Names of some usual non-ASCII WCHAR, for insertion in comments.
-const SymbolTable wchar_descriptions {
-    #include "unicode.h"
 };
 
 
@@ -1368,7 +1369,7 @@ void GenerateCharacterTableLine(Grid& grid, uint16_t sc, const VirtualKey& vk, b
         grid.addLine({
             Format(L"%02X%s", sc, extended ? L" (ext)" : L""),
             it != vk_symbols.end() ? it->second : Format(L"%02X", vk.vk)
-        });
+            });
         for (wchar_t c : vk.wc) {
             grid.addColumn(c < L' ' || c == UC_DEL ? L"" : WString(1, c));
         }
@@ -1379,7 +1380,7 @@ void GenerateCharacterTable(ReverseOptions& opt, const KBDTABLES* tables)
 {
     // Header lines.
     Grid grid;
-    Grid::Line header{L"Scan code", L"Virtual key"};
+    Grid::Line header{ L"Scan code", L"Virtual key" };
     header.insert(header.end(), modifiers_headers.begin(), modifiers_headers.end());
     grid.addLine(header);
     grid.addUnderlines();
@@ -1402,6 +1403,98 @@ void GenerateCharacterTable(ReverseOptions& opt, const KBDTABLES* tables)
     grid.setSpacing(2);
     opt.out() << UTF8_BOM;
     grid.print(opt.out());
+}
+
+
+//---------------------------------------------------------------------------
+// Generate a keyboard map for the keyboard DLL.
+//---------------------------------------------------------------------------
+
+void GenerateKeyboardMap(ReverseOptions& opt, const KBDTABLES* tables)
+{
+    // Open the map template file.
+    std::ifstream inmap(opt.map_template);
+    if (!inmap) {
+        opt.fatal("error opening file " + opt.map_template);
+    }
+
+    // Get lists of characters.
+    WinKeyMap kmap(tables);
+    WinKeyVector keys;
+    kmap.buildKeyMap(keys);
+
+    // Read map template line by line and generate the map..
+    opt.out() << UTF8_BOM;
+    std::string mapline;
+    for (size_t linenum = 1; std::getline(inmap, mapline); ++linenum) {
+        if (mapline.find_first_of("0123456789abcdefABCEDF") == std::string::npos) {
+            // No scancode hexa value, just copy the line
+            opt.out() << mapline << std::endl;
+        }
+        else {
+            // Format a double line replacing the scancodes with the generated characters.
+            WString line1, line2;
+            static const wchar_t* const cellchars = L" 0123456789abcdefABCEDF";
+            static const wchar_t* const hexachars = cellchars + 1;
+            const WString in(ToUTF16(mapline));
+            size_t start = 0;
+            size_t end = 0;
+
+            // Loop on all cells containing an hexa scancode.
+            while ((start = in.find_first_of(hexachars, end)) != WString::npos) {
+                // Locate start of cell.
+                while (start > end && in[start - 1] == L' ') {
+                    --start;
+                }
+
+                // Copy raw characters before cell.
+                line1.append(in.substr(end, start - end));
+                line2.append(in.substr(end, start - end));
+
+                // Locate end of cell.
+                end = in.find_first_not_of(cellchars, start);
+                if (end == WString::npos) {
+                    end = in.size();
+                }
+                const size_t width = end - start;
+
+                // Locate hexa char inside cell.
+                size_t hex = in.find_first_of(hexachars, start);
+                assert(hex < end);
+                size_t scancode = 0;
+                if (hex + 2 >= end || !FromHexa(scancode, in.substr(hex, 2))) {
+                    opt.error(Format(L"invalid cell \"%s\" in %s, line %d, col %d", in.substr(start, width).c_str(), opt.map_template.c_str(), linenum, start + 1));
+                    end = start;
+                    break;
+                }
+                const bool extended = hex + 2 < end && in[hex + 2] == L'e';
+
+                // Find corresponding character definition.
+                bool known = scancode < keys.size() && keys[scancode].sc != 0;
+                const VirtualKey& vk(extended ? keys[scancode].evk : keys[scancode].vk);
+                known = known && vk.vk != 0;
+
+                // Format chars.
+                const WString left(width == 2 ? 0 : (width - 3) / 2, L' ');
+                const WString right(width == 2 ? 0 : width - left.size() - 3, L' ');
+                line1.append(left);
+                line2.append(left);
+                line1.push_back(known ? Printable(vk.wc[KBDSHIFT]) : L' ');
+                line2.push_back(known ? Printable(vk.wc[KBDBASE]) : L' ');
+                line1.append(width == 2 ? L"" : L" ");
+                line2.append(width == 2 ? L"" : L" ");
+                line1.push_back(known ? Printable(vk.wc[KBDSHIFT | KBDCTRL | KBDALT]) : L' ');
+                line2.push_back(known ? Printable(vk.wc[KBDCTRL | KBDALT]) : L' ');
+                line1.append(right);
+                line2.append(right);
+            }
+
+            // Append end of template line.
+            line1.append(in.substr(end));
+            line2.append(in.substr(end));
+            opt.out() << line1 << std::endl << line2 << std::endl;
+        }
+    }
 }
 
 
@@ -1450,6 +1543,9 @@ int wmain(int argc, wchar_t* argv[])
     }
     else if (opt.gen_list) {
         GenerateCharacterTable(opt, tables);
+    }
+    else if (!opt.map_template.empty()) {
+        GenerateKeyboardMap(opt, tables);
     }
     else {
         SourceGenerator gen(opt);

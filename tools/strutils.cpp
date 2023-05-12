@@ -80,6 +80,11 @@ WString ToUpper(const WString& s)
     return res;
 }
 
+wchar_t Printable(wchar_t c, wchar_t substiture)
+{
+    return c < L' ' || c == 0x7F ? substiture : c;
+}
+
 
 //---------------------------------------------------------------------------
 // Remove leading and trailing spaces in a string.

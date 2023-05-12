@@ -316,8 +316,6 @@ static VK_TO_WCHARS3 vk_to_wchar3[] = {
     //                            Shift         Ctrl
     //                            -----         ----
     {VK_OEM_6,   CAPLOK, {L'^',   UC_DIAERESIS, UC_ESC}},
-    {VK_OEM_5,   CAPLOK, {L'*',   UC_MICRO,     UC_FS}},
-    {VK_OEM_102, 0x00,   {L'<',   L'>',         UC_FS}},
     {VK_BACK,    0x00,   {UC_BS,  UC_BS,        UC_DEL}},
     {VK_ESCAPE,  0x00,   {UC_ESC, UC_ESC,       UC_ESC}},
     {VK_RETURN,  0x00,   {L'\r',  L'\r',        L'\n'}},
@@ -333,13 +331,7 @@ static VK_TO_WCHARS3 vk_to_wchar3[] = {
 static VK_TO_WCHARS4 vk_to_wchar4[] = {
     //                                       Shift      Ctrl      AltGr
     //                                       -----      ----      -----
-    {'3',         CAPLOK, {L'"',             L'3',      WCH_NONE, L'#'}},
-    {'4',         CAPLOK, {L'\'',            L'4',      WCH_NONE, L'{'}},
-    {'7',         CAPLOK, {UC_LOWER_E_GRAVE, L'7',      WCH_NONE, L'`'}},
-    {'0',         CAPLOK, {UC_LOWER_A_GRAVE, L'0',      0x0000,   L'@'}},
     {VK_OEM_4,    CAPLOK, {L')',             UC_DEGREE, WCH_NONE, L']'}},
-    {VK_OEM_PLUS, CAPLOK, {L'=',             L'+',      WCH_NONE, L'}'}},
-    {'E',         CAPLOK, {L'e',             L'E',      WCH_NONE, UC_EURO}},
     {'T',         CAPLOK, {L't',             L'T',      WCH_NONE, WCH_LGTR}},
     {VK_OEM_1,    CAPLOK, {L'$',             UC_POUND,  UC_GS,    UC_CURRENCY}},
     {0,           0,      0,                 0,         0,        0}
@@ -363,22 +355,35 @@ static VK_TO_WCHARS5 vk_to_wchar5[] = {
 //---------------------------------------------------------------------------
 
 static VK_TO_WCHARS6 vk_to_wchar6[] = {
-    //                                      Shift Ctrl      AltGr                  Shift/Ctrl Shift/AltGr
-    //                                      ----- ----      -----                  ---------- -----------
-    {'2',      CAPLOK, {UC_LOWER_E_ACUTE,   L'2', WCH_NONE, L'~',                  WCH_NONE,  UC_UPPER_E_ACUTE}},
-    {'7',      CAPLOK, {UC_LOWER_E_GRAVE,   L'7', WCH_NONE, L'`',                  WCH_NONE,  UC_UPPER_E_GRAVE}},
-    {'9',      CAPLOK, {UC_LOWER_C_CEDILLA, L'9', WCH_NONE, L'^',                  UC_RS,     UC_UPPER_C_CEDILLA}},
-    {'A',      CAPLOK, {L'a',               L'A', WCH_NONE, UC_LOWER_A_CIRCUMFLEX, WCH_NONE,  UC_UPPER_A_CIRCUMFLEX}},
-    {'Z',      CAPLOK, {L'z',               L'Z', WCH_NONE, UC_LOWER_A_GRAVE,      WCH_NONE,  UC_UPPER_A_GRAVE}},
-    {'E',      CAPLOK, {L'e',               L'E', WCH_NONE, UC_EURO,               WCH_NONE,  WCH_NONE}},
-    {'R',      CAPLOK, {L'r',               L'R', WCH_NONE, UC_LOWER_E_CIRCUMFLEX, WCH_NONE,  UC_UPPER_E_CIRCUMFLEX}},
-    {'D',      CAPLOK, {L'd',               L'D', WCH_NONE, UC_LOWER_E_DIAERESIS,  WCH_NONE,  UC_UPPER_E_DIAERESIS}},
-    {'N',      CAPLOK, {L'n',               L'N', WCH_NONE, UC_LOWER_N_TILDE,      WCH_NONE,  UC_UPPER_N_TILDE}},
-    {'I',      CAPLOK, {L'i',               L'I', WCH_NONE, UC_LOWER_I_CIRCUMFLEX, WCH_NONE,  UC_UPPER_I_CIRCUMFLEX}},
-    {'O',      CAPLOK, {L'o',               L'O', WCH_NONE, UC_LOWER_O_CIRCUMFLEX, WCH_NONE,  UC_UPPER_O_CIRCUMFLEX}},
-    {'U',      CAPLOK, {L'u',               L'U', WCH_NONE, UC_LOWER_U_CIRCUMFLEX, WCH_NONE,  UC_UPPER_U_CIRCUMFLEX}},
-    {VK_OEM_3, CAPLOK, {UC_LOWER_U_GRAVE,   L'%', WCH_NONE, WCH_NONE,              WCH_NONE,  UC_UPPER_U_GRAVE}},
-    {0,        0,      0,                   0,    0,        0,                     0,         0}
+    //                                          Shift       Ctrl      AltGr                  Shift/Ctrl Shift/AltGr
+    //                                           -----       ----      -----                  ---------- -----------
+    {'1',           CAPLOK, {L'&',               L'1',       WCH_NONE, UC_LOWER_ALPHA,        WCH_NONE,  UC_LOWER_BETA}},
+    {'2',           CAPLOK, {UC_LOWER_E_ACUTE,   L'2',       WCH_NONE, L'~',                  WCH_NONE,  UC_UPPER_E_ACUTE}},
+    {'3',           CAPLOK, {L'"',               L'3',       WCH_NONE, L'#',                  WCH_NONE,  UC_DA_LEFT_QUOT}},
+    {'4',           CAPLOK, {L'\'',              L'4',       WCH_NONE, L'{',                  WCH_NONE,  UC_DA_RIGHT_QUOT}},
+    {'7',           CAPLOK, {UC_LOWER_E_GRAVE,   L'7',       WCH_NONE, L'`',                  WCH_NONE,  UC_UPPER_E_GRAVE}},
+    {'9',           CAPLOK, {UC_LOWER_C_CEDILLA, L'9',       WCH_NONE, L'^',                  UC_RS,     UC_UPPER_C_CEDILLA}},
+    {'0',           CAPLOK, {UC_LOWER_A_GRAVE,   L'0',       0x0000,   L'@',                  WCH_NONE,  UC_UPPER_A_GRAVE}},
+    {VK_OEM_PLUS,   CAPLOK, {L'=',               L'+',       WCH_NONE, L'}',                  WCH_NONE,  UC_ALMOST_EQUAL}},
+    {'A',           CAPLOK, {L'a',               L'A',       WCH_NONE, UC_LOWER_A_CIRCUMFLEX, WCH_NONE,  UC_UPPER_A_CIRCUMFLEX}},
+    {'Z',           CAPLOK, {L'z',               L'Z',       WCH_NONE, UC_LOWER_AE,           WCH_NONE,  UC_UPPER_AE}},
+    {'E',           CAPLOK, {L'e',               L'E',       WCH_NONE, UC_EURO,               WCH_NONE,  UC_YEN}},
+    {'R',           CAPLOK, {L'r',               L'R',       WCH_NONE, UC_LOWER_E_CIRCUMFLEX, WCH_NONE,  UC_UPPER_E_CIRCUMFLEX}},
+    {'U',           CAPLOK, {L'u',               L'U',       WCH_NONE, UC_LOWER_U_CIRCUMFLEX, WCH_NONE,  UC_UPPER_U_CIRCUMFLEX}},
+    {'I',           CAPLOK, {L'i',               L'I',       WCH_NONE, UC_LOWER_I_CIRCUMFLEX, WCH_NONE,  UC_UPPER_I_CIRCUMFLEX}},
+    {'O',           CAPLOK, {L'o',               L'O',       WCH_NONE, UC_LOWER_O_CIRCUMFLEX, WCH_NONE,  UC_UPPER_O_CIRCUMFLEX}},
+    {'P',           CAPLOK, {L'p',               L'P',       WCH_NONE, UC_LOWER_O_DIAERESIS,  WCH_NONE,  UC_UPPER_O_DIAERESIS}},
+    {'D',           CAPLOK, {L'd',               L'D',       WCH_NONE, UC_LOWER_E_DIAERESIS,  WCH_NONE,  UC_UPPER_E_DIAERESIS}},
+    {'J',           CAPLOK, {L'j',               L'J',       WCH_NONE, UC_LOWER_U_DIAERESIS,  WCH_NONE,  UC_UPPER_U_DIAERESIS}},
+    {'L',           CAPLOK, {L'l',               L'L',       WCH_NONE, UC_LOWER_OE,           WCH_NONE,  UC_UPPER_OE}},
+    {VK_OEM_5,      CAPLOK, {L'*',               UC_MICRO,   UC_FS,    UC_EM_DASH,            WCH_NONE,  UC_EN_DASH}},
+    {VK_OEM_102,    0x00,   {L'<',               L'>',       UC_FS,    UC_LESS_EQUAL,         WCH_NONE,  UC_GREATER_EQUAL}},
+    {VK_OEM_3,      CAPLOK, {UC_LOWER_U_GRAVE,   L'%',       WCH_NONE, UC_PER_MILLE,          WCH_NONE,  UC_UPPER_U_GRAVE}},
+    {'B',           CAPLOK, {L'b',               L'B',       WCH_NONE, UC_LOWER_SHARP_S,      WCH_NONE,  WCH_NONE}},
+    {'N',           CAPLOK, {L'n',               L'N',       WCH_NONE, UC_LOWER_N_TILDE,      WCH_NONE,  UC_UPPER_N_TILDE}},
+    {VK_OEM_PERIOD, CAPLOK, {L';',               L'.',       WCH_NONE, UC_ELLIPSIS,           WCH_NONE,  UC_BULLET}},
+    {VK_OEM_8,      CAPLOK, {L'!',               UC_SECTION, WCH_NONE, UC_NOT_EQUAL,          WCH_NONE,  UC_PLUS_MINUS}},
+    {0,             0,      0,                   0,          0,        0,                     0,         0}
 };
 
 //---------------------------------------------------------------------------
@@ -389,27 +394,20 @@ static VK_TO_WCHARS2 vk_to_wchar2[] = {
     //                                         Shift
     //                                         -----
     {VK_OEM_7,      0x00,   {UC_SUP2,          WCH_NONE}},
-    {'1',           CAPLOK, {L'&',             L'1'}},
     {'Y',           CAPLOK, {L'y',             L'Y'}},
-    {'P',           CAPLOK, {L'p',             L'P'}},
     {'Q',           CAPLOK, {L'q',             L'Q'}},
     {'S',           CAPLOK, {L's',             L'S'}},
     {'F',           CAPLOK, {L'f',             L'F'}},
     {'G',           CAPLOK, {L'g',             L'G'}},
     {'H',           CAPLOK, {L'h',             L'H'}},
-    {'J',           CAPLOK, {L'j',             L'J'}},
     {'K',           CAPLOK, {L'k',             L'K'}},
-    {'L',           CAPLOK, {L'l',             L'L'}},
     {'M',           CAPLOK, {L'm',             L'M'}},
     {'W',           CAPLOK, {L'w',             L'W'}},
     {'X',           CAPLOK, {L'x',             L'X'}},
     {'C',           CAPLOK, {L'c',             L'C'}},
     {'V',           CAPLOK, {L'v',             L'V'}},
-    {'B',           CAPLOK, {L'b',             L'B'}},
     {VK_OEM_COMMA,  CAPLOK, {L',',             L'?'}},
-    {VK_OEM_PERIOD, CAPLOK, {L';',             L'.'}},
     {VK_OEM_2,      CAPLOK, {L':',             L'/'}},
-    {VK_OEM_8,      CAPLOK, {L'!',             UC_SECTION}},
     {VK_DECIMAL,    0x00,   {L'.',             L'.'}},
     {VK_TAB,        0x00,   {L'\t',            L'\t'}},
     {VK_ADD,        0x00,   {L'+',             L'+'}},

@@ -44,6 +44,16 @@ WinKeyMap::WinKeyMap(const KBDTABLES* tables) :
 
 
 //----------------------------------------------------------------------------
+// Convert a "modifier number" (index in wch[] of VK_TO_WCHARS)
+//----------------------------------------------------------------------------
+
+size_t WinKeyMap::modNumberToModMask(size_t modnum)
+{
+    return modnum < _mods.size() ? _mods[modnum] : SHFT_INVALID;
+}
+
+
+//----------------------------------------------------------------------------
 // Get a map of all scan codes in a keymap.
 //----------------------------------------------------------------------------
 

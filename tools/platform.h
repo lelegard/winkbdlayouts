@@ -27,6 +27,7 @@
 #include <fstream>
 #include <algorithm>
 #include <cstring>
+#include <cassert>
 #include <string>
 #include <vector>
 #include <list>

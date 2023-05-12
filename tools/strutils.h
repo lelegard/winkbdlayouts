@@ -26,6 +26,9 @@ size_t StringSize(const wchar_t*);
 WString ToLower(const WString&);
 WString ToUpper(const WString&);
 
+// Return a printable version of a character.
+wchar_t Printable(wchar_t c, wchar_t substiture = L' ');
+
 // Remove leading and trailing spaces in a string.
 void Trim(WString& str, bool begin = true, bool end = true);
 WString Trimmed(const WString& str, bool begin = true, bool end = true);

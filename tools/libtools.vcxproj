@@ -5,6 +5,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ClInclude Include="platform.h"/>
+    <ClInclude Include="..\keyboards\unicode.h"/>
     <ClInclude Include="error.h"/>
     <ClCompile Include="error.cpp"/>
     <ClInclude Include="options.h"/>
