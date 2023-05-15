@@ -158,6 +158,21 @@ WString GetEnv(const WString& name, const WString& def)
 
 
 //---------------------------------------------------------------------------
+// Get the path of the System32 and system temp directories.
+//---------------------------------------------------------------------------
+
+WString GetSystem32()
+{
+    return GetEnv(L"SystemRoot", L"C:\\Windows") + L"\\System32";
+}
+
+WString GetSystemTemp()
+{
+    return GetEnv(L"SystemRoot", L"C:\\Windows") + L"\\Temp";
+}
+
+
+//---------------------------------------------------------------------------
 // Get the file name of a module in a process.
 //---------------------------------------------------------------------------
 

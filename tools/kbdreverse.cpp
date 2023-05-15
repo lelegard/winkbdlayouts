@@ -1510,7 +1510,7 @@ int wmain(int argc, wchar_t* argv[])
     // Resolve keyboard DLL file name.
     if (opt.input.find_first_of(L":\\/.") == WString::npos) {
         // No separator, must be a keyboard name, not a DLL file name.
-        opt.input = GetEnv(L"SYSTEMROOT", L"C:\\Windows") + L"\\System32\\kbd" + opt.input + L".dll";
+        opt.input = GetSystem32() + L"\\kbd" + opt.input + L".dll";
     }
  
     // Load the DLL in our virtual memory space.

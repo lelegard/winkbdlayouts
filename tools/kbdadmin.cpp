@@ -307,8 +307,14 @@ void ActivateKeyboard(AdminOptions& opt)
         for (const auto& lang_id : all_lang_ids) {
             const WString key(REGISTRY_LAYOUT_KEY "\\" + lang_id);
             const WString file(reg.getValue(key, REGISTRY_LAYOUT_FILE, true));
-            if (ToLower(file) == dllname) {
+            DWORD int_id = 0;
+            if (ToLower(file) == dllname && FromHexa(int_id, lang_id)) {
                 // Found the right language.
+                //
+                // WARNING: the code below does not work as expected.
+                // The selected keyboard lyaout is not activated at system level.
+                // This is exploratory code only. The proper solution is still to be found.
+                //
                 opt.info(L"Activating language " + lang_id + " (" + dllname + ")");
                 HKL hkl = LoadKeyboardLayoutW(lang_id.c_str(), KLF_ACTIVATE);
                 if (hkl == NULL) {
@@ -318,7 +324,13 @@ void ActivateKeyboard(AdminOptions& opt)
                 if (!SystemParametersInfoW(SPI_SETDEFAULTINPUTLANG, 0, &hkl, SPIF_SENDCHANGE)) {
                     const DWORD err = GetLastError();
                     opt.fatal("SystemParametersInfo: " + ErrorText(err));
-                }                
+                }
+                if (!PostMessage(HWND_BROADCAST, WM_INPUTLANGCHANGEREQUEST, 0, LPARAM(int_id)) ||
+                    !PostMessage(HWND_BROADCAST, WM_INPUTLANGCHANGE, 0, LPARAM(int_id)))
+                {
+                    const DWORD err = GetLastError();
+                    opt.fatal("PostMessage(HWND_BROADCAST): " + ErrorText(err));
+                }
                 return;
             }
         }
@@ -394,15 +406,13 @@ void InstallKeyboards(AdminOptions& opt)
 
 void RemoveKeyboards(AdminOptions& opt)
 {
-    const WString sysdir(GetEnv(L"SystemRoot", L"C:\\Windows") + L"\\System32\\");
-
     // Enumerate keyboard layouts in registry and remove all WKL keyboads.
     Registry reg(opt);
     WStringList all_lang_ids;
     if (reg.getSubKeys(REGISTRY_LAYOUT_KEY, all_lang_ids)) {
         for (const auto& lang_id : all_lang_ids) {
             const WString file(reg.getValue(REGISTRY_LAYOUT_KEY L"\\" + lang_id, REGISTRY_LAYOUT_FILE, L"", true));
-            if (!file.empty() && GetResourceString(sysdir + file, WKL_RES_PROVIDER) == L"WKL") {
+            if (!file.empty() && GetResourceString(GetSystem32() + L"\\" + file, WKL_RES_PROVIDER) == L"WKL") {
                 UninstallKeyboardLayout(opt, file);
             }
         }

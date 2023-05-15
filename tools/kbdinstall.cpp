@@ -31,7 +31,7 @@ uint32_t InstallKeyboardLayout(Error& err, const WString& dll, uint16_t base_lan
 
     // Reference DLL name to store in the registry.
     const WString filename(ToLower(FileName(dll)));
-    const WString filepath(GetEnv(L"SystemRoot", L"C:\\Windows") + L"\\System32\\" + filename);
+    const WString filepath(GetSystem32() + L"\\" + filename);
 
     // List of existing language ids with matching base language (last 4 digits).
     std::set<uint32_t> matching_lang_ids;
@@ -108,8 +108,23 @@ uint32_t InstallKeyboardLayout(Error& err, const WString& dll, uint16_t base_lan
     }
     else {
         const DWORD errcode = GetLastError();
-        err.error(L"error copying " + dll + ": " + ErrorText(errcode));
-        return 0;
+        if (errcode != ERROR_SHARING_VIOLATION) {
+            err.error(L"error copying " + dll + ": " + ErrorText(errcode));
+            return 0;
+        }
+        // Failure is "cannot access the file because it is being used by another process".
+        // This means that the keyboard DLL is currently in use.
+        // Copy it into a temporary directory and move it on reboot.
+        err.info(dll + L" currently in use, will be installed on reboot");
+        const WString temppath(GetSystemTemp() + L"\\" + filename);
+        if (!CopyFileW(dll.c_str(), temppath.c_str(), false)) {
+            err.error(L"error copying " + dll + " in temp directory: " + ErrorText(errcode));
+            return 0;
+        }
+        if (!MoveFileExW(temppath.c_str(), filepath.c_str(), MOVEFILE_DELAY_UNTIL_REBOOT | MOVEFILE_REPLACE_EXISTING)) {
+            err.error(L"error registering " + temppath + " for copy on reboot: " + ErrorText(errcode));
+            return 0;
+        }
     }
 
     // Then register it in the registry.
@@ -132,7 +147,7 @@ bool UninstallKeyboardLayout(Error& err, const WString& dll)
 {
     // Reference DLL name to search in the registry.
     const WString filename(ToLower(FileName(dll)));
-    const WString filepath(GetEnv(L"SystemRoot", L"C:\\Windows") + L"\\System32\\" + filename);
+    const WString filepath(GetSystem32() + L"\\" + filename);
 
     // Enumerate keyboard layouts in registry.
     Registry reg(err);

@@ -17,6 +17,10 @@ WString ErrorText(DWORD code = GetLastError());
 // Get the value of an environment variable.
 WString GetEnv(const WString& name, const WString& def = L"");
 
+// Get the path of the System32 and system temp directories.
+WString GetSystem32();
+WString GetSystemTemp();
+
 // Directory name, file name (without directory), file base name (without directory and prefix).
 WString FullName(const WString&, bool include_dir = true, bool include_file = true);
 WString DirName(const WString&);
