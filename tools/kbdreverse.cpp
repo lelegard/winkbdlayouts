@@ -999,7 +999,7 @@ void SourceGenerator::genVscToString(const VSC_LPWSTR* vts, const WString& name,
             L"{" + Format(L"0x%02X", vts->vsc) + L",",
             WStringLiteral(vts->pwsz) + L"},"
         });
-        _alldata.push_back(DataStructure("Strings in " + name, vts->pwsz, StringSize(vts->pwsz)));
+        _alldata.push_back(DataStructure("Strings in " + name, vts->pwsz, WStringSize(vts->pwsz)));
     }
     grid.addLine({L"{0x00,", L"NULL}"});
     vts++;
@@ -1028,7 +1028,7 @@ void SourceGenerator::genKeyNames(const DEADKEY_LPWSTR* names, const WString& na
         if (**names != 0) {
             WCHAR prefix[2]{ **names, L'\0' };
             grid.addLine({WStringLiteral(prefix), WStringLiteral(*names + 1) + ","});
-            _alldata.push_back(DataStructure("Strings in " + name, *names, StringSize(*names)));
+            _alldata.push_back(DataStructure("Strings in " + name, *names, WStringSize(*names)));
         }
     }
     ++names; // skip last null pointer

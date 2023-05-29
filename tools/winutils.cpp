@@ -186,6 +186,35 @@ WString ModuleFileName(HANDLE process, HMODULE module)
 
 
 //---------------------------------------------------------------------------
+// Get name of a keyboard layout from an HKL.
+//---------------------------------------------------------------------------
+
+WString GetOtherKeyboardLayoutName(HKL hkl)
+{
+    // Save current layout, temporarily activate the other one (we can only get the name of the current keyboard).
+    const HKL cur = GetKeyboardLayout(0);
+    if (cur != hkl) {
+        ActivateKeyboardLayout(hkl, KLF_SETFORPROCESS);
+    }
+
+    // Get the name of the current keyboard.
+    WString name(KL_NAMELENGTH, 0);
+    if (GetKeyboardLayoutNameW(&name[0])) {
+        name.resize(WStringLength(name.data()));
+    }
+    else {
+        name.clear();
+    }
+
+    // Restore previous keyboard if it was different.
+    if (cur != hkl) {
+        ActivateKeyboardLayout(cur, KLF_SETFORPROCESS);
+    }
+    return name;
+}
+
+
+//---------------------------------------------------------------------------
 // Get a resource string in a module.
 //---------------------------------------------------------------------------
 

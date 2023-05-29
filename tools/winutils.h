@@ -42,6 +42,9 @@ WString ModuleFileName(HANDLE process, HMODULE module);
 // Get current executable.
 inline WString GetCurrentProgram() { return ModuleFileName(GetCurrentProcess(), nullptr); }
 
+// Get name of a keyboard layout from an HKL.
+WString GetOtherKeyboardLayoutName(HKL hkl);
+
 // Get a resource string in a module.
 WString GetResourceString(const WString& filename, int resource_index);
 WString GetResourceString(HMODULE module, int resource_index);

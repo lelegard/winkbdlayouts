@@ -19,8 +19,8 @@ typedef std::wstring WString;
 WString Format(const wchar_t* fmt, ...);
 
 // Length of a string. Size in bytes of it (including trailing null).
-size_t StringLength(const wchar_t*);
-size_t StringSize(const wchar_t*);
+size_t WStringLength(const wchar_t*);
+size_t WStringSize(const wchar_t*);
 
 // Case conversions.
 WString ToLower(const WString&);

@@ -23,3 +23,18 @@ uint32_t InstallKeyboardLayout(Error& err, const WString& dll, uint16_t base_lan
 // The DLL is deleted from %SystemRoot%\System32 and all registrations are removed.
 // Return true on success, false on error.
 bool UninstallKeyboardLayout(Error& err, const WString& dll);
+
+// Install a keyboard layout DLL from the WKL project.
+// These keyboard DLL are supposed to contain resource strings to indicate the language and description.
+// The specified DLL is copied into %SystemRoot%\System32.
+// Return the allocated complete language id or zero on error.
+uint32_t WKLInstallKeyboardLayout(Error& err, const WString& dll);
+
+// Install one or more keyboard layout DLL's from the WKL project.
+// When a path is a directory, install all kbd*.dll from that directory.
+// Return true on success, false on error.
+bool WKLInstallAllKeyboardLayouts(Error& err, const WStringVector& paths);
+
+// Uninstall all WKL keyboard layout DLL's.
+// Return true on success, false on error.
+bool WKLUninstallAllKeyboardLayouts(Error& err);

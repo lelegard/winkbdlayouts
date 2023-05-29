@@ -11,6 +11,7 @@
 #include "kbdinstall.h"
 #include "registry.h"
 #include "winutils.h"
+#include "kbdrc.h"
 
 
 //---------------------------------------------------------------------------
@@ -174,6 +175,100 @@ bool UninstallKeyboardLayout(Error& err, const WString& dll)
         else {
             const DWORD errcode = GetLastError();
             err.error(L"error deleting " + filepath + ", " + ErrorText(errcode));
+        }
+    }
+
+    return success;
+}
+
+
+//---------------------------------------------------------------------------
+// Install a keyboard layout DLL from the WKL project.
+// These keyboard DLL are supposed to contain special resource strings.
+//---------------------------------------------------------------------------
+
+uint32_t WKLInstallKeyboardLayout(Error& err, const WString& dll)
+{
+    // Get all expected resource strings from a WKL DLL.
+    HMODULE hmod = LoadLibraryExW(dll.c_str(), nullptr, LOAD_LIBRARY_AS_DATAFILE);
+    if (hmod == nullptr) {
+        const DWORD errcode = GetLastError();
+        err.error(dll + ": " + ErrorText(errcode));
+        return 0;
+    }
+    const WString dll_name(ToLower(FileName(dll)));
+    const WString dll_text(GetResourceString(hmod, WKL_RES_TEXT));
+    const WString dll_provider(GetResourceString(hmod, WKL_RES_PROVIDER));
+    WString dll_lang_id(ToLower(GetResourceString(hmod, WKL_RES_LANG)));
+    int base_language = 0;
+    FromHexa(base_language, dll_lang_id);
+    FreeLibrary(hmod);
+
+    // A WKL DLL is expected to have resource strings: "WKL" as provider and non-null language id.
+    if (dll_provider != L"WKL" || base_language == 0) {
+        err.error(dll + " is not a valid WKL keyboard layout");
+        return 0;
+    }
+
+    // Install the keyboard layout DLL.
+    err.verbose("installing " + dll_name + " (" + dll_text + ")");
+    const uint32_t lang_id = InstallKeyboardLayout(err, dll, base_language, dll_text);
+
+    // Add specific WKL entries in the registry.
+    if (lang_id != 0) {
+        Registry reg(err);
+        const WString key(REGISTRY_LAYOUT_KEY L"\\" + Format(L"%08x", lang_id));
+        reg.setValue(key, REGISTRY_LAYOUT_PROVIDER, dll_provider);
+        reg.setValue(key, REGISTRY_LAYOUT_DISPLAY, L"@%SystemRoot%\\system32\\" + dll_name + Format(L",-%d", WKL_RES_TEXT), true);
+    }
+
+    return lang_id;
+}
+
+
+//---------------------------------------------------------------------------
+// Install one or more keyboard layout DLL's from the WKL project.
+//---------------------------------------------------------------------------
+
+bool WKLInstallAllKeyboardLayouts(Error& err, const WStringVector& paths)
+{
+    bool success = true;
+
+    for (const auto& path : paths) {
+        if (IsDirectory(path)) {
+            WStringList files;
+            SearchFiles(files, path, L"kbd*.dll");
+            for (const auto& file : files) {
+                success = WKLInstallKeyboardLayout(err, path + L"\\" + file) != 0 && success;
+            }
+        }
+        else {
+            success = WKLInstallKeyboardLayout(err, path) != 0 && success;
+        }
+    }
+
+    return success;
+}
+
+
+//---------------------------------------------------------------------------
+// Uninstall all WKL keyboard layout DLL's.
+//---------------------------------------------------------------------------
+
+bool WKLUninstallAllKeyboardLayouts(Error& err)
+{
+    bool success = true;
+
+    // Enumerate keyboard layouts in registry and remove all WKL keyboads.
+    Registry reg(err);
+    WStringList all_lang_ids;
+    if (reg.getSubKeys(REGISTRY_LAYOUT_KEY, all_lang_ids)) {
+        for (const auto& lang_id : all_lang_ids) {
+            const WString file(reg.getValue(REGISTRY_LAYOUT_KEY L"\\" + lang_id, REGISTRY_LAYOUT_FILE, L"", true));
+            if (!file.empty() && GetResourceString(GetSystem32() + L"\\" + file, WKL_RES_PROVIDER) == L"WKL") {
+                err.verbose("uninstalling " + file);
+                success = UninstallKeyboardLayout(err, file) && success;
+            }
         }
     }
 

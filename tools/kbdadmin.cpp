@@ -46,7 +46,7 @@ AdminOptions::AdminOptions(int argc, wchar_t* argv[]) :
         L"\n"
         L"Options:\n"
         L"\n"
-        L"  -a name : activate the specified keyboard DLL\n"
+        L"  -a name : activate the specified keyboard DLL or hexa id\n"
         L"  -i dll-or-directory : install specified keyboard DLL\n"
         L"  -o file : output file name, default is standard output\n"
         L"  -h  : display this help text\n"
@@ -175,7 +175,7 @@ void DisplayUserSetup(AdminOptions& opt)
         return;
     }
 
-    Grid grid(L"", L"  ");
+    Grid grid;
     for (const auto& n : names) {
         const WString id(reg.getValue(REGISTRY_USER_PRELOAD_KEY, n, false));
         grid.addLine({n + L":", id});
@@ -209,6 +209,25 @@ void DisplayUserSetup(AdminOptions& opt)
               << "Substitutes" << std::endl
               << "-----------" << std::endl;
     grid.print(opt.out());
+
+    // Get all registered/known/loaded (?) keyboard layouts for the user.
+    HKL all_hkls[256];
+    int num_hkl = GetKeyboardLayoutList(int(ARRAYSIZE(all_hkls)), all_hkls);
+    if (num_hkl <= 0) {
+        const DWORD err = GetLastError();
+        opt.fatal("GetKeyboardLayoutList: " + ErrorText(err));
+    }
+
+    opt.out() << std::endl
+        << "GetKeyboardLayoutList" << std::endl
+        << "---------------------" << std::endl;
+    for (int i = 0; i < num_hkl; ++i) {
+        opt.out() << Format(L"%08x (name \"", all_hkls[i]) << GetOtherKeyboardLayoutName(all_hkls[i]) << "\"";
+        if (all_hkls[i] == GetKeyboardLayout(0)) {
+            opt.out() << ", current";
+        }
+        opt.out() << ")" << std::endl;
+    }
 }
 
 
@@ -286,135 +305,79 @@ void SearchActiveKeyboards(AdminOptions& opt)
 
 
 //---------------------------------------------------------------------------
+// Activate a keyboard DLL by hexa id.
+//---------------------------------------------------------------------------
+
+void ActivateKeyboard(AdminOptions& opt, const WString& lang_id, DWORD int_id)
+{
+    // Get corresponding DLL from registry (don't display errors).
+    Registry reg;
+    const WString file(reg.getValue(REGISTRY_LAYOUT_KEY "\\" + lang_id, REGISTRY_LAYOUT_FILE, true));
+
+    //
+    // WARNING: the code below does not work as expected.
+    // The selected keyboard layout is not activated at system level.
+    // This is exploratory code only. The proper solution is still to be found.
+    //
+
+    opt.info(L"Activating language " + lang_id + " (" + (file.empty() ? L"not found" : file) + ")");
+    HKL hkl = LoadKeyboardLayoutW(lang_id.c_str(), KLF_ACTIVATE | KLF_REORDER);
+    if (hkl == NULL) {
+        const DWORD err = GetLastError();
+        opt.fatal("LoadKeyboardLayout: " + ErrorText(err));
+    }
+    opt.verbose(Format(L"HKL: %08x", hkl));
+
+    if (!SystemParametersInfoW(SPI_SETDEFAULTINPUTLANG, 0, &hkl, SPIF_SENDCHANGE)) {
+        const DWORD err = GetLastError();
+        opt.fatal("SystemParametersInfo: " + ErrorText(err));
+    }
+
+    if (!PostMessage(HWND_BROADCAST, WM_INPUTLANGCHANGEREQUEST, 0, LPARAM(int_id)) ||
+        !PostMessage(HWND_BROADCAST, WM_INPUTLANGCHANGE, 0, LPARAM(int_id)))
+    {
+        const DWORD err = GetLastError();
+        opt.fatal("PostMessage(HWND_BROADCAST): " + ErrorText(err));
+    }
+}
+
+
+//---------------------------------------------------------------------------
 // Activate a keyboard DLL.
 //---------------------------------------------------------------------------
 
 void ActivateKeyboard(AdminOptions& opt)
 {
-    // Get DLL file name, lower case.
-    WString dllname(ToLower(FileName(opt.activate)));
-    if (!StartsWith(dllname, L"kbd")) {
-        dllname.insert(0, L"kbd");
+    // Try to interpret name as hexa id.
+    DWORD int_id = 0;
+    if (FromHexa(int_id, opt.activate)) {
+        // Hexa lang id was specified.
+        ActivateKeyboard(opt, opt.activate, int_id);
     }
-    if (!EndsWith(dllname, L".dll")) {
-        dllname.append(L".dll");
-    }
-
-    // Search which keyboard layout has this DLL name.
-    Registry reg(opt);
-    WStringList all_lang_ids;
-    if (reg.getSubKeys(REGISTRY_LAYOUT_KEY, all_lang_ids)) {
-        for (const auto& lang_id : all_lang_ids) {
-            const WString key(REGISTRY_LAYOUT_KEY "\\" + lang_id);
-            const WString file(reg.getValue(key, REGISTRY_LAYOUT_FILE, true));
-            DWORD int_id = 0;
-            if (ToLower(file) == dllname && FromHexa(int_id, lang_id)) {
-                // Found the right language.
-                //
-                // WARNING: the code below does not work as expected.
-                // The selected keyboard lyaout is not activated at system level.
-                // This is exploratory code only. The proper solution is still to be found.
-                //
-                opt.info(L"Activating language " + lang_id + " (" + dllname + ")");
-                HKL hkl = LoadKeyboardLayoutW(lang_id.c_str(), KLF_ACTIVATE);
-                if (hkl == NULL) {
-                    const DWORD err = GetLastError();
-                    opt.fatal("LoadKeyboardLayout: " + ErrorText(err));
-                }
-                if (!SystemParametersInfoW(SPI_SETDEFAULTINPUTLANG, 0, &hkl, SPIF_SENDCHANGE)) {
-                    const DWORD err = GetLastError();
-                    opt.fatal("SystemParametersInfo: " + ErrorText(err));
-                }
-                if (!PostMessage(HWND_BROADCAST, WM_INPUTLANGCHANGEREQUEST, 0, LPARAM(int_id)) ||
-                    !PostMessage(HWND_BROADCAST, WM_INPUTLANGCHANGE, 0, LPARAM(int_id)))
-                {
-                    const DWORD err = GetLastError();
-                    opt.fatal("PostMessage(HWND_BROADCAST): " + ErrorText(err));
-                }
-                return;
-            }
+    else {
+        // Get DLL file name, lower case.
+        WString dllname(ToLower(FileName(opt.activate)));
+        if (!StartsWith(dllname, L"kbd")) {
+            dllname.insert(0, L"kbd");
         }
-        opt.error(L"cannot find a language id for " + dllname);
-    }
-}
+        if (!EndsWith(dllname, L".dll")) {
+            dllname.append(L".dll");
+        }
 
-
-//---------------------------------------------------------------------------
-// Install one keyboard DLL's.
-//---------------------------------------------------------------------------
-
-void InstallOneKeyboard(AdminOptions& opt, const WString& dll_path)
-{
-    // Get all expected resource strings from a WKL DLL.
-    HMODULE hmod = LoadLibraryExW(dll_path.c_str(), nullptr, LOAD_LIBRARY_AS_DATAFILE);
-    if (hmod == nullptr) {
-        const DWORD err = GetLastError();
-        opt.error(dll_path + ": " + ErrorText(err));
-        return;
-    }
-    const WString dll_name(ToLower(FileName(dll_path)));
-    const WString dll_text(GetResourceString(hmod, WKL_RES_TEXT));
-    const WString dll_provider(GetResourceString(hmod, WKL_RES_PROVIDER));
-    WString dll_lang_id(ToLower(GetResourceString(hmod, WKL_RES_LANG)));
-    int base_language = 0;
-    FromHexa(base_language, dll_lang_id);
-    FreeLibrary(hmod);
-
-    // A WKL DLL is expected to have resource strings: "WKL" as provider and non-null language id.
-    if (dll_provider != L"WKL" || base_language == 0) {
-        return;
-    }
-
-    // Install the keyboard layout DLL.
-    opt.info("==== Installing " + dll_name + " (" + dll_text + ")");
-    const uint32_t lang_id = InstallKeyboardLayout(opt, dll_path, base_language, dll_text);
-
-    // Add specific WKL entries in the registry.
-    if (lang_id != 0) {
+        // Search which keyboard layout has this DLL name.
         Registry reg(opt);
-        const WString key(REGISTRY_LAYOUT_KEY L"\\" + Format(L"%08x", lang_id));
-        reg.setValue(key, REGISTRY_LAYOUT_PROVIDER, dll_provider);
-        reg.setValue(key, REGISTRY_LAYOUT_DISPLAY, L"@%SystemRoot%\\system32\\" + dll_name + Format(L",-%d", WKL_RES_TEXT), true);
-    }
-}
-
-
-//---------------------------------------------------------------------------
-// Install all specified keyboard DLL's.
-//---------------------------------------------------------------------------
-
-void InstallKeyboards(AdminOptions& opt)
-{
-    for (const auto& path : opt.dll_install) {
-        if (IsDirectory(path)) {
-            WStringList files;
-            SearchFiles(files, path, L"*.dll");
-            for (const auto& file : files) {
-                InstallOneKeyboard(opt, path + L"\\" + file);
+        WStringList all_lang_ids;
+        if (reg.getSubKeys(REGISTRY_LAYOUT_KEY, all_lang_ids)) {
+            for (const auto& lang_id : all_lang_ids) {
+                const WString key(REGISTRY_LAYOUT_KEY "\\" + lang_id);
+                const WString file(reg.getValue(key, REGISTRY_LAYOUT_FILE, true));
+                if (ToLower(file) == dllname && FromHexa(int_id, lang_id)) {
+                    // Found the right language.
+                    ActivateKeyboard(opt, lang_id, int_id);
+                    return;
+                }
             }
-        }
-        else {
-            InstallOneKeyboard(opt, path);
-        }
-    }
-}
-
-
-//---------------------------------------------------------------------------
-// Remove all installed WKL keyboard DLL's.
-//---------------------------------------------------------------------------
-
-void RemoveKeyboards(AdminOptions& opt)
-{
-    // Enumerate keyboard layouts in registry and remove all WKL keyboads.
-    Registry reg(opt);
-    WStringList all_lang_ids;
-    if (reg.getSubKeys(REGISTRY_LAYOUT_KEY, all_lang_ids)) {
-        for (const auto& lang_id : all_lang_ids) {
-            const WString file(reg.getValue(REGISTRY_LAYOUT_KEY L"\\" + lang_id, REGISTRY_LAYOUT_FILE, L"", true));
-            if (!file.empty() && GetResourceString(GetSystem32() + L"\\" + file, WKL_RES_PROVIDER) == L"WKL") {
-                UninstallKeyboardLayout(opt, file);
-            }
+            opt.error(L"cannot find a language id for " + dllname);
         }
     }
 }
@@ -439,10 +402,10 @@ int wmain(int argc, wchar_t* argv[])
     // Now perform all requested operations.
     opt.setOutput(opt.output);
     if (opt.remove_wkl) {
-        RemoveKeyboards(opt);
+        WKLUninstallAllKeyboardLayouts(opt);
     }
     if (!opt.dll_install.empty()) {
-        InstallKeyboards(opt);
+        WKLInstallAllKeyboardLayouts(opt, opt.dll_install);
     }
     if (opt.list_keyboards) {
         ListKeyboards(opt);

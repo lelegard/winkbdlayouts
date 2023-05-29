@@ -15,7 +15,8 @@ class Registry
 {
 public:
     // Constructor. Specify where to report errors.
-    Registry(Error& err) : _err(err) {}
+    Registry() : _null(), _err(_null) {}
+    Registry(Error& err) : _null(), _err(err) {}
 
     // Check if a registry key or value exists.
     bool keyExists(const WString& key) { return valueExists(key, L""); }
@@ -57,6 +58,7 @@ public:
     bool splitKey(const WString& key, HKEY& root_key, WString& midkey, WString& final_key);
 
 private:
+    Error  _null;
     Error& _err;
 
     bool openKey(HKEY root, const WString& key, REGSAM sam, HKEY& handle);

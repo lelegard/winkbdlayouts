@@ -45,7 +45,7 @@ WString Format(const wchar_t* fmt, ...)
 // Length of a string. Size in bytes of it (including trailing null).
 //---------------------------------------------------------------------------
 
-size_t StringLength(const wchar_t* s)
+size_t WStringLength(const wchar_t* s)
 {
     size_t len = 0;
     if (s != nullptr) {
@@ -56,9 +56,9 @@ size_t StringLength(const wchar_t* s)
     return len;
 }
 
-size_t StringSize(const wchar_t* s)
+size_t WStringSize(const wchar_t* s)
 {
-    return s == nullptr ? 0 : (StringLength(s) + 1) * sizeof(wchar_t);
+    return s == nullptr ? 0 : (WStringLength(s) + 1) * sizeof(wchar_t);
 }
 
 
