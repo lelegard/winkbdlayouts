@@ -449,7 +449,10 @@ character which is produced when hitting the dead key followed by the letter
 (`ñ` in that case).
  
 The last field of each entry in `dead_keys` is a mask of flags. The only defined
-flag is `DKF_DEAD`, unused in all standard keyboards, with unclear usage.
+flag is `DKF_DEAD` which is used for dead key chaining. As recommended by @DJm00n
+in issue #1, more information can be found
+[here](http://archives.miloush.net/michkap/archive/2011/04/16/10154700.html) and
+[here](http://www.kbdedit.com/manual/dead_chained.html).
 
 ### Ligatures
 
@@ -675,6 +678,8 @@ The base language is a 4-digit hexadecimal number.
 | kbdswapplevm | 041d | Swedish Apple VM
 | kbdszapple   | 100c | Swiss French Apple
 | kbdszapplevm | 100c | Swiss French Apple VM
+| kbduaapple   | 0409 | Ukrainian Apple
+| kbduaapplevm | 0409 | Ukrainian Apple VM
 | kbduiapple   | 0409 | United States International Apple
 | kbduiapplevm | 0409 | United States International Apple VM
 | kbdukapple   | 0809 | United Kingdom Apple
