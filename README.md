@@ -449,8 +449,8 @@ character which is produced when hitting the dead key followed by the letter
 (`ñ` in that case).
  
 The last field of each entry in `dead_keys` is a mask of flags. The only defined
-flag is `DKF_DEAD` which is used for dead key chaining. As recommended by @DJm00n
-in issue #1, more information can be found
+flag is `DKF_DEAD` which is used for dead key chaining. As recommended by Dimitriy Ryazantcev
+in [issue #1](https://github.com/lelegard/winkbdlayouts/issues/1), more information can be found
 [here](http://archives.miloush.net/michkap/archive/2011/04/16/10154700.html) and
 [here](http://www.kbdedit.com/manual/dead_chained.html).
 
@@ -582,12 +582,16 @@ In the diagrams below, the hexadecimal values are the scan codes of the keys,
 
 When you run a Windows virtual machine (VM) on a Mac, there is a potential
 issue with two keys on the left side of the keyboard: the keys `@`/`#` and
-`<`/`>` are sometimes inverted.
+`<`/`>` are sometimes inverted. The presence of these keys depends on the
+language layout.
 
-The core reason for this issue is unknown. We observe that the problem appears
-on some hypervisors and not on others. Using Parallels Desktop, there is no
-problem. The two keys send their expected scan codes. On the other hand, using
-VMware or UTM/Qemu, the two keys swap their scan codes.
+This situation is the result of a long history of keyboards in Apple systems.
+An explanation has been proposed by Eugene Golushkov in
+[issue #2](https://github.com/lelegard/winkbdlayouts/issues/2).
+
+We observe that the problem appears on some hypervisors and not on others.
+Using Parallels Desktop, there is no problem. The two keys send their expected scan codes.
+On the other hand, using VMware or UTM/Qemu, the two keys swap their scan codes.
 
 On the diagram below, the left part shows the expected key codes of a standard
 keyboard. This is also what is received by a Windows VM running on Parallels Desktop.
