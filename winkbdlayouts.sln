@@ -126,6 +126,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kbdfiapplevm", "keyboards\k
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kbdfrnodead", "keyboards\kbdfrnodead\kbdfrnodead.vcxproj", "{967B4EB5-5348-44A7-A887-081C55A9EF84}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kbduaapple", "keyboards\kbduaapple\kbduaapple.vcxproj", "{0A99DCE3-5295-45F9-8B8D-FF687EA0BDB5}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kbduaapplevm", "keyboards\kbduaapplevm\kbduaapplevm.vcxproj", "{FAB8B2B4-80C5-4567-870C-315242E304F8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|arm64 = Debug|arm64
@@ -820,6 +824,30 @@ Global
 		{967B4EB5-5348-44A7-A887-081C55A9EF84}.Release|x64.Build.0 = Release|x64
 		{967B4EB5-5348-44A7-A887-081C55A9EF84}.Release|x86.ActiveCfg = Release|Win32
 		{967B4EB5-5348-44A7-A887-081C55A9EF84}.Release|x86.Build.0 = Release|Win32
+		{0A99DCE3-5295-45F9-8B8D-FF687EA0BDB5}.Debug|arm64.ActiveCfg = Debug|arm64
+		{0A99DCE3-5295-45F9-8B8D-FF687EA0BDB5}.Debug|arm64.Build.0 = Debug|arm64
+		{0A99DCE3-5295-45F9-8B8D-FF687EA0BDB5}.Debug|x64.ActiveCfg = Debug|x64
+		{0A99DCE3-5295-45F9-8B8D-FF687EA0BDB5}.Debug|x64.Build.0 = Debug|x64
+		{0A99DCE3-5295-45F9-8B8D-FF687EA0BDB5}.Debug|x86.ActiveCfg = Debug|Win32
+		{0A99DCE3-5295-45F9-8B8D-FF687EA0BDB5}.Debug|x86.Build.0 = Debug|Win32
+		{0A99DCE3-5295-45F9-8B8D-FF687EA0BDB5}.Release|arm64.ActiveCfg = Release|arm64
+		{0A99DCE3-5295-45F9-8B8D-FF687EA0BDB5}.Release|arm64.Build.0 = Release|arm64
+		{0A99DCE3-5295-45F9-8B8D-FF687EA0BDB5}.Release|x64.ActiveCfg = Release|x64
+		{0A99DCE3-5295-45F9-8B8D-FF687EA0BDB5}.Release|x64.Build.0 = Release|x64
+		{0A99DCE3-5295-45F9-8B8D-FF687EA0BDB5}.Release|x86.ActiveCfg = Release|Win32
+		{0A99DCE3-5295-45F9-8B8D-FF687EA0BDB5}.Release|x86.Build.0 = Release|Win32
+		{FAB8B2B4-80C5-4567-870C-315242E304F8}.Debug|arm64.ActiveCfg = Debug|arm64
+		{FAB8B2B4-80C5-4567-870C-315242E304F8}.Debug|arm64.Build.0 = Debug|arm64
+		{FAB8B2B4-80C5-4567-870C-315242E304F8}.Debug|x64.ActiveCfg = Debug|x64
+		{FAB8B2B4-80C5-4567-870C-315242E304F8}.Debug|x64.Build.0 = Debug|x64
+		{FAB8B2B4-80C5-4567-870C-315242E304F8}.Debug|x86.ActiveCfg = Debug|Win32
+		{FAB8B2B4-80C5-4567-870C-315242E304F8}.Debug|x86.Build.0 = Debug|Win32
+		{FAB8B2B4-80C5-4567-870C-315242E304F8}.Release|arm64.ActiveCfg = Release|arm64
+		{FAB8B2B4-80C5-4567-870C-315242E304F8}.Release|arm64.Build.0 = Release|arm64
+		{FAB8B2B4-80C5-4567-870C-315242E304F8}.Release|x64.ActiveCfg = Release|x64
+		{FAB8B2B4-80C5-4567-870C-315242E304F8}.Release|x64.Build.0 = Release|x64
+		{FAB8B2B4-80C5-4567-870C-315242E304F8}.Release|x86.ActiveCfg = Release|Win32
+		{FAB8B2B4-80C5-4567-870C-315242E304F8}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
