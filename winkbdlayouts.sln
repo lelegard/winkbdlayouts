@@ -130,6 +130,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kbduaapple", "keyboards\kbd
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kbduaapplevm", "keyboards\kbduaapplevm\kbduaapplevm.vcxproj", "{FAB8B2B4-80C5-4567-870C-315242E304F8}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kbdpdvapple", "keyboards\kbdpdvapple\kbdpdvapple.vcxproj", "{849791C7-9088-449F-B88A-668C089C51AA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|arm64 = Debug|arm64
@@ -848,6 +850,18 @@ Global
 		{FAB8B2B4-80C5-4567-870C-315242E304F8}.Release|x64.Build.0 = Release|x64
 		{FAB8B2B4-80C5-4567-870C-315242E304F8}.Release|x86.ActiveCfg = Release|Win32
 		{FAB8B2B4-80C5-4567-870C-315242E304F8}.Release|x86.Build.0 = Release|Win32
+		{849791C7-9088-449F-B88A-668C089C51AA}.Debug|arm64.ActiveCfg = Debug|arm64
+		{849791C7-9088-449F-B88A-668C089C51AA}.Debug|arm64.Build.0 = Debug|arm64
+		{849791C7-9088-449F-B88A-668C089C51AA}.Debug|x64.ActiveCfg = Debug|x64
+		{849791C7-9088-449F-B88A-668C089C51AA}.Debug|x64.Build.0 = Debug|x64
+		{849791C7-9088-449F-B88A-668C089C51AA}.Debug|x86.ActiveCfg = Debug|Win32
+		{849791C7-9088-449F-B88A-668C089C51AA}.Debug|x86.Build.0 = Debug|Win32
+		{849791C7-9088-449F-B88A-668C089C51AA}.Release|arm64.ActiveCfg = Release|arm64
+		{849791C7-9088-449F-B88A-668C089C51AA}.Release|arm64.Build.0 = Release|arm64
+		{849791C7-9088-449F-B88A-668C089C51AA}.Release|x64.ActiveCfg = Release|x64
+		{849791C7-9088-449F-B88A-668C089C51AA}.Release|x64.Build.0 = Release|x64
+		{849791C7-9088-449F-B88A-668C089C51AA}.Release|x86.ActiveCfg = Release|Win32
+		{849791C7-9088-449F-B88A-668C089C51AA}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
