@@ -682,8 +682,8 @@ The base language is a 4-digit hexadecimal number.
 | kbdswapplevm | 041d | Swedish Apple VM
 | kbdszapple   | 100c | Swiss French Apple
 | kbdszapplevm | 100c | Swiss French Apple VM
-| kbduaapple   | 0409 | Ukrainian Apple
-| kbduaapplevm | 0409 | Ukrainian Apple VM
+| kbduaapple   | 0422 | Ukrainian Apple
+| kbduaapplevm | 0422 | Ukrainian Apple VM
 | kbduiapple   | 0409 | United States International Apple
 | kbduiapplevm | 0409 | United States International Apple VM
 | kbdukapple   | 0809 | United Kingdom Apple
