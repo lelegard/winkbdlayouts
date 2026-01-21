@@ -158,7 +158,7 @@ static USHORT scancode_to_vk[] = {
     /* 26 */ 'L',
     /* 27 */ VK_OEM_3,
     /* 28 */ VK_OEM_7,
-    /* 29 */ VK_OEM_5,
+    /* 29 */ VK_OEM_102, // to be confirmed
     /* 2A */ VK_LSHIFT,
     /* 2B */ VK_OEM_2,
     /* 2C */ 'Z',
@@ -203,7 +203,7 @@ static USHORT scancode_to_vk[] = {
     /* 53 */ VK_DELETE | KBDSPECIAL | KBDNUMPAD,
     /* 54 */ VK_SNAPSHOT,
     /* 55 */ VK__none_,
-    /* 56 */ VK_OEM_7,
+    /* 56 */ VK_OEM_5, // to be confirmed
     /* 57 */ VK_F11,
     /* 58 */ VK_F12,
     /* 59 */ VK_CLEAR,
